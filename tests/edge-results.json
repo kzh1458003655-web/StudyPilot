@@ -1,0 +1,38 @@
+[
+  {
+    "test": "无关问题不编造答案",
+    "passed": true,
+    "seconds": 0.06,
+    "detail": "无相关资料时明确拒绝编造"
+  },
+  {
+    "test": "取消生成并保存取消状态",
+    "passed": true,
+    "seconds": 0.51,
+    "detail": "生成取消且状态持久化"
+  },
+  {
+    "test": "损坏PDF被拒绝",
+    "passed": true,
+    "seconds": 0.01,
+    "detail": "HTTP 400"
+  },
+  {
+    "test": "跨站写入请求被拒绝",
+    "passed": true,
+    "seconds": 0.01,
+    "detail": "HTTP 403"
+  },
+  {
+    "test": "不存在的计划返回404",
+    "passed": true,
+    "seconds": 0.0,
+    "detail": "HTTP 404"
+  },
+  {
+    "test": "非法打卡类型被拒绝",
+    "passed": true,
+    "seconds": 0.0,
+    "detail": "HTTP 400"
+  }
+]

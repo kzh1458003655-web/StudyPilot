@@ -1,0 +1,8 @@
+{
+  "RUNTIME": "D:/StudyPilot-runtime",
+  "STUDY_DB_PASSWORD": "请替换为本机数据库密码",
+  "ROOT_PASSWORD": "请替换为本机数据库管理员密码",
+  "MODEL_KEY": "请替换为随机生成的本机模型密钥",
+  "JAVA": ""
+}
+

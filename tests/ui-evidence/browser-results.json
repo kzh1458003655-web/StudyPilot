@@ -1,0 +1,15 @@
+{
+  "started_at": "2026-09-07T05:45:28.862Z",
+  "base": "http://127.0.0.1:18080",
+  "mocked": false,
+  "checks": [
+    {
+      "name": "页面加载并显示课程空间",
+      "passed": false,
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:18080/\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:18080/\", waiting until \"networkidle\"\u001b[22m\n",
+      "elapsed_ms": 2107
+    }
+  ],
+  "console_errors": [],
+  "finished_at": "2026-09-07T05:45:35.177Z"
+}

@@ -1,0 +1,215 @@
+{
+  "timestamp": "2026-09-06T18:52:13.555819",
+  "results": [
+    {
+      "test": "服务与模型健康检查",
+      "passed": true,
+      "seconds": 0.05,
+      "detail": {
+        "database": true,
+        "ai": {
+          "chunks": 3,
+          "completed": 0,
+          "model_ready": true,
+          "pending": 0,
+          "service": "StudyPilot C++"
+        },
+        "model": "Qwen3.5-4B Q4_K_M"
+      }
+    },
+    {
+      "test": "上传并索引文字PDF",
+      "passed": true,
+      "seconds": 1.78,
+      "detail": {
+        "name": "数据库课程示例讲义.pdf",
+        "id": "66265483-4648-43b2-9372-f5d15ba3f2e7",
+        "pages": 3
+      }
+    },
+    {
+      "test": "重复资料被拒绝",
+      "passed": true,
+      "seconds": 0.02,
+      "detail": "HTTP 400"
+    },
+    {
+      "test": "真实模型问答及引用保存",
+      "passed": true,
+      "seconds": 3.66,
+      "detail": {
+        "session_id": "67a92721-f205-49f1-a559-4670e9e0e952",
+        "answer": "事务的 ACID 特性包括以下四个方面：\n- **原子性（Atomicity）**：保证事务中的操作全部成功或全部回滚，确保事务作为一个整体执行 [1]。\n- **一致性（Consistency）**：要求事务执行前后满足数据库约束，保持数据状态的一致性 [1]。\n- **隔离性（Isolation）**：描述并发事务之间的相互影响程度，确保并发执行时不会相互干扰 [1]。\n- **持久性（Durability）**：保证提交后的修改得到保存，即使系统故障也不会丢失数据 [1]。\n\n在创建复习计划时，将复习计划及全部子任务放入一个事务中，是为了防止只保存了部分任务。通过事务的原子性，可以确保要么全部任务都被保存，要么全部回滚，从而保证数据的一致性和完整性 [1]。",
+        "sources": [
+          {
+            "document_id": "66265483-4648-43b2-9372-f5d15ba3f2e7",
+            "name": "数据库课程示例讲义.pdf",
+            "page": 3,
+            "score": 20.82197780164148,
+            "text": "第三章 事务与数据一致性\r\n事务的ACID特性分别是原子性、一致性、隔离性和持久性。\r\n原子性保证事务中的操作全部成功或全部回滚。\r\n一致性要求事务执行前后满足数据库约束。\r\n隔离性描述并发事务之间的相互影响程度。持久性保证提交后的修改得到保存。\r\n创建复习计划及全部子任务适合放入一个事务，防止只保存了部分任务。\r\n版本号可以检测并发修改，发现版本变化后应拒绝覆盖旧结果并提示重新操作。"
+          },
+          {
+            "document_id": "66265483-4648-43b2-9372-f5d15ba3f2e7",
+            "name": "数据库课程示例讲义.pdf",
+            "page": 1,
+            "score": 6.195108833888464,
+            "text": "第一章 关系数据库与第三范式\r\n本讲义为项目功能测试编写的示例资料，不是学校正式课件。\r\n关系数据库用二维表组织数据，主键唯一标识每一条记录。\r\n外键建立表之间的引用关系，参照完整性防止出现无效引用。\r\n第一范式要求属性值不可再分；第二范式消除非主属性对候选键的部分函数依赖。\r\n第三范式要求对每个非平凡函数依赖X→A，X为超键或A为主属性。\r\n直观上，第三范式需要避免非主属性通过其他非主属性依赖候选键。\r\n例如选课记录中反复存储课程名称会产生冗余，课程名称应放入课程表。\r\n分解关系时还需要考虑无损连接和函数依赖保持，不能只增加表的数量。"
+          },
+          {
+            "document_id": "66265483-4648-43b2-9372-f5d15ba3f2e7",
+            "name": "数据库课程示例讲义.pdf",
+            "page": 2,
+            "score": 4.592930754976127,
+            "text": "第二章 SQL查询与索引\r\nSELECT用于查询，WHERE筛选行，GROUP BY按属性分组，HA\r\nVING筛选分组。\r\nINNER JOIN返回符合连接条件的记录，LEFT JOIN保留左表全\r\n部记录。\r\nCOUNT统计数量，SUM求和，AVG计算平均值。\r\n索引能够提高特定查询速度，但会增加存储开销和写入维护成本。\r\n复合索引的字段顺序应结合查询条件和排序需求设计。\r\n使用EXPLAIN观察执行计划，不能认为每一个字段都应该建立索引。"
+          }
+        ],
+        "first_text_seconds": 0.602,
+        "total_seconds": 3.649
+      }
+    },
+    {
+      "test": "真实Agent生成计划",
+      "passed": true,
+      "seconds": 3.98,
+      "detail": {
+        "id": "bac4c1c6-edec-426e-a485-a825f0115e5c",
+        "goal": "复习关系数据库的范式、SQL与事务",
+        "weak_points": "第三范式与事务",
+        "start_date": "2026-09-06",
+        "days": 3,
+        "daily_minutes": 60,
+        "version": 1,
+        "created_at": "2026-09-06T10:52:10.000+00:00",
+        "tasks": [
+          {
+            "id": "d0e01675-3eb6-4c10-afcc-8e87ef8f81b3",
+            "plan_id": "bac4c1c6-edec-426e-a485-a825f0115e5c",
+            "task_date": "2026-09-06",
+            "title": "复习第三范式",
+            "detail": "阅读讲义第一页，理解第一、二、三范式定义及示例",
+            "minutes": 20,
+            "done": false,
+            "completed_at": null
+          },
+          {
+            "id": "9aba2b59-18b0-4406-8f8e-09bc490e0027",
+            "plan_id": "bac4c1c6-edec-426e-a485-a825f0115e5c",
+            "task_date": "2026-09-07",
+            "title": "复习SQL与索引",
+            "detail": "阅读讲义第二页，掌握SQL查询语句与索引设计原则",
+            "minutes": 20,
+            "done": false,
+            "completed_at": null
+          },
+          {
+            "id": "f694f3b7-487c-4505-8714-93d5c910ad39",
+            "plan_id": "bac4c1c6-edec-426e-a485-a825f0115e5c",
+            "task_date": "2026-09-08",
+            "title": "复习事务与一致性",
+            "detail": "阅读讲义第三页，理解事务ACID特性及并发控制机制",
+            "minutes": 20,
+            "done": false,
+            "completed_at": null
+          }
+        ],
+        "revisions": [
+          {
+            "version": 1,
+            "instruction": "制定复习计划",
+            "created_at": "2026-09-06T10:52:10.000+00:00"
+          }
+        ],
+        "run_id": "9d255406-7ec4-4640-8c12-4f782cb27b6b"
+      }
+    },
+    {
+      "test": "完成任务打卡",
+      "passed": true,
+      "seconds": 0.02,
+      "detail": {
+        "updated": true
+      }
+    },
+    {
+      "test": "真实Agent调整计划",
+      "passed": true,
+      "seconds": 3.33,
+      "detail": {
+        "id": "bac4c1c6-edec-426e-a485-a825f0115e5c",
+        "goal": "复习关系数据库的范式、SQL与事务",
+        "weak_points": "第三范式与事务",
+        "start_date": "2026-09-06",
+        "days": 3,
+        "daily_minutes": 60,
+        "version": 3,
+        "created_at": "2026-09-06T10:52:10.000+00:00",
+        "tasks": [
+          {
+            "id": "d0e01675-3eb6-4c10-afcc-8e87ef8f81b3",
+            "plan_id": "bac4c1c6-edec-426e-a485-a825f0115e5c",
+            "task_date": "2026-09-06",
+            "title": "复习第三范式",
+            "detail": "阅读讲义第一页，理解第一、二、三范式定义及示例",
+            "minutes": 20,
+            "done": true,
+            "completed_at": "2026-09-06T10:52:10.000+00:00"
+          },
+          {
+            "id": "7891c9a6-e068-4ebd-80bd-cd0a1dd2f663",
+            "plan_id": "bac4c1c6-edec-426e-a485-a825f0115e5c",
+            "task_date": "2026-09-07",
+            "title": "复习SQL与索引",
+            "detail": "阅读讲义第二页，掌握SQL查询语句与索引设计原则",
+            "minutes": 20,
+            "done": false,
+            "completed_at": null
+          },
+          {
+            "id": "cd22b817-f459-45e4-bbae-567ad7e90225",
+            "plan_id": "bac4c1c6-edec-426e-a485-a825f0115e5c",
+            "task_date": "2026-09-08",
+            "title": "复习事务与一致性",
+            "detail": "阅读讲义第三页，理解事务ACID特性及并发控制机制",
+            "minutes": 20,
+            "done": false,
+            "completed_at": null
+          }
+        ],
+        "revisions": [
+          {
+            "version": 3,
+            "instruction": "保留已经完成的任务，剩余任务更加侧重事务。",
+            "created_at": "2026-09-06T10:52:13.000+00:00"
+          },
+          {
+            "version": 1,
+            "instruction": "制定复习计划",
+            "created_at": "2026-09-06T10:52:10.000+00:00"
+          }
+        ],
+        "run_id": "b4d2e794-93ab-4f79-b05a-302505a8c96f"
+      }
+    },
+    {
+      "test": "调整后完成记录被保留",
+      "passed": true,
+      "seconds": 0.0,
+      "detail": {
+        "id": "d0e01675-3eb6-4c10-afcc-8e87ef8f81b3",
+        "plan_id": "bac4c1c6-edec-426e-a485-a825f0115e5c",
+        "task_date": "2026-09-06",
+        "title": "复习第三范式",
+        "detail": "阅读讲义第一页，理解第一、二、三范式定义及示例",
+        "minutes": 20,
+        "done": true,
+        "completed_at": "2026-09-06T10:52:10.000+00:00"
+      }
+    },
+    {
+      "test": "非法时间条件被拒绝",
+      "passed": true,
+      "seconds": 0.0,
+      "detail": "HTTP 400"
+    }
+  ]
+}

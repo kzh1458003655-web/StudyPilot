@@ -1,0 +1,37 @@
+# 本机配置与密钥
+config.local.json
+.env
+.env.*
+
+# 运行数据与日志
+data/
+logs/
+app/
+.build-cache/
+
+# 编译产物
+backend/target/
+ai/bin/
+*.exe
+*.dll
+*.class
+__pycache__/
+*.py[cod]
+
+# 本地模型与大文件
+*.gguf
+*.bin
+
+# 含姓名、学号的课程提交材料
+deliverables/
+
+# 模型测试的原始运行日志；保留汇总、CSV、报告和截图
+tests/model-evaluation/Qwen3-4B/
+tests/model-evaluation/Qwen3.5-4B/
+tests/ui-evidence/failure.png
+
+# 编辑器与系统文件
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

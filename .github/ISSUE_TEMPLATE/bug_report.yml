@@ -1,0 +1,37 @@
+name: 缺陷报告
+description: 报告可以稳定复现的问题
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: textarea
+    attributes:
+      label: 问题描述
+      description: 请说明实际发生了什么。
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 复现步骤
+      placeholder: "1. 打开……\n2. 点击……\n3. 出现……"
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 预期结果
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: 所属模块
+      options:
+        - 课程资料智能问答
+        - 考频统计与模拟出题
+        - 在线答题与智能评测
+        - 本地推理与公共基础设施
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 运行环境与补充信息
+      description: 可填写系统版本、浏览器、模型以及脱敏后的日志。
+

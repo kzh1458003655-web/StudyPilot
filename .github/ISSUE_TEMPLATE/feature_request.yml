@@ -1,0 +1,34 @@
+name: 功能建议
+description: 提议新功能或现有功能改进
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    attributes:
+      label: 所属模块
+      options:
+        - 课程资料智能问答
+        - 考频统计与模拟出题
+        - 在线答题与智能评测
+        - 本地推理与公共基础设施
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 使用场景
+      description: 谁在什么情况下需要这个功能？
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 建议方案
+      description: 请写清楚输入、处理过程和预期输出。
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 验收标准
+      description: 怎样判断这个功能已经完成？
+    validations:
+      required: true
+

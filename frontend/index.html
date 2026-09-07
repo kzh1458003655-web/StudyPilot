@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>知序 · 课程学习助手</title><link rel="stylesheet" href="style.css"></head>
+<body><div id="app" v-cloak>
+<aside class="sidebar">
+ <a class="brand" href="#" @click.prevent="tab='chat'"><span class="brand-icon">知</span><div>知序 <small>STUDYPILOT</small></div></a>
+ <button class="new-course" @click="courseModal=true">＋ 新建课程</button>
+ <div class="side-heading"><span>我的课程</span><small>{{courses.length}}</small></div>
+ <div class="course-list"><button v-for="c in courses" :key="c.id" :class="['course-item',{selected:c.id===courseId}]" @click="switchCourse(c.id)" :aria-current="c.id===courseId?'page':undefined"><span class="folder-icon">▱</span><span>{{c.name}}</span><small v-if="c.id===courseId">●</small></button><p v-if="!courses.length" class="muted">新建一门课程，开始整理学习。</p></div>
+ <nav aria-label="课程功能"><button :class="{active:tab==='chat'}" @click="tab='chat'">◈ <span>学习问答</span></button><button :class="{active:tab==='plan'}" @click="tab='plan'">▦ <span>复习计划</span></button></nav>
+ <div class="side-heading"><span>本课程对话</span><button class="icon-btn" @click="newChat" :disabled="generating||!courseId" aria-label="新建对话">＋</button></div>
+ <div class="session-list"><button v-for="s in sessions" :key="s.id" :class="{selected:s.id===sessionId}" @click="openSession(s.id)" :disabled="generating">{{s.title}}</button><p v-if="!sessions.length" class="muted">从一个问题开始</p></div>
+ <blockquote class="study-quote"><span>一点鼓励</span>{{quote}}</blockquote>
+ <div class="local-status"><i :class="{ready:health.ai?.model_ready}"></i><div>{{health.ai?.model_ready?'本地模型已就绪':'模型连接中或未启动'}}<small>资料与对话保存在本机</small></div><button class="icon-btn" @click="checkHealth" aria-label="刷新服务状态">↻</button></div>
+</aside>
+<main>
+ <header><div class="breadcrumb">{{activeCourse?.name||'学习空间'}} <span>/</span> {{tab==='chat'?'学习问答':'复习计划'}}</div><span class="pill">LOCAL AI · 本地运行</span></header>
+ <section v-if="tab==='chat'" class="workspace">
+  <div class="title-row"><div><p class="eyebrow">YOUR LEARNING SPACE</p><h1>{{activeCourse?.name||'今天，从一个问题开始。'}}</h1><p class="muted">这门课的资料、对话和复习安排，都在这里。</p></div><button class="secondary" @click="newChat" :disabled="generating">＋ 新对话</button></div>
+  <div v-if="loadingCourse" class="course-loading" role="status">正在打开课程…</div><div class="chat-layout" :aria-busy="loadingCourse">
+   <section class="chat-panel">
+    <div class="messages" ref="messageBox" aria-live="polite">
+     <div v-if="!messages.length" class="welcome"><div class="welcome-mark">✳</div><h2>今天想弄懂什么？</h2><p>直接提问，或添加本课程 PDF，让回答更贴近课堂。</p><div class="suggestions"><button @click="question='请用一个简单例子解释这门课的核心概念。'">解释一个知识点 ↗</button><button @click="question='请帮我梳理这门课的复习思路。'">梳理重点与区别 ↗</button></div><small>每次弄懂一点，都是进步。</small></div>
+     <article v-for="(m,i) in messages" :key="m.id||i" :class="['message',m.role]">
+      <div class="message-label">{{m.role==='user'?'你':'知序'}} <span v-if="m.status && m.status!=='complete'">{{m.status==='cancelled'?'已停止':m.status==='failed'?'生成失败':'正在生成'}}</span></div>
+      <div class="message-text" v-html="formatText(m.content || (generating && i===messages.length-1?'正在思考，请稍候…':'本次没有生成内容'))"></div>
+      <div class="source-list" v-if="m.sources?.length"><button v-for="(source,n) in m.sources" @click="preview=source">[{{n+1}}] {{source.name}} · 第{{source.page}}页</button></div>
+     </article>
+    </div>
+    <form class="composer" @submit.prevent="send"><textarea v-model="question" placeholder="输入问题，或说说你想弄懂的知识点…" maxlength="2000" @keydown.ctrl.enter.prevent="send" :disabled="generating" aria-label="输入课程问题"></textarea><div class="composer-foot"><label class="reference-toggle"><input type="checkbox" v-model="useReferences" :disabled="generating"><span>参考课程资料</span></label><span class="keyboard-hint">Ctrl + Enter</span><button v-if="generating" type="button" class="secondary" @click="stop">停止生成</button><button v-else class="primary" :disabled="!question.trim()||!courseId||loadingCourse">发送问题 ↑</button></div><p class="reference-hint">{{useReferences?(documents.length?'只检索当前课程的资料，引用可查看原文。':'当前没有资料，将使用模型自身知识回答。'):'通用问答：本次不检索课程资料。'}}</p></form>
+   </section>
+   <aside class="materials"><div class="panel-heading"><h3>本课程资料</h3><span>{{documents.length}}</span></div><label class="upload" :class="{disabled:uploading}"><input type="file" accept="application/pdf,.pdf" @change="upload" :disabled="uploading||!courseId||loadingCourse"><b>＋</b><strong>{{uploading?'正在解析并建立检索…':'添加课程 PDF'}}</strong><small>文字型 PDF · 单份不超过 20MB</small></label>
+    <div class="document" v-for="d in documents"><div class="pdf-icon">PDF</div><div class="document-info"><a :href="'/api'+scoped('/documents/'+d.id+'/file')" target="_blank" rel="noopener">{{d.name}}</a><small>{{d.pages}} 页 · 已可检索</small></div><button class="icon-btn" @click="deleteTarget=d" :disabled="generating||planning" aria-label="删除资料">×</button></div>
+    <p v-if="!documents.length" class="empty-documents">还没有资料<br><small>可以先聊天，稍后再添加。</small></p><div class="note"><strong>让回答更有依据</strong><p>仅在当前课程中检索，不会混入其他课程的文件。支持文字型 PDF，暂不支持扫描件。</p></div>
+   </aside>
+  </div>
+ </section>
+ <section v-else class="workspace">
+  <div class="title-row"><div><p class="eyebrow">A LITTLE PROGRESS EVERY DAY</p><h1>让每一天，都有清晰的下一步。</h1><p class="muted">结合课程内容和你的时间，制定可执行的复习安排。</p></div><button class="secondary" @click="resetPlan" :disabled="planning">＋ 新计划</button></div>
+  <div class="plan-layout"><aside class="plan-settings"><h3>{{selectedPlan?'调整复习安排':'制定复习计划'}}</h3><form @submit.prevent="generatePlan">
+   <label>复习目标<input v-model="form.goal" required maxlength="400" placeholder="例如：掌握数据库期末重点"></label>
+   <label>薄弱内容 <small>选填，由你自己判断</small><textarea v-model="form.weak_points" maxlength="600" placeholder="例如：范式分解、事务隔离"></textarea></label>
+   <label>开始日期<input type="date" v-model="form.start_date" required></label>
+   <div class="form-pair"><label>复习天数<input type="number" min="1" max="30" v-model.number="form.days" required></label><label>每天分钟数<input type="number" min="10" max="480" v-model.number="form.daily_minutes" required></label></div>
+   <label v-if="selectedPlan">调整要求<textarea v-model="form.instruction" maxlength="600" placeholder="例如：增加重点章节的复习时间"></textarea></label>
+   <button class="primary full" :disabled="planning||!documents.length">{{planning?'正在读取资料并安排任务…':selectedPlan?'调整复习计划':'生成复习计划 →'}}</button><p class="hint">{{selectedPlan?'调整后会重新校验每日总时长。':'请先上传资料。生成可能需要一至数分钟。'}}</p>
+  </form><div class="saved-plans"><h4>已保存计划</h4><button v-for="p in planList" @click="loadPlan(p.id)" :disabled="planning" :class="{selected:selectedPlan?.id===p.id}">{{p.goal}}<small>{{p.start_date}} · {{p.days}} 天</small></button></div></aside>
+  <section class="plan-content"><div v-if="planning" class="planning-state"><span class="spinner"></span><h3>正在编排你的复习计划</h3><p>读取资料与进度 → 安排任务 → 校验时间 → 保存</p><small>生成失败时，原计划保持不变。</small></div>
+   <template v-else-if="selectedPlan"><div class="plan-summary"><div><span class="eyebrow">YOUR STUDY PLAN</span><h2>{{selectedPlan.goal}}</h2><p>{{selectedPlan.start_date}} 起 · 每天 {{selectedPlan.daily_minutes}} 分钟以内</p></div><span class="pill">{{selectedPlan.tasks.length}} 项安排</span></div>
+   <section class="day-group" v-for="(tasks,date) in groupedTasks"><div class="day-heading"><h3>{{date}}</h3><span>{{tasks.reduce((n,t)=>n+t.minutes,0)}} 分钟</span></div><article v-for="task in tasks" :class="['task']"><div><h4>{{task.title}}</h4><p>{{task.detail}}</p><small>{{task.minutes}} 分钟</small></div></article></section>
+   <details class="revision-list"><summary>计划调整记录（{{selectedPlan.revisions?.length||0}}）</summary><p v-for="r in selectedPlan.revisions">版本 {{r.version}} · {{r.instruction}}</p></details>
+   <details v-if="trace.length" class="revision-list"><summary>本次执行记录</summary><p v-for="t in trace">{{toolLabel(t.tool_name)}}</p></details>
+   </template><div v-else class="plan-empty"><div class="welcome-mark">▦</div><h2>从一份适合自己的计划开始</h2><p>填写左侧条件，把课程内容变成每天可以完成的小任务。</p><div class="empty-steps"><span>01 明确目标</span><span>02 安排时间</span><span>03 按序复习</span></div></div>
+  </section></div>
+ </section>
+</main>
+<div v-if="courseModal" class="modal-backdrop" @click.self="courseModal=false" @keydown.esc="courseModal=false"><section class="modal small" role="dialog" aria-modal="true" aria-labelledby="course-dialog-title"><h3 id="course-dialog-title">新建课程</h3><p class="muted">每门课程拥有独立的资料和对话。</p><form @submit.prevent="createCourse"><label for="course-name">课程名称</label><input id="course-name" class="course-name-input" v-model="courseName" maxlength="80" placeholder="例如：数据库原理" required autofocus><div class="actions"><button type="button" class="secondary" @click="courseModal=false">取消</button><button class="primary" :disabled="!courseName.trim()">创建课程</button></div></form></section></div>
+<div v-if="notice" :class="['toast',notice.type]" role="status">{{notice.text}}</div>
+<div v-if="preview" class="modal-backdrop" @click.self="preview=null"><section class="modal"><div class="panel-heading"><h3>{{preview.name}} · 第{{preview.page}}页</h3><button class="icon-btn" @click="preview=null" aria-label="关闭来源">×</button></div><p class="excerpt">{{preview.text}}</p><a v-if="preview.document_id" class="primary link-button" :href="'/api'+scoped('/documents/'+preview.document_id+'/file')+'#page='+preview.page" target="_blank" rel="noopener">打开 PDF 原文 ↗</a><p v-else class="muted">原资料已删除，此处保留当时引用的内容。</p></section></div>
+<div v-if="deleteTarget" class="modal-backdrop" @click.self="deleteTarget=null"><section class="modal small"><h3>删除这份资料？</h3><p>{{deleteTarget.name}}</p><p class="muted">后续回答将不再检索它，历史引用片段仍会保留。</p><div class="actions"><button class="secondary" @click="deleteTarget=null">保留资料</button><button class="danger" @click="removeDocument">确认删除</button></div></section></div>
+</div><script src="vue.global.prod.js"></script><script src="app.js"></script></body></html>
