@@ -5,20 +5,36 @@
 - 文字型 PDF 上传、页级检索、带资料名称和页码的问答；
 - 基于复习目标、薄弱点、日期和每日时长的计划生成；
 - 任务打卡、计划调整、已完成任务保留与版本记录；
-- Qwen3-4B Q4_K_M 本地模型、C++ 检索服务、Java 业务服务、MySQL 数据库和 Vue 前端；
+- Qwen3.5-4B Q4_K_M 本地模型、C++ 检索服务、Java 业务服务、MySQL 数据库和 Vue 前端；
 - 不上传资料时仍可进行通用课程问答；启用“参考课程资料”后，答案附带本课程的资料来源和页码。
 
-## 启动
+## 组员首次部署
 
-首次使用时复制 `config.example.json` 为 `config.local.json`，再填写本机运行目录、数据库密码和随机模型密钥。`config.local.json` 已被 Git 忽略，不要提交到仓库。
+系统面向 64 位 Windows 和 NVIDIA 显卡。电脑需要提前安装 Git、Visual Studio 2022 的“使用 C++ 的桌面开发”工作负载；Python 和 Node.js 只用于扩展测试，不影响基本启动。
 
-配置完成后双击 `启动知序.cmd`，浏览器访问 `http://127.0.0.1:18080`。停止时双击 `停止知序.cmd`。
+克隆仓库后，在项目根目录运行：
 
-模型、llama.cpp、MySQL 和 Maven 运行文件在本机 `D:\StudyPilot-runtime`；源代码、数据、日志、构建产物和文档在本项目目录。首次运行前需要确认 `D:\StudyPilot-runtime` 存在，且 `config.local.json` 中的 `RUNTIME` 指向该目录。
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+.\scripts\setup.ps1
+.\scripts\start.ps1
+```
+
+`setup.ps1` 会自动选择剩余空间最大的磁盘，在 `StudyPilot-runtime` 中准备便携版 Java 21、Maven、MySQL、llama.cpp，生成本机配置和数据库，并下载、校验 Qwen3.5-4B Q4_K_M。也可以用 `-Runtime E:\StudyPilot-runtime` 指定位置。首次部署需要下载约 4GB 文件，之后更新代码不会重复下载。模型 SHA-256 固定为 `00FE7986FF5F6B463E62455821146049DB6F9313603938A70800D1FB69EF11A4`。
+
+浏览器访问 `http://127.0.0.1:18080`。停止服务运行 `.\scripts\stop.ps1`。本机配置、数据库、模型、日志和构建缓存均已从 Git 排除。
 
 ## 构建与测试
 
-执行 `build.ps1` 会编译 Java 与 C++，并运行 Java 时间约束测试。需要先停止正在运行的程序，再执行构建并启动。
+修改源代码后的推荐检查：
+
+```powershell
+.\scripts\build.ps1                 # 编译 Java、运行 Java 测试并编译 C++
+.\scripts\test.ps1 -SkipBrowser     # 构建、启动、健康检查和真实模型接口测试
+.\scripts\test.ps1                  # 本机有 Node.js 时再执行浏览器测试
+```
+
+根目录原有的 `build.ps1`、`start.ps1`、`stop.ps1` 和两个中文 `.cmd` 入口仍然保留。开发时优先使用 `scripts` 中的统一入口。
 
 真实模型集成测试：
 
@@ -32,7 +48,7 @@
 
 ## 模型选型
 
-在 RTX 4060 Laptop 8GB、llama.cpp、Q4_K_M 量化、4096 上下文、单并发、关闭思考模式的统一条件下，对 Qwen3-4B 和 Qwen3.5-4B 各执行 15 个中文测试用例。Qwen3-4B 得分为 27/30，高于 Qwen3.5-4B 的 25/30；平均首字时间分别为 0.080 秒和 0.204 秒，生成速度分别为 58.47 和 52.66 token/s。项目选择 Qwen3-4B，是因为其资料页码遵循和结构化计划输出更稳定，并不表示其在所有问题上都更强。完整原始记录、统计表和截图保存在 `tests/model-evaluation/`。
+在 RTX 4060 Laptop 8GB、llama.cpp、Q4_K_M 量化、4096 上下文、单并发、关闭思考模式的统一条件下，对 Qwen3.5-4B、Qwen3-4B、Phi-4-mini-instruct执行60道选择题、6道资料依据题、6道出题结构题、8道答题评测题和3次性能请求。Qwen3.5-4B综合分为78.62，略高于Qwen3-4B的78.37；Phi-4-mini-instruct虽具有最快首Token时间和生成速度，但中文专业任务得分明显偏低。项目选择Qwen3.5-4B作为默认模型，保留Qwen3-4B作为低延迟备选。完整脚本、原始响应、汇总CSV和截图在 `tests/model-benchmark/`。
 
 ## 分工
 
@@ -44,7 +60,7 @@
 
 ## 参与开发
 
-组员先通过 GitHub Issues 提交问题或功能方案，再从 `main` 创建功能分支并提交 Pull Request。仓库已经提供缺陷报告和功能建议模板，具体约定见 `CONTRIBUTING.md`。
+组员先通过 GitHub Issues 提交问题或功能方案，再从 `main` 创建个人功能分支并提交 Pull Request。仓库提供缺陷报告、功能建议模板和 Windows CI；每次推送会自动验证 Java 测试和 C++ 编译。具体约定见 `CONTRIBUTING.md`。
 
 ## 学习资料与注释
 

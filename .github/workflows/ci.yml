@@ -1,0 +1,26 @@
+name: source-check
+
+on:
+  push:
+    branches: [main, "feature/**", "fix/**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - name: Java tests and package
+        run: mvn -B -ntp -f backend/pom.xml package
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Build C++ retrieval service
+        shell: cmd
+        run: |
+          if not exist ai\bin mkdir ai\bin
+          cl /nologo /std:c++17 /EHsc /utf-8 /O2 /MD /I runtime ai\src\main.cpp /Fo:ai\bin\main.obj /Fe:ai\bin\study-ai.exe ws2_32.lib crypt32.lib

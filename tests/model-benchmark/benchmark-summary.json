@@ -1,0 +1,50 @@
+[
+  {
+    "model": "Qwen3.5-4B",
+    "mcq_accuracy": 93.33,
+    "mcq_format": 100.0,
+    "rag_accuracy": 83.33,
+    "generation_structure": 22.22,
+    "grading_mae": 0.375,
+    "grading_score": 92.5,
+    "ttft_s": 0.194,
+    "tokens_s": 49.759,
+    "peak_gpu_mib": 5194,
+    "success_rate": 97.56,
+    "model_gib": 2.553,
+    "performance_score": 62.07,
+    "overall_score": 78.62
+  },
+  {
+    "model": "Qwen3-4B",
+    "mcq_accuracy": 90.0,
+    "mcq_format": 100.0,
+    "rag_accuracy": 83.33,
+    "generation_structure": 22.22,
+    "grading_mae": 0.625,
+    "grading_score": 87.5,
+    "ttft_s": 0.067,
+    "tokens_s": 58.592,
+    "peak_gpu_mib": 5223,
+    "success_rate": 100.0,
+    "model_gib": 2.326,
+    "performance_score": 86.46,
+    "overall_score": 78.37
+  },
+  {
+    "model": "Phi-4-mini-instruct",
+    "mcq_accuracy": 36.67,
+    "mcq_format": 100.0,
+    "rag_accuracy": 16.67,
+    "generation_structure": 8.33,
+    "grading_mae": 2.125,
+    "grading_score": 57.5,
+    "ttft_s": 0.048,
+    "tokens_s": 61.499,
+    "peak_gpu_mib": 5144,
+    "success_rate": 95.12,
+    "model_gib": 2.321,
+    "performance_score": 100.0,
+    "overall_score": 38.78
+  }
+]

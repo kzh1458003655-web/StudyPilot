@@ -1,0 +1,4 @@
+﻿model,mcq_accuracy,mcq_format,rag_accuracy,generation_structure,grading_mae,grading_score,ttft_s,tokens_s,peak_gpu_mib,success_rate,model_gib,performance_score,overall_score
+Qwen3.5-4B,93.33,100.0,83.33,22.22,0.375,92.5,0.194,49.759,5194,97.56,2.553,62.07,78.62
+Qwen3-4B,90.0,100.0,83.33,22.22,0.625,87.5,0.067,58.592,5223,100.0,2.326,86.46,78.37
+Phi-4-mini-instruct,36.67,100.0,16.67,8.33,2.125,57.5,0.048,61.499,5144,95.12,2.321,100.0,38.78

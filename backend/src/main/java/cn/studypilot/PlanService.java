@@ -93,7 +93,28 @@ public class PlanService {
     if (outline.path("outline").isEmpty())
       throw new IllegalArgumentException("请先上传可读取的课程资料");
     ObjectNode context = mapper.createObjectNode();
-    context.set("course_material", outline);
+    // /outline 返回逐页文本。规划阶段只需要课程范围，不应把整本资料再次塞入上下文。
+    // 每份资料最多保留3页、每页900字，并设置总字符预算；这样多资料课程仍能公平取样。
+    ArrayNode compactPages = mapper.createArrayNode();
+    Map<String, Integer> pagesPerDocument = new HashMap<>();
+    int outlineCharacters = 0;
+    for (JsonNode page : outline.path("outline")) {
+      String name = page.path("name").asText("课程资料");
+      if (pagesPerDocument.getOrDefault(name, 0) >= 3 || outlineCharacters >= 12000)
+        continue;
+      String pageText = page.path("text").asText("");
+      if (pageText.length() > 900)
+        pageText = pageText.substring(0, 900);
+      ObjectNode compactPage = compactPages.addObject();
+      compactPage.put("name", name);
+      compactPage.put("page", page.path("page").asInt());
+      compactPage.put("text", pageText);
+      pagesPerDocument.merge(name, 1, Integer::sum);
+      outlineCharacters += pageText.length();
+    }
+    ObjectNode compactOutline = mapper.createObjectNode();
+    compactOutline.set("outline", compactPages);
+    context.set("course_material", compactOutline);
     context.set("requirements", input);
     if (existing != null)
       context.set("existing_plan", mapper.valueToTree(existing));
@@ -121,7 +142,8 @@ public class PlanService {
       request.set("messages", messages);
       request.set("tools", tools);
       request.put("temperature", 0.2);
-      request.put("max_tokens", 4500);
+      // 计划通常只需数百 token。限制输出预算，避免“长课程提纲 + 4500 输出”超过 8192 上下文。
+      request.put("max_tokens", 1024);
       request.put("tool_choice", "required");
       JsonNode response = ai.post("/completion", request),
                message = response.path("choices").path(0).path("message");

@@ -51,7 +51,7 @@ public class ApiController {
     } catch (Exception e) {
       h.put("ai", Map.of("model_ready", false));
     }
-    h.put("model", "Qwen3-4B Q4_K_M");
+    h.put("model", "Qwen3.5-4B Q4_K_M");
     return h;
   }
   @GetMapping("/courses")

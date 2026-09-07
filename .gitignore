@@ -8,6 +8,7 @@ data/
 logs/
 app/
 .build-cache/
+.local/
 
 # 编译产物
 backend/target/
@@ -15,12 +16,14 @@ ai/bin/
 *.exe
 *.dll
 *.class
+hs_err_pid*.log
 __pycache__/
 *.py[cod]
 
 # 本地模型与大文件
 *.gguf
 *.bin
+*.zip
 
 # 含姓名、学号的课程提交材料
 deliverables/
@@ -29,6 +32,8 @@ deliverables/
 tests/model-evaluation/Qwen3-4B/
 tests/model-evaluation/Qwen3.5-4B/
 tests/ui-evidence/failure.png
+tests/model-benchmark/*.log
+tests/model-benchmark/results/
 
 # 编辑器与系统文件
 .idea/

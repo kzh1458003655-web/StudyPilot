@@ -6,6 +6,7 @@ $configPath=Join-Path $projectRoot 'config.local.json'
 if(!(Test-Path -LiteralPath $configPath)){throw '缺少config.local.json，请先阅读README并配置运行目录。'}
 $config=Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json
 $runtime=$config.RUNTIME
+if(-not [IO.Path]::IsPathRooted($runtime)){$runtime=[IO.Path]::GetFullPath((Join-Path $projectRoot $runtime))}
 $env:STUDY_DB_PASSWORD=$config.STUDY_DB_PASSWORD
 if(!$config.MODEL_KEY){$config|Add-Member MODEL_KEY ([guid]::NewGuid().ToString('N'));$config|ConvertTo-Json|Set-Content -LiteralPath $configPath -Encoding utf8}
 $env:STUDY_MODEL_KEY=$config.MODEL_KEY
@@ -26,7 +27,7 @@ if(!(Test-Port 13306)){
  Start-Owned 'mysql' "$mysql/bin/mysqld.exe" @('--no-defaults',"--basedir=$mysql",('--datadir="'+$projectRoot+'\data\mysql"'),'--port=13306','--bind-address=127.0.0.1','--mysqlx=0','--console')
 }
 if(!(Test-Port 18082)){
- Start-Owned 'model' "$runtime/llama/llama-server.exe" @('-m',('"'+$runtime+'/Qwen3-4B-Q4_K_M.gguf"'),'--host','127.0.0.1','--port','18082','-ngl','99','-c','8192','-np','1','--jinja','--reasoning-budget','0','--api-key',$config.MODEL_KEY)
+ Start-Owned 'model' "$runtime/llama/llama-server.exe" @('-m',('"'+$runtime+'/Qwen3.5-4B-Q4_K_M.gguf"'),'--host','127.0.0.1','--port','18082','-ngl','99','-c','8192','-np','1','--jinja','--reasoning-budget','0','--api-key',$config.MODEL_KEY)
 }
 Wait-Url 'http://127.0.0.1:18082/health' 120
 if(!(Test-Port 18081)){
@@ -36,11 +37,11 @@ if(!(Test-Port 18081)){
 Wait-Url 'http://127.0.0.1:18081/health' 30
 if(!(Test-Port 18080)){
  Copy-Item -LiteralPath 'backend/target/studypilot-1.0.0.jar' -Destination 'app/studypilot.jar' -Force
- $java=if($config.JAVA){$config.JAVA}else{(Get-Command java -ErrorAction Stop).Source}
+ $java=if($config.JAVA){if([IO.Path]::IsPathRooted($config.JAVA)){$config.JAVA}else{[IO.Path]::GetFullPath((Join-Path $projectRoot $config.JAVA))}}else{(Get-Command java -ErrorAction Stop).Source}
  Start-Owned 'backend' $java @('-jar',('"'+$projectRoot+'\app\studypilot.jar"'))
 }
 Wait-Url 'http://127.0.0.1:18080/api/health' 90
-$old=@();if(Test-Path 'data/processes.json'){$old=@(Get-Content 'data/processes.json' -Raw|ConvertFrom-Json)}
-@($old+$started)|ConvertTo-Json|Set-Content 'data/processes.json' -Encoding utf8
+# 文件只记录本次实际启动的进程，避免旧 PID 累积后误停其他程序。
+@($started)|ConvertTo-Json -Depth 3|Set-Content 'data/processes.json' -Encoding utf8
 Write-Output '知序已启动：http://127.0.0.1:18080'
 if(!$NoBrowser){Start-Process 'http://127.0.0.1:18080'}
