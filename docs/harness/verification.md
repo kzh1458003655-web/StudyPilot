@@ -101,3 +101,12 @@ CI 在 Pull Request 中使用基线 commit 运行：
 | 前端质量入口 | `pnpm run check` | 通过：ESLint、Prettier、vue-tsc、Vitest 和 Vite 生产构建均完成 |
 | 数据边界样例 | `architecture-sample` 模块 | 外部 DTO 经 Zod Schema 与 mapper 转为内部领域模型 |
 | 模块边界 | `app`、`modules`、`shared`、`types` 目录与模块 `index.ts` | 已建立；未迁入旧全局 Vue 页面和脚本 |
+
+## ARCH-004 验证记录
+
+| 检查 | 命令或证据 | 结果 |
+| --- | --- | --- |
+| Java Gateway | `backend/mvnw.cmd test` | 3 项通过，含本地 HTTP Server 的 C++ 检索协议映射测试 |
+| C++ 服务健康 | 实际运行 `study-ai.exe` 后调用 `GET /health` | 返回 `model_ready=true`、队列与索引指标 |
+| 检索服务 | 实际调用 `POST /retrieve` | 按协议返回 `hits` 数组 |
+| 本地模型转发 | 实际调用 `POST /completion` | C++ 成功转发到本地 Qwen3.5-4B，最小提示返回 `OK` |

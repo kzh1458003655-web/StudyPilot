@@ -5,8 +5,8 @@
 - 最后更新：2026-09-08 16:24 +08:00
 - 当前分支：`refactor/ai-boundary`
 - 已完成任务：`HARNESS-001`、`ARCH-001`、`ARCH-002`、`ARCH-003`，状态均为 `verified`
-- 当前状态：正在固定 C++ 与模型服务边界
-- 当前任务：`ARCH-004` 固定 C++ 与模型服务边界，状态为 `in_progress`
+- 当前状态：C++ 与模型服务边界已验证，等待 PostgreSQL 数据库与访问骨架
+- 当前任务：`DB-001` 建立 PostgreSQL 数据库与访问骨架，状态为 `ready`
 
 ## 已完成
 
