@@ -4,6 +4,7 @@ import cn.studypilot.document.model.DocumentChunk;
 import cn.studypilot.document.model.DocumentReference;
 import cn.studypilot.document.model.DocumentListItem;
 import cn.studypilot.document.model.RemovableDocument;
+import cn.studypilot.document.model.DocumentPageForAnalysis;
 import cn.studypilot.common.exception.ResourceNotFoundException;
 import cn.studypilot.document.model.ExtractedPage;
 import java.util.HashMap;
@@ -112,5 +113,15 @@ public class JdbcDocumentRepository implements DocumentRepository {
   @Override public void delete(long projectId, long documentId) {
     jdbc.update("DELETE FROM studypilot.documents WHERE id = :documentId AND project_id = :projectId",
         Map.of("projectId", projectId, "documentId", documentId));
+  }
+
+  @Override public List<DocumentPageForAnalysis> findPastPaperPages(long projectId, long documentId) {
+    return jdbc.query("""
+        SELECT d.id AS document_id, p.page_number, p.text_content
+        FROM studypilot.documents d JOIN studypilot.document_pages p ON p.document_id = d.id
+        WHERE d.id = :documentId AND d.project_id = :projectId AND d.document_type = 'PAST_EXAM' AND d.status = 'READY'
+        ORDER BY p.page_number
+        """, Map.of("projectId", projectId, "documentId", documentId), (row, ignored) ->
+        new DocumentPageForAnalysis(row.getLong("document_id"), row.getInt("page_number"), row.getString("text_content")));
   }
 }

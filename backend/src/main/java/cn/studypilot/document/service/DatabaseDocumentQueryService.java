@@ -2,6 +2,7 @@ package cn.studypilot.document.service;
 
 import cn.studypilot.document.repository.DocumentRepository;
 import cn.studypilot.document.model.DocumentReference;
+import cn.studypilot.document.model.DocumentPageForAnalysis;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -29,5 +30,12 @@ public class DatabaseDocumentQueryService implements DocumentQueryService {
     } catch (NumberFormatException error) {
       throw new IllegalArgumentException("课程项目编号不合法");
     }
+  }
+  @Override public List<DocumentPageForAnalysis> pastPaperPages(String projectId, long documentId) {
+    try {
+      long id = Long.parseLong(projectId);
+      if (id <= 0 || documentId <= 0) throw new NumberFormatException();
+      return documents.findPastPaperPages(id, documentId);
+    } catch (NumberFormatException error) { throw new IllegalArgumentException("课程项目编号或真题资料编号不合法"); }
   }
 }
