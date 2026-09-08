@@ -2,10 +2,13 @@ package cn.studypilot.common.database;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres;
 import cn.studypilot.document.model.DocumentChunk;
 import cn.studypilot.document.model.ExtractedPage;
 import cn.studypilot.document.repository.JdbcDocumentRepository;
+import cn.studypilot.exam.model.GeneratedExamItem;
+import cn.studypilot.exam.repository.JdbcMockExamRepository;
 import cn.studypilot.qa.model.QaCitationEvidence;
 import cn.studypilot.qa.repository.JdbcQaRepository;
 import java.sql.Connection;
@@ -76,6 +79,18 @@ class PostgreSqlSchemaIntegrationTest {
             WHERE table_schema = 'studypilot' AND table_name = 'mock_exam_items'
               AND column_name = 'options' AND data_type = 'jsonb'
             """)).isEqualTo(1L);
+
+        // JSONB options and validation evidence are written through the same repository used by the API.
+        var mockExams = new JdbcMockExamRepository(new NamedParameterJdbcTemplate(dataSource), new ObjectMapper());
+        var saved = mockExams.save(1L, "数据库模拟卷", List.of(
+            new GeneratedExamItem("SINGLE_CHOICE", "哪项描述进程？", List.of("程序的一次执行", "静态文件"), "A", "", "进程与线程", 5, List.of(indexId.toString())),
+            new GeneratedExamItem("SHORT_ANSWER", "说明进程含义。", List.of(), "程序的一次执行。", "", "进程与线程", 10, List.of(indexId.toString()))));
+        assertThat(saved.itemCount()).isEqualTo(2);
+        assertThat(queryLong(connection, "SELECT count(*) FROM studypilot.mock_exam_items WHERE exam_id = " + saved.id())).isEqualTo(2L);
+        assertThat(queryLong(connection, "SELECT count(*) FROM studypilot.question_validation_records")).isEqualTo(2L);
+        assertThat(mockExams.findByProject(1L, saved.id()).orElseThrow().items())
+            .extracting("options").containsExactly(List.of("程序的一次执行", "静态文件"), List.of());
+        assertThat(mockExams.findByProject(2L, saved.id())).isEmpty();
 
         execute(connection, "DELETE FROM studypilot.projects WHERE id = 1");
         assertThat(queryLong(connection, "SELECT count(*) FROM studypilot.documents"))

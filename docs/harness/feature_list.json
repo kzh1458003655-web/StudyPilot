@@ -1,7 +1,7 @@
 {
   "$schema": "./feature_list.schema.json",
   "schemaVersion": 1,
-  "lastUpdated": "2026-09-08T19:13:00+08:00",
+  "lastUpdated": "2026-09-08T23:49:00+08:00",
   "features": [
     {
       "id": "HARNESS-001",
@@ -223,7 +223,7 @@
       "name": "实现真题分析与模拟题生成",
       "description": "实现文本真题知识点提取、归一、统计、组卷和单选题及简答题的结构化生成校验。",
       "dependencies": ["PROD-001"],
-        "status": "in_progress",
+        "status": "verified",
       "acceptanceCriteria": [
         "可解析文本题目参与知识点分析",
         "统计按题目维度归一且可追溯",
@@ -231,7 +231,10 @@
         "模块前后端、数据库和端到端测试通过"
       ],
       "branch": "feat/mock-exam-generation",
-      "evidence": [],
+      "evidence": [
+        "2026-09-08：真题文本划分、知识点归一、按题目统计、固定四题结构校验和 PostgreSQL 保存已实现。",
+        "2026-09-08：PostgreSqlSchemaIntegrationTest、ExamControllerTest 及 MockExamWorkflowEndToEndTest 通过；前端 /projects/:projectId/exams 完成并通过检查。"
+      ],
       "docsToUpdate": [
         "docs/产品相关/产品架构.md",
         "docs/产品相关/需求规划.md",
@@ -245,7 +248,7 @@
       "name": "实现在线作答与智能测评",
       "description": "实现考试记录、客观题判分、简答题辅助评分、错题、掌握度、薄弱点和推荐闭环。",
       "dependencies": ["PROD-002"],
-      "status": "blocked",
+      "status": "ready",
       "acceptanceCriteria": [
         "同一试卷支持独立的多次作答记录",
         "客观题规则评分和简答题依据评分可追溯",
@@ -306,5 +309,4 @@
     }
   ]
 }
-
 

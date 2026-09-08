@@ -180,3 +180,67 @@ button:disabled {
     bottom: 0.5rem;
   }
 }
+.workspace-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+.exam-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+.exam-card {
+  margin-top: 1.25rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid #dbe3ef;
+  border-radius: 10px;
+  background: #fff;
+}
+.exam-grid .exam-card {
+  margin-top: 0;
+}
+.exam-card h2 {
+  margin: 0 0 0.7rem;
+  font-size: 1.08rem;
+}
+.inline-form {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+}
+.inline-form input {
+  flex: 1;
+}
+.frequency-list {
+  padding-left: 1.3rem;
+}
+.frequency-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0.55rem 0;
+}
+.question-card {
+  margin-top: 1rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid #e2e8f0;
+}
+.question-card ol {
+  line-height: 1.7;
+}
+.question-card summary {
+  cursor: pointer;
+  color: #2858ad;
+  font-weight: 650;
+}
+@media (max-width: 600px) {
+  .exam-grid {
+    grid-template-columns: 1fr;
+  }
+  .inline-form {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

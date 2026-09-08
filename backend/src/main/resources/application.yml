@@ -11,3 +11,7 @@ studypilot:
     base-url: ${STUDYPILOT_AI_BASE_URL:http://127.0.0.1:18081}
     connect-timeout: ${STUDYPILOT_AI_CONNECT_TIMEOUT:3s}
   database:
+  # 用户上传的课程资料、运行日志与导出物默认放在 D 盘课程设计目录。
+  # 可通过 STUDYPILOT_STORAGE_ROOT 覆盖，便于组员在自己的电脑上调整盘符。
+  storage:
+    root: ${STUDYPILOT_STORAGE_ROOT:D:/大四课程设计/StudyPilot-runtime/uploads}

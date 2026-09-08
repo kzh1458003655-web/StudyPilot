@@ -27,5 +27,16 @@ public class GeneratedExamValidator {
     }
     return List.copyOf(candidates);
   }
+
+  /** Enforces the fixed, easy-to-review paper shape used by the first product release. */
+  public List<GeneratedExamItem> validateMockExam(List<GeneratedExamItem> candidates, Set<String> allowedSources) {
+    List<GeneratedExamItem> validated = validate(candidates, allowedSources);
+    long choices = validated.stream().filter(item -> "SINGLE_CHOICE".equals(item.type())).count();
+    long shortAnswers = validated.stream().filter(item -> "SHORT_ANSWER".equals(item.type())).count();
+    if (validated.size() != 4 || choices != 2 || shortAnswers != 2) {
+      throw invalid("模拟卷必须包含 2 道单选题和 2 道简答题");
+    }
+    return validated;
+  }
   private BusinessException invalid(String message) { return new BusinessException(ErrorCode.MODEL_OUTPUT_INVALID, message); }
 }

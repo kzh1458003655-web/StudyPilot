@@ -2,48 +2,27 @@
 
 ## 当前状态
 
-- 最后更新：2026-09-08 19:17 +08:00
-- 最新完成分支：`feat/grounded-qa`
-- 已验证任务：`HARNESS-001`、`ARCH-001`、`ARCH-002`、`ARCH-003`、`ARCH-004`、`DB-001`、`INT-001`、`PROD-001`
-- 当前可执行任务：`PROD-002`，实现真题分析与模拟题生成
+- 最后更新：2026-09-08 23:49 +08:00
+- 最新完成任务：`PROD-002` 真题分析与模拟题生成
+- 已验证任务：`HARNESS-001`、`ARCH-001` 至 `ARCH-004`、`DB-001`、`INT-001`、`PROD-001`、`PROD-002`
+- 当前可执行任务：`PROD-003` 在线作答与智能测评
 
-## 已完成的架构基础
+## 已完成产品能力
 
-- 旧课程版固定在 `archive/legacy-course-prototype` 分支和仓库外 worktree；归档版本 16 项 Java 测试通过。
-- Java 后端已建立 Java 21、Spring Boot 3.5、模块化单体、统一错误响应、版本化健康检查和 C++ Gateway 适配器。
-- Vue 3、TypeScript、Vite 的前端目标骨架已经建立，DTO、运行时 Schema、mapper 和内部模型具有单向边界。
-- 实际 C++ 服务完成过健康、检索和本地 Qwen3.5-4B 最小调用验证。
-- PostgreSQL Schema 已建立：24 张表覆盖资料、溯源问答、真题组卷和测评诊断；JDBC 使用环境变量和 `NamedParameterJdbcTemplate`。
+- 项目、文字型 PDF 上传、页级解析、分块、索引、删除和项目隔离。
+- 溯源问答：检索白名单、引用快照、资料不足拒答与真实 C++／本地模型端到端验证。
+- 真题分析：文本题目划分、知识点归一和按题目计数的考频统计。
+- 模拟组卷：当前项目知识资料检索、模型 JSON 解析、固定 2 道单选和 2 道简答校验、PostgreSQL 保存与预览页面。
+- 用户上传资料默认写入 `D:\大四课程设计\StudyPilot-runtime\uploads`；可查看的测试证据和导出物默认写入 `D:\大四课程设计\StudyPilot-output`。
 
-## DB-001 验证结论
+## PROD-002 验证结论
 
-- `PostgreSqlSchemaIntegrationTest` 在 Windows 上临时启动真实 PostgreSQL 14.22。
-- 测试连续执行两遍七份 DDL，确认初始化可重复，验证 24 张表、`JSONB`、资料分块写入和项目级级联删除。
-- 无数据库变量时后端不会创建数据源；本机默认 Java 当前为 25，Maven 仍以 `--release 21` 通过编译和测试，但 `backend/scripts/build.ps1` 正确拒绝非 21 版本。
-- 本机没有 `psql` 客户端，因此 `verify-schema.ps1` 的外部测试库路径尚未执行；该路径不影响已完成的隔离 PostgreSQL 验证。
+- 算法与服务测试验证真题编号划分、知识点归一、考频统计、模型 JSON 解析、题型/答案/来源/重复度和固定题数校验。
+- `PostgreSqlSchemaIntegrationTest` 在真实临时 PostgreSQL 中验证模拟卷、JSONB 选项、校验记录及跨项目读取拒绝。
+- `ExamControllerTest` 覆盖分析、统计、生成、读取四项 REST 契约。
+- `MockExamWorkflowEndToEndTest` 使用临时 PostgreSQL、Spring MVC 和受控 Gateway 完成完整 HTTP 工作流；外部 C++／模型实际连通性继续由 `GroundedQaEndToEndTest` 验证。
+- 前端已新增 `/projects/:projectId/exams` 页面；静态检查、单测和 Vite 生产构建通过。
 
-## INT-001 验证结论
+## 当前边界与下一步
 
-- Java 8080 通过 C++ 18081 获取模型与索引状态；Vite 5173 经 `/api` 代理得到相同的统一响应。
-- 后端完整测试 12 项、前端完整检查均通过；C++ 不可用时 API 的 503 和稳定错误码已有自动化证据。
-
-## 当前边界与风险
-
-- 资料管理与溯源问答已完成；真题分析、模拟组卷、在线作答和测评仍未完成，当前不能称为可交付的完整学习系统。
-- 前端和 C++ 的一部分运行代码仍来自课程版原型；基础契约已验证，后续产品开发必须继续遵守既定的模块边界。
-- 真实 Supabase 测试库尚未接入。不可把任何个人或生产连接信息写入仓库、终端记录或测试输出。
-- 正式运行仍要求 JDK 21；本机系统 Java 被切到 25，需要在成员机器或 CI 中安装/选择 JDK 21 后执行 `backend/scripts/build.ps1`。
-
-## 下一步
-
-1. 从 `test/architecture-integration` 创建 `feat/grounded-qa` 分支，并将 `PROD-001` 置为 `in_progress`。
-2. 实现项目、文字型 PDF、分块、检索、带引用问答与无依据拒答闭环。
-3. 将端到端结果、项目隔离与错误场景写入 `verification.md`。
-
-## 本阶段提交
-
-- `refactor(architecture): 归档课程版并建立行为基线`
-- `refactor(backend): 建立 Java 目标骨架和公共 Gateway 契约`
-- `refactor(frontend): 建立 Vue 目标骨架与数据边界`
-- `feat(ai): 接入 C++ 网关适配器`
-- `refactor(database): 建立 PostgreSQL Schema 和访问边界`
+`PROD-003` 需要实现一次独立作答记录、单选规则判分、简答题辅助评分、考试报告、错题与掌握度计算。不得复用课程版的全局课程状态；作答、答案和报告必须绑定项目、试卷和独立 attempt。

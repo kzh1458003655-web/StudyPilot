@@ -4,7 +4,6 @@ import { useRoute } from "vue-router";
 import { toAppError } from "@/shared/api/http";
 import { askQuestion } from "../api/requests";
 import type { QaAnswer } from "../types/domain";
-
 interface Turn {
   question: string;
   answer: QaAnswer;
@@ -16,7 +15,6 @@ const sessionId = ref<number>();
 const turns = ref<Turn[]>([]);
 const asking = ref(false);
 const errorMessage = ref("");
-
 async function ask() {
   if (
     !question.value.trim() ||
@@ -43,7 +41,6 @@ async function ask() {
   }
 }
 </script>
-
 <template>
   <section class="workspace">
     <div class="workspace-head">
@@ -51,7 +48,14 @@ async function ask() {
         <p class="eyebrow">项目 {{ projectId }}</p>
         <h1>知识问答</h1>
       </div>
-      <RouterLink :to="`/projects/${projectId}/resources`">管理资料</RouterLink>
+      <div class="workspace-links">
+        <RouterLink :to="`/projects/${projectId}/resources`">
+          管理资料
+        </RouterLink>
+        <RouterLink :to="`/projects/${projectId}/exams`">
+          真题分析与模拟考
+        </RouterLink>
+      </div>
     </div>
     <p class="subtle">
       回答只使用本项目已处理完成的教材、讲义和知识点资料，并显示页码依据。

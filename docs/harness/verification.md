@@ -140,3 +140,13 @@ CI 在 Pull Request 中使用基线 commit 运行：
 | Java 到 C++ | 实际启动 Java 8080 后调用 `/api/v1/health/dependencies` | 200；响应包含 C++ 模型就绪、47 个分块和队列指标 |
 | 前端代理链路 | 实际启动 Vite 后调用 `http://localhost:5173/api/v1/health/dependencies` | 200；请求经 `/api` 代理进入 Java，没有浏览器直连 C++ 端口 |
 | 外部服务不可用 | `DependencyHealthControllerTest` | 通过；AI Gateway 异常转换为 `EXTERNAL_SERVICE_UNAVAILABLE` 与 HTTP 503 |
+
+## PROD-002 验证记录
+
+| 检查 | 命令或证据 | 结果 |
+| --- | --- | --- |
+| 真题分析与结构化校验 | `PastPaperAnalysisServiceTest`、`MockExamGenerationServiceTest`、`GeneratedExamValidatorTest` | 通过；题目解析、归一、来源限制和固定 2+2 题型均有验证。 |
+| PostgreSQL 真实持久化 | `backend\mvnw.cmd -Dtest=PostgreSqlSchemaIntegrationTest test` | 通过；模拟卷、JSONB 选项、校验记录和项目边界由 Embedded PostgreSQL 14.22 验证。 |
+| REST 契约 | `backend\mvnw.cmd -Dtest=ExamControllerTest test` | 通过；分析、考频、组卷、读取试卷均返回统一响应。 |
+| HTTP 工作流 | `backend\mvnw.cmd -Dstudypilot.e2e=true -Dtest=MockExamWorkflowEndToEndTest test` | 通过；临时 PostgreSQL、PDF 导入、生成、读取与清理走真实 HTTP 路径；外部网关受控以稳定校验模型 JSON。 |
+| 前端 | `frontend\pnpm run check` | 通过；新增考试页面、路由和 API Schema，包含生产构建。 |
