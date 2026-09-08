@@ -121,3 +121,13 @@ CI 在 Pull Request 中使用基线 commit 运行：
 | JDBC 边界 | `PostgreSqlJdbcConfigTest` | 通过；无变量时无数据源，完整变量时创建 Hikari 与 `NamedParameterJdbcTemplate` |
 | 静态约束 | `SchemaConventionTest` | 通过；文件使用目标 Schema，未含旧 MySQL 关键字 |
 | 外部测试库脚本 | `backend/scripts/verify-schema.ps1` | 已检查其缺失 URL 时的保护性失败；本机没有 `psql` 和受控测试库，未将其冒充为实连验证 |
+
+## INT-001 验证记录
+
+| 检查 | 命令或证据 | 结果 |
+| --- | --- | --- |
+| 后端与数据库 | `backend\\mvnw.cmd test` | 12 项通过，包含真实隔离 PostgreSQL、Java-C++ 协议与 503 不可用契约 |
+| 前端质量入口 | `frontend\\pnpm run check` | 通过：ESLint、Prettier、vue-tsc、Vitest 与生产构建 |
+| Java 到 C++ | 实际启动 Java 8080 后调用 `/api/v1/health/dependencies` | 200；响应包含 C++ 模型就绪、47 个分块和队列指标 |
+| 前端代理链路 | 实际启动 Vite 后调用 `http://localhost:5173/api/v1/health/dependencies` | 200；请求经 `/api` 代理进入 Java，没有浏览器直连 C++ 端口 |
+| 外部服务不可用 | `DependencyHealthControllerTest` | 通过；AI Gateway 异常转换为 `EXTERNAL_SERVICE_UNAVAILABLE` 与 HTTP 503 |

@@ -1,7 +1,7 @@
 {
   "$schema": "./feature_list.schema.json",
   "schemaVersion": 1,
-  "lastUpdated": "2026-09-08T18:35:00+08:00",
+  "lastUpdated": "2026-09-08T18:41:00+08:00",
   "features": [
     {
       "id": "HARNESS-001",
@@ -169,7 +169,7 @@
       "name": "验证目标架构基础链路",
       "description": "验证前端、后端、数据库、C++ 检索和本地模型之间的基础契约及失败行为，不扩展产品功能。",
       "dependencies": ["DB-001"],
-      "status": "ready",
+      "status": "verified",
       "acceptanceCriteria": [
         "各层可独立构建并通过基础测试",
         "跨层契约通过最小集成验证",
@@ -177,7 +177,12 @@
         "架构阶段文档完成一致性检查"
       ],
       "branch": "test/architecture-integration",
-      "evidence": [],
+      "evidence": [
+        "2026-09-08：backend/mvnw.cmd test 通过 12 项测试，含真实 Embedded PostgreSQL DDL、C++ Gateway 协议和 503 不可用响应",
+        "2026-09-08：frontend/pnpm run check 通过，覆盖 ESLint、Prettier、vue-tsc、Vitest 和生产构建",
+        "2026-09-08：实际启动 Java 8080、Vite 5173、已有 C++ 18081 与 llama-server 18082；通过 Vite /api 代理得到 Java 统一响应和 C++ 真实健康数据",
+        "2026-09-08：DependencyHealthControllerTest 验证 C++ 不可用时公共 API 返回 EXTERNAL_SERVICE_UNAVAILABLE 与 HTTP 503"
+      ],
       "docsToUpdate": [
         "README.md",
         "docs/harness/verification.md",
@@ -190,7 +195,7 @@
       "name": "实现资料知识库与溯源问答",
       "description": "实现文字型 PDF、检索、问答、引用快照和无充分依据拒答的完整模块闭环。",
       "dependencies": ["INT-001"],
-      "status": "blocked",
+      "status": "ready",
       "acceptanceCriteria": [
         "资料和问答数据严格绑定项目",
         "回答提供真实资料、页码和原文引用",
@@ -295,3 +300,4 @@
     }
   ]
 }
+

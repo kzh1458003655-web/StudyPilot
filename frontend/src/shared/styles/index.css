@@ -27,3 +27,12 @@ header {
   background: var(--surface);
   border-radius: 12px;
 }
+.status-card {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 1.25rem;
+  padding: 1rem;
+  border-radius: 8px;
+  background: #eff8f2;
+  color: #175c35;
+}

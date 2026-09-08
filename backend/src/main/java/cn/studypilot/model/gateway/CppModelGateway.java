@@ -34,7 +34,7 @@ public class CppModelGateway implements ModelGateway {
       }
       return new ModelResponse(result.path("model").asText("local-model"), result.path("choices").get(0).path("message").path("content").asText(), Duration.between(started, Instant.now()));
     } catch (ExternalServiceException error) { throw error;
-    } catch (RestClientResponseException error) { throw unavailable(error.getRawStatusCode());
+    } catch (RestClientResponseException error) { throw unavailable(error.getStatusCode().value());
     } catch (RestClientException error) { throw new ExternalServiceException(ErrorCode.EXTERNAL_SERVICE_UNAVAILABLE, "模型服务不可用或响应超时"); }
   }
 
