@@ -29,7 +29,8 @@ class CourseIsolationTest {
     db.update("INSERT INTO sessions(id,title,course_id) VALUES('other-session','隐私会话',?)",other);
     ai=mock(AiClient.class);var mapper=new ObjectMapper();
     var plans=new PlanService(db,ai,mapper,new DataSourceTransactionManager(ds),courses);
-    api=new ApiController(db,ai,mapper,plans,courses,temp.toString());
+    var assessments=new AssessmentService(db,mapper,courses);assessments.migrate();
+    api=new ApiController(db,ai,mapper,plans,courses,assessments,temp.toString());
   }
   @Test void legacyDataIsRetainedAndMigrationIsRepeatable() {
     assertEquals(CourseService.DEFAULT,db.queryForObject("SELECT course_id FROM documents WHERE id='old'",String.class));

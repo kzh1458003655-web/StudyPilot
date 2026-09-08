@@ -52,7 +52,7 @@ public class CourseService {
     return db.queryForList("SELECT id FROM documents WHERE course_id=?",String.class,require(course));
   }
   public void owns(String table,String id,String course) {
-    if(!Set.of("documents","sessions","plans").contains(table))throw new IllegalArgumentException("无效对象");
+    if(!Set.of("documents","sessions","plans","exam_topics","exam_questions","mock_papers","exam_attempts").contains(table))throw new IllegalArgumentException("无效对象");
     if(db.queryForList("SELECT id FROM "+table+" WHERE id=? AND course_id=?",id,require(course)).isEmpty())
       throw new NoSuchElementException("当前课程中不存在该记录");
   }

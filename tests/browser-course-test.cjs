@@ -82,6 +82,24 @@ async function waitCourse(name) {
   assert.notEqual(await page.locator('.study-quote').innerText(),quote);
   await page.getByLabel('参考课程资料',{exact:true}).check();
  });
+ await check('考频、模拟出题和答题评测形成课程内闭环', async () => {
+  // 在本脚本自建的课程中演练，finally 会删除该课程及其题库、试卷和答卷。
+  await page.locator('.course-item').filter({hasText:courseNames[1]}).click(); await waitCourse(courseNames[1]);
+  await page.getByRole('button',{name:'◫ 考频与出题',exact:true}).click();
+  await page.getByRole('button',{name:'载入演示题库',exact:true}).click();
+  await page.getByRole('heading',{name:'本课程考频概览',exact:true}).waitFor();
+  assert.equal(await page.locator('.topic-row').count(),4);
+  await page.getByRole('button',{name:'生成 5 题测验 →',exact:true}).click();
+  await page.getByRole('heading',{name:/模拟测验/}).waitFor();
+  assert.equal(await page.locator('.paper-question').count(),5);
+  for (const radio of await page.locator('.paper-question input[type=radio]').all()) await radio.first().check();
+  await page.locator('.paper-question textarea').fill('利用原子性与一致性，使计划和任务全部成功；出现异常时全部回滚。');
+  await page.getByRole('button',{name:'提交并查看评测结果',exact:true}).click();
+  await page.locator('.assessment-result').waitFor();
+  assert.match(await page.locator('.assessment-result').innerText(),/分/);
+  assert.equal(await page.locator('.attempt-card article').count(),1);
+  await screenshot('05-assessment-flow');
+ });
  if (process.env.STUDYPILOT_UI_CHAT === '1') {
   await check('无文件课程真实模型问答', async () => {
    await page.locator('.course-item').filter({hasText:courseNames[1]}).click(); await waitCourse(courseNames[1]);

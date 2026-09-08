@@ -41,3 +41,32 @@ CREATE TABLE IF NOT EXISTS agent_events (
  id VARCHAR(36) PRIMARY KEY, run_id VARCHAR(36) NOT NULL, tool_name VARCHAR(80) NOT NULL,
  detail TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+-- 课程表及 course_id 由 CourseService 兼容旧数据库时创建和迁移。
+-- 下列评测数据按 course_id 组织，参考答案只保存在 exam_questions，不通过试卷接口返回。
+CREATE TABLE IF NOT EXISTS exam_topics (
+ id VARCHAR(36) PRIMARY KEY, course_id VARCHAR(36) NOT NULL, name VARCHAR(120) NOT NULL,
+ frequency INT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS exam_questions (
+ id VARCHAR(36) PRIMARY KEY, course_id VARCHAR(36) NOT NULL, topic_id VARCHAR(36) NOT NULL,
+ stem VARCHAR(2000) NOT NULL, question_type VARCHAR(16) NOT NULL, options_json MEDIUMTEXT,
+ answer_key VARCHAR(1000) NOT NULL, rubric VARCHAR(2000), source_type VARCHAR(24) NOT NULL,
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS mock_papers (
+ id VARCHAR(36) PRIMARY KEY, course_id VARCHAR(36) NOT NULL, title VARCHAR(160) NOT NULL,
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS mock_paper_questions (
+ paper_id VARCHAR(36) NOT NULL, question_id VARCHAR(36) NOT NULL, ordinal INT NOT NULL,
+ PRIMARY KEY(paper_id,question_id)
+);
+CREATE TABLE IF NOT EXISTS exam_attempts (
+ id VARCHAR(36) PRIMARY KEY, paper_id VARCHAR(36) NOT NULL UNIQUE, course_id VARCHAR(36) NOT NULL,
+ score INT NOT NULL, total_score INT NOT NULL, weak_summary VARCHAR(1000) NOT NULL,
+ submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS exam_answers (
+ id VARCHAR(36) PRIMARY KEY, attempt_id VARCHAR(36) NOT NULL, question_id VARCHAR(36) NOT NULL,
+ answer_text VARCHAR(4000) NOT NULL, score INT NOT NULL, feedback VARCHAR(2000) NOT NULL
+);

@@ -6,14 +6,14 @@
  <button class="new-course" @click="courseModal=true">＋ 新建课程</button>
  <div class="side-heading"><span>我的课程</span><small>{{courses.length}}</small></div>
  <div class="course-list"><button v-for="c in courses" :key="c.id" :class="['course-item',{selected:c.id===courseId}]" @click="switchCourse(c.id)" :aria-current="c.id===courseId?'page':undefined"><span class="folder-icon">▱</span><span>{{c.name}}</span><small v-if="c.id===courseId">●</small></button><p v-if="!courses.length" class="muted">新建一门课程，开始整理学习。</p></div>
- <nav aria-label="课程功能"><button :class="{active:tab==='chat'}" @click="tab='chat'">◈ <span>学习问答</span></button><button :class="{active:tab==='plan'}" @click="tab='plan'">▦ <span>复习计划</span></button></nav>
+ <nav aria-label="课程功能"><button :class="{active:tab==='chat'}" @click="tab='chat'">◈ <span>学习问答</span></button><button :class="{active:tab==='exam'}" @click="tab='exam'">◫ <span>考频与出题</span></button><button :class="{active:tab==='assessment'}" @click="tab='assessment'">✓ <span>答题评测</span></button><button :class="{active:tab==='plan'}" @click="tab='plan'">▦ <span>复习计划</span></button></nav>
  <div class="side-heading"><span>本课程对话</span><button class="icon-btn" @click="newChat" :disabled="generating||!courseId" aria-label="新建对话">＋</button></div>
  <div class="session-list"><button v-for="s in sessions" :key="s.id" :class="{selected:s.id===sessionId}" @click="openSession(s.id)" :disabled="generating">{{s.title}}</button><p v-if="!sessions.length" class="muted">从一个问题开始</p></div>
  <blockquote class="study-quote"><span>一点鼓励</span>{{quote}}</blockquote>
  <div class="local-status"><i :class="{ready:health.ai?.model_ready}"></i><div>{{health.ai?.model_ready?'本地模型已就绪':'模型连接中或未启动'}}<small>资料与对话保存在本机</small></div><button class="icon-btn" @click="checkHealth" aria-label="刷新服务状态">↻</button></div>
 </aside>
 <main>
- <header><div class="breadcrumb">{{activeCourse?.name||'学习空间'}} <span>/</span> {{tab==='chat'?'学习问答':'复习计划'}}</div><span class="pill">LOCAL AI · 本地运行</span></header>
+ <header><div class="breadcrumb">{{activeCourse?.name||'学习空间'}} <span>/</span> {{({chat:'学习问答',exam:'考频与出题',assessment:'答题评测',plan:'复习计划'})[tab]}}</div><span class="pill">LOCAL AI · 本地运行</span></header>
  <section v-if="tab==='chat'" class="workspace">
   <div class="title-row"><div><p class="eyebrow">YOUR LEARNING SPACE</p><h1>{{activeCourse?.name||'今天，从一个问题开始。'}}</h1><p class="muted">这门课的资料、对话和复习安排，都在这里。</p></div><button class="secondary" @click="newChat" :disabled="generating">＋ 新对话</button></div>
   <div v-if="loadingCourse" class="course-loading" role="status">正在打开课程…</div><div class="chat-layout" :aria-busy="loadingCourse">
@@ -34,7 +34,16 @@
    </aside>
   </div>
  </section>
- <section v-else class="workspace">
+ <section v-else-if="tab==='exam'" class="workspace">
+  <div class="title-row"><div><p class="eyebrow">EXAM TOPICS & MOCK PAPER</p><h1>从高频考点开始，练一份小测验。</h1><p class="muted">题库和统计只保存在当前课程中，生成的试卷不会混入其他课程。</p></div><button class="primary" @click="createPaper" :disabled="paperLoading||!examTopics.length">{{paperLoading?'正在组卷…':'生成 5 题测验 →'}}</button></div>
+  <section class="exam-board"><div class="exam-intro"><div class="welcome-mark">◫</div><h2>{{examTopics.length?'本课程考频概览':'先载入一套演示题库'}}</h2><p v-if="examTopics.length">按考点出现次数排序。实际课程资料接入后，可由资料整理流程替换或补充题库。</p><p v-else>演示题库用于完整体验统计、组卷和评测流程，不会影响课程资料与问答记录。</p><button v-if="!examTopics.length" class="primary" @click="seedAssessment" :disabled="seeding">{{seeding?'正在载入…':'载入演示题库'}}</button></div><div v-if="examTopics.length" class="topic-list"><article v-for="topic in examTopics" :key="topic.id" class="topic-row"><div><strong>{{topic.name}}</strong><small>出现 {{topic.frequency}} 次</small></div><div class="frequency"><i :style="{width:Math.min(100,topic.frequency/Math.max(...examTopics.map(t=>t.frequency))*100)+'%'}"></i></div></article></div></section>
+ </section>
+ <section v-else-if="tab==='assessment'" class="workspace">
+  <div class="title-row"><div><p class="eyebrow">ANSWER & REVIEW</p><h1>完成作答，定位下一步该复习什么。</h1><p class="muted">客观题由服务端判分，简答题依据评分点给出反馈；得分和结果会保存到当前课程。</p></div><button class="secondary" @click="tab='exam'">← 返回考频与出题</button></div>
+  <section v-if="paper" class="assessment-layout"><form class="paper-card" @submit.prevent="submitPaper"><div class="paper-title"><div><span class="eyebrow">MOCK PAPER</span><h2>{{paper.title}}</h2></div><span class="pill">{{paper.questions.length}} 题</span></div><article v-for="(q,index) in paper.questions" :key="q.id" class="paper-question"><div class="question-meta">第 {{index+1}} 题 · {{q.topic}} · {{q.type==='choice'?'选择题':'简答题'}}</div><h3>{{q.stem}}</h3><div v-if="q.type==='choice'" class="options"><label v-for="(option,index) in q.options" :key="option"><input type="radio" :name="q.id" :value="optionLabel(index)" v-model="examAnswers[q.id]" :disabled="!!examResult"><b>{{optionLabel(index)}}</b>{{option}}</label></div><textarea v-else v-model="examAnswers[q.id]" maxlength="4000" :disabled="!!examResult" placeholder="请分点说明你的理解…"></textarea><div v-if="examResult" class="item-feedback" :class="{good:examResult.results.find(r=>r.question_id===q.id)?.score>0}">得分：{{examResult.results.find(r=>r.question_id===q.id)?.score}} 分 · {{examResult.results.find(r=>r.question_id===q.id)?.feedback}}</div></article><button v-if="!examResult" class="primary full" :disabled="submitting">{{submitting?'正在评分…':'提交并查看评测结果'}}</button><div v-else class="assessment-result"><strong>{{examResult.score}} / {{examResult.total_score}} 分</strong><p>{{examResult.weak_summary}}</p><button type="button" class="secondary" @click="tab='exam'">再生成一份测验</button></div></form><aside class="attempt-card"><h3>本课程测验记录</h3><article v-for="attempt in examAttempts" :key="attempt.id"><b>{{attempt.score}} / {{attempt.total_score}}</b><p>{{attempt.weak_summary}}</p><small>{{String(attempt.submitted_at).replace('T',' ').slice(0,16)}}</small></article><p v-if="!examAttempts.length" class="muted">完成一份测验后，结果会显示在这里。</p></aside></section>
+  <section v-else class="empty-module"><div class="welcome-mark">✓</div><h2>还没有待完成的测验</h2><p>先查看高频考点，再按当前课程题库生成一份模拟题。</p><button class="primary" @click="tab='exam'">去生成测验 →</button></section>
+ </section>
+ <section v-else-if="tab==='plan'" class="workspace">
   <div class="title-row"><div><p class="eyebrow">A LITTLE PROGRESS EVERY DAY</p><h1>让每一天，都有清晰的下一步。</h1><p class="muted">结合课程内容和你的时间，制定可执行的复习安排。</p></div><button class="secondary" @click="resetPlan" :disabled="planning">＋ 新计划</button></div>
   <div class="plan-layout"><aside class="plan-settings"><h3>{{selectedPlan?'调整复习安排':'制定复习计划'}}</h3><form @submit.prevent="generatePlan">
    <label>复习目标<input v-model="form.goal" required maxlength="400" placeholder="例如：掌握数据库期末重点"></label>

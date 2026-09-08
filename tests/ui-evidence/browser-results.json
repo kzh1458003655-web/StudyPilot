@@ -1,15 +1,49 @@
 {
-  "started_at": "2026-09-07T05:45:28.862Z",
+  "started_at": "2026-09-08T07:24:54.632Z",
   "base": "http://127.0.0.1:18080",
   "mocked": false,
   "checks": [
     {
       "name": "页面加载并显示课程空间",
-      "passed": false,
-      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:18080/\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:18080/\", waiting until \"networkidle\"\u001b[22m\n",
-      "elapsed_ms": 2107
+      "passed": true,
+      "elapsed_ms": 729
+    },
+    {
+      "name": "通过页面创建两门课程",
+      "passed": true,
+      "elapsed_ms": 172
+    },
+    {
+      "name": "课程 A 上传 PDF，课程 B 文件保持为空",
+      "passed": true,
+      "elapsed_ms": 1523
+    },
+    {
+      "name": "会话按课程隔离且切换后恢复",
+      "passed": true,
+      "elapsed_ms": 92
+    },
+    {
+      "name": "参考开关与随机鼓励语显示正确",
+      "passed": true,
+      "elapsed_ms": 56
+    },
+    {
+      "name": "考频、模拟出题和答题评测形成课程内闭环",
+      "passed": true,
+      "elapsed_ms": 653
+    },
+    {
+      "name": "390px 窄屏仍可使用课程和资料入口",
+      "passed": true,
+      "elapsed_ms": 110
+    },
+    {
+      "name": "没有浏览器未捕获异常",
+      "passed": true,
+      "elapsed_ms": 1
     }
   ],
   "console_errors": [],
-  "finished_at": "2026-09-07T05:45:35.177Z"
+  "finished_at": "2026-09-08T07:24:59.197Z"
 }

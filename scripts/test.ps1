@@ -17,6 +17,8 @@ $python = Get-Command python.exe -ErrorAction SilentlyContinue
 if ($python) {
     & $python.Source tests/integration.py
     if ($LASTEXITCODE -ne 0) { throw '真实模型接口测试失败。' }
+    & $python.Source tests/assessment_integration.py
+    if ($LASTEXITCODE -ne 0) { throw '考频与评测接口测试失败。' }
 } else {
     Write-Warning '未找到 Python，跳过 integration.py；四个服务的健康检查已通过。'
 }

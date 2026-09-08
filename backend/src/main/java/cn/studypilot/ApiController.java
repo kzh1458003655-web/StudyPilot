@@ -25,6 +25,7 @@ public class ApiController {
   private final ObjectMapper mapper;
   private final PlanService plans;
   private final CourseService courses;
+  private final AssessmentService assessments;
   private final Path data;
   private final ExecutorService workers = Executors.newFixedThreadPool(6);
   private final ConcurrentHashMap<String, InputStream> streams = new ConcurrentHashMap<>();
@@ -32,13 +33,14 @@ public class ApiController {
   private final Set<String> cancelled = ConcurrentHashMap.newKeySet();
   private final Set<String> busySessions = ConcurrentHashMap.newKeySet();
   private final Semaphore planning = new Semaphore(1);
-  public ApiController(JdbcTemplate db, AiClient ai, ObjectMapper mapper, PlanService plans, CourseService courses,
+  public ApiController(JdbcTemplate db, AiClient ai, ObjectMapper mapper, PlanService plans, CourseService courses, AssessmentService assessments,
       @Value("${study.data}") String data) throws IOException {
     this.db = db;
     this.ai = ai;
     this.mapper = mapper;
     this.plans = plans;
     this.courses = courses;
+    this.assessments = assessments;
     this.data = Path.of(data).toAbsolutePath().normalize();
     Files.createDirectories(this.data.resolve("documents"));
   }
@@ -73,6 +75,7 @@ public class ApiController {
       if(busySessions.contains(session.get("id")))throw new IllegalStateException("课程正在生成回答，请先停止");
     if(planning.availablePermits()==0)throw new IllegalStateException("计划正在生成，请稍后删除课程");
     for(String document:courses.documentIds(id))delete(document,id);
+    assessments.removeCourseData(id);
     db.update("DELETE FROM sessions WHERE course_id=?",id);
     db.update("DELETE FROM plans WHERE course_id=?",id);
     db.update("DELETE FROM agent_events WHERE course_id=?",id);
@@ -337,6 +340,38 @@ public class ApiController {
     });
     return emitter;
   }
+  // -------- 考频统计、模拟出题与答题评测（均按当前课程隔离） --------
+  @GetMapping("/assessment/topics")
+  public List<Map<String, Object>> assessmentTopics(@RequestParam(required=false) String courseId) {
+    return assessments.topics(courseId);
+  }
+  @PostMapping("/assessment/seed")
+  public Map<String, Object> seedAssessment(@RequestBody JsonNode body) {
+    return assessments.seed(body.path("courseId").asText(null));
+  }
+  @PostMapping("/assessment/papers")
+  public Map<String, Object> createAssessmentPaper(@RequestBody JsonNode body) {
+    int count = body.has("count") ? body.path("count").asInt() : 5;
+    return assessments.createPaper(body.path("courseId").asText(null), count);
+  }
+  @GetMapping("/assessment/papers/{id}")
+  public Map<String, Object> assessmentPaper(@PathVariable String id, @RequestParam(required=false) String courseId) {
+    return assessments.paper(id, courseId);
+  }
+  @PostMapping("/assessment/papers/{id}/submit")
+  public Map<String, Object> submitAssessmentPaper(@PathVariable String id, @RequestBody JsonNode body) {
+    List<Map<String, String>> answers = new ArrayList<>();
+    if (!body.path("answers").isArray()) throw new IllegalArgumentException("answers必须为数组");
+    for (JsonNode answer : body.path("answers")) {
+      answers.add(Map.of("question_id", answer.path("question_id").asText(), "answer", answer.path("answer").asText()));
+    }
+    return assessments.submit(id, body.path("courseId").asText(null), answers);
+  }
+  @GetMapping("/assessment/attempts")
+  public List<Map<String, Object>> assessmentAttempts(@RequestParam(required=false) String courseId) {
+    return assessments.attempts(courseId);
+  }
+
   @GetMapping("/plans")
   public List<Map<String, Object>> plans(@RequestParam(required=false) String courseId) {
     return plans.list(courses.require(courseId));
