@@ -1,0 +1,275 @@
+{
+  "$schema": "./feature_list.schema.json",
+  "schemaVersion": 1,
+  "lastUpdated": "2026-09-08T13:23:10+08:00",
+  "features": [
+    {
+      "id": "HARNESS-001",
+      "phase": "harness",
+      "name": "建设 Agent Harness",
+      "description": "建立代理入口、机器可读任务状态、正式关键记录、只读校验、CI 约束和下一会话交接。",
+      "dependencies": [],
+      "status": "verified",
+      "acceptanceCriteria": [
+        "根目录 AGENTS.md 能引导 Agent 找到全部事实来源",
+        "Harness 和关键记录目录完整且职责不重叠",
+        "任务清单通过 Schema、依赖和状态校验",
+        "初始化与检查脚本只读并返回可靠退出码",
+        "CI、Commit 和 PR 规则可以阻止明显违规",
+        "下一位 Agent 能直接开始 ARCH-001",
+        "本任务没有修改业务源码或实现产品功能"
+      ],
+      "branch": "docs/harness-foundation",
+      "evidence": [
+        "2026-09-08：./scripts/harness-check.ps1 通过",
+        "2026-09-08：./scripts/harness-check.ps1 -BaseRef origin/main -CheckCommits -EnforceHarnessScope 通过",
+        "2026-09-08：./scripts/harness-init.ps1 完成且未修改仓库",
+        "2026-09-08：相对 origin/main 的变更未包含业务源码或数据库实现"
+      ],
+      "docsToUpdate": [
+        "AGENTS.md",
+        "README.md",
+        "docs/harness/progress.md",
+        "docs/harness/session-handoff.md",
+        "docs/关键记录/README.md"
+      ]
+    },
+    {
+      "id": "ARCH-001",
+      "phase": "architecture",
+      "name": "盘点现有实现并隔离旧代码",
+      "description": "建立旧课程版归档分支和仓库外 worktree，形成现状清单、行为基线和可复用候选，当前目录不保留平行旧代码。",
+      "dependencies": ["HARNESS-001"],
+      "status": "ready",
+      "acceptanceCriteria": [
+        "archive/legacy-course-prototype 分支可用于回看旧实现",
+        "旧代码 worktree 位于当前仓库目录之外",
+        "现有行为和测试基线有可复现记录",
+        "重构复用清单列出候选和处理结论",
+        "未开始产品功能实现"
+      ],
+      "branch": "refactor/architecture-baseline",
+      "evidence": [],
+      "docsToUpdate": [
+        "docs/harness/progress.md",
+        "docs/harness/session-handoff.md",
+        "docs/关键记录/架构迁移总纲.md",
+        "docs/关键记录/重构复用清单.md"
+      ]
+    },
+    {
+      "id": "ARCH-002",
+      "phase": "architecture",
+      "name": "建立后端目标骨架",
+      "description": "按照后端架构基线建立 Java 21、Spring Boot 3.5 模块化单体、公共异常与 Gateway 契约，不迁入旧架构。",
+      "dependencies": ["ARCH-001"],
+      "status": "blocked",
+      "acceptanceCriteria": [
+        "目标包结构和依赖方向与后端架构文档一致",
+        "Maven Wrapper 和无外部服务骨架测试可运行",
+        "API、DTO、错误和 Gateway 公共契约已验证",
+        "没有实现完整产品业务"
+      ],
+      "branch": "refactor/backend-skeleton",
+      "evidence": [],
+      "docsToUpdate": [
+        "backend/后端框架设计.md",
+        "docs/关键记录/架构迁移总纲.md",
+        "docs/关键记录/接口契约索引.md"
+      ]
+    },
+    {
+      "id": "ARCH-003",
+      "phase": "architecture",
+      "name": "建立前端目标骨架",
+      "description": "按照前端架构基线建立 Vue 3、TypeScript、Vite 以及 app、modules、shared、types 的单向依赖结构。",
+      "dependencies": ["ARCH-002"],
+      "status": "blocked",
+      "acceptanceCriteria": [
+        "前端目标目录和模块出口已建立",
+        "外部 DTO、Schema、mapper 和内部模型边界可验证",
+        "Lint、类型检查、测试和构建入口可运行",
+        "没有实现完整产品页面"
+      ],
+      "branch": "refactor/frontend-skeleton",
+      "evidence": [],
+      "docsToUpdate": [
+        "frontend/前端框架设计.md",
+        "docs/关键记录/架构迁移总纲.md",
+        "docs/关键记录/接口契约索引.md"
+      ]
+    },
+    {
+      "id": "ARCH-004",
+      "phase": "architecture",
+      "name": "固定 C++ 与模型服务边界",
+      "description": "明确检索、模型调用、流式输出、队列、取消和健康检查协议，Java 仅通过 Gateway 调用。",
+      "dependencies": ["ARCH-003"],
+      "status": "blocked",
+      "acceptanceCriteria": [
+        "C++ 服务职责和外部协议有正式记录",
+        "后端不依赖 C++ 内部实现细节",
+        "协议错误和不可用状态有统一语义",
+        "现有可复用实现已登记并有行为验证"
+      ],
+      "branch": "refactor/ai-boundary",
+      "evidence": [],
+      "docsToUpdate": [
+        "docs/关键记录/架构迁移总纲.md",
+        "docs/关键记录/接口契约索引.md",
+        "docs/关键记录/重构复用清单.md"
+      ]
+    },
+    {
+      "id": "DB-001",
+      "phase": "database",
+      "name": "建立 PostgreSQL 数据库与访问骨架",
+      "description": "按目标架构建立 studypilot Schema、分模块 SQL、Repository 契约、迁移记录和可复现验证路径。",
+      "dependencies": ["ARCH-004"],
+      "status": "blocked",
+      "acceptanceCriteria": [
+        "SQL 文件顺序和表归属符合数据库设计基线",
+        "外键、索引、时间和 JSONB 规范有可执行体现",
+        "Schema 可在隔离 PostgreSQL 环境中重复验证",
+        "仓库不包含凭据、真实连接地址或项目密钥"
+      ],
+      "branch": "refactor/database-contracts",
+      "evidence": [],
+      "docsToUpdate": [
+        "backend/后端框架设计.md",
+        "docs/关键记录/数据库演进记录.md",
+        "docs/关键记录/接口契约索引.md"
+      ]
+    },
+    {
+      "id": "INT-001",
+      "phase": "integration",
+      "name": "验证目标架构基础链路",
+      "description": "验证前端、后端、数据库、C++ 检索和本地模型之间的基础契约及失败行为，不扩展产品功能。",
+      "dependencies": ["DB-001"],
+      "status": "blocked",
+      "acceptanceCriteria": [
+        "各层可独立构建并通过基础测试",
+        "跨层契约通过最小集成验证",
+        "外部服务不可用场景有可复现结果",
+        "架构阶段文档完成一致性检查"
+      ],
+      "branch": "test/architecture-integration",
+      "evidence": [],
+      "docsToUpdate": [
+        "README.md",
+        "docs/harness/verification.md",
+        "docs/关键记录/架构迁移总纲.md"
+      ]
+    },
+    {
+      "id": "PROD-001",
+      "phase": "product",
+      "name": "实现资料知识库与溯源问答",
+      "description": "实现文字型 PDF、检索、问答、引用快照和无充分依据拒答的完整模块闭环。",
+      "dependencies": ["INT-001"],
+      "status": "blocked",
+      "acceptanceCriteria": [
+        "资料和问答数据严格绑定项目",
+        "回答提供真实资料、页码和原文引用",
+        "资料不足时不编造确定性结论",
+        "模块前后端、数据库和端到端测试通过"
+      ],
+      "branch": "feat/grounded-qa",
+      "evidence": [],
+      "docsToUpdate": [
+        "docs/产品相关/产品架构.md",
+        "docs/产品相关/需求规划.md",
+        "docs/关键记录/数据库演进记录.md",
+        "docs/关键记录/接口契约索引.md"
+      ]
+    },
+    {
+      "id": "PROD-002",
+      "phase": "product",
+      "name": "实现真题分析与模拟题生成",
+      "description": "实现文本真题知识点提取、归一、统计、组卷和单选题及简答题的结构化生成校验。",
+      "dependencies": ["PROD-001"],
+      "status": "blocked",
+      "acceptanceCriteria": [
+        "可解析文本题目参与知识点分析",
+        "统计按题目维度归一且可追溯",
+        "生成题目只包含允许题型并经过程序校验",
+        "模块前后端、数据库和端到端测试通过"
+      ],
+      "branch": "feat/mock-exam-generation",
+      "evidence": [],
+      "docsToUpdate": [
+        "docs/产品相关/产品架构.md",
+        "docs/产品相关/需求规划.md",
+        "docs/关键记录/数据库演进记录.md",
+        "docs/关键记录/接口契约索引.md"
+      ]
+    },
+    {
+      "id": "PROD-003",
+      "phase": "product",
+      "name": "实现在线作答与智能测评",
+      "description": "实现考试记录、客观题判分、简答题辅助评分、错题、掌握度、薄弱点和推荐闭环。",
+      "dependencies": ["PROD-002"],
+      "status": "blocked",
+      "acceptanceCriteria": [
+        "同一试卷支持独立的多次作答记录",
+        "客观题规则评分和简答题依据评分可追溯",
+        "错题、掌握度和推荐由真实作答数据产生",
+        "模块前后端、数据库和端到端测试通过"
+      ],
+      "branch": "feat/assessment-diagnosis",
+      "evidence": [],
+      "docsToUpdate": [
+        "docs/产品相关/产品架构.md",
+        "docs/产品相关/需求规划.md",
+        "docs/关键记录/数据库演进记录.md",
+        "docs/关键记录/接口契约索引.md"
+      ]
+    },
+    {
+      "id": "VERIFY-001",
+      "phase": "verification",
+      "name": "完成系统级验证闭环",
+      "description": "覆盖构建、集成、异常、项目隔离、浏览器端到端、模型输出和性能验证，形成可审计证据。",
+      "dependencies": ["PROD-003"],
+      "status": "blocked",
+      "acceptanceCriteria": [
+        "关键用户路径通过真实端到端验证",
+        "异常、数据隔离和恢复场景有自动化证据",
+        "模型质量和性能结果可复现",
+        "未通过项均有明确阻塞或后续处理结论"
+      ],
+      "branch": "test/system-verification",
+      "evidence": [],
+      "docsToUpdate": [
+        "README.md",
+        "docs/harness/verification.md",
+        "docs/harness/progress.md"
+      ]
+    },
+    {
+      "id": "RELEASE-001",
+      "phase": "release",
+      "name": "完成最终文档与交付",
+      "description": "整理部署、演示、架构、数据库、测试和接力资料，确保从干净环境可以复现完整系统。",
+      "dependencies": ["VERIFY-001"],
+      "status": "blocked",
+      "acceptanceCriteria": [
+        "干净环境能够按文档完成安装、启动和验证",
+        "最终演示流程与产品需求一致",
+        "所有正式文档和 Harness 状态完成一致性检查",
+        "没有未记录的关键决策或高风险阻塞"
+      ],
+      "branch": "docs/release-handoff",
+      "evidence": [],
+      "docsToUpdate": [
+        "README.md",
+        "docs/harness/progress.md",
+        "docs/harness/session-handoff.md",
+        "docs/关键记录/README.md"
+      ]
+    }
+  ]
+}
