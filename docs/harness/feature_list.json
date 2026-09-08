@@ -1,7 +1,7 @@
 {
   "$schema": "./feature_list.schema.json",
   "schemaVersion": 1,
-  "lastUpdated": "2026-09-08T18:41:00+08:00",
+  "lastUpdated": "2026-09-08T18:45:00+08:00",
   "features": [
     {
       "id": "HARNESS-001",
@@ -195,7 +195,7 @@
       "name": "实现资料知识库与溯源问答",
       "description": "实现文字型 PDF、检索、问答、引用快照和无充分依据拒答的完整模块闭环。",
       "dependencies": ["INT-001"],
-      "status": "ready",
+      "status": "in_progress",
       "acceptanceCriteria": [
         "资料和问答数据严格绑定项目",
         "回答提供真实资料、页码和原文引用",
@@ -300,4 +300,5 @@
     }
   ]
 }
+
 
