@@ -1,0 +1,29 @@
+:root {
+  font-family: Inter, system-ui, sans-serif;
+  color: #162033;
+  background: #f5f7fb;
+  --surface: #fff;
+  --muted: #61708a;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+.app-shell {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+}
+.panel {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: var(--surface);
+  border-radius: 12px;
+}

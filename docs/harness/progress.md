@@ -2,11 +2,11 @@
 
 ## 当前状态
 
-- 最后更新：2026-09-08 15:56 +08:00
-- 当前分支：`refactor/backend-skeleton`
-- 已完成任务：`HARNESS-001`、`ARCH-001`、`ARCH-002`，状态均为 `verified`
-- 当前状态：后端目标骨架已验证，等待前端目标骨架
-- 当前任务：`ARCH-003` 建立前端目标骨架，状态为 `ready`
+- 最后更新：2026-09-08 16:24 +08:00
+- 当前分支：`refactor/frontend-skeleton`
+- 已完成任务：`HARNESS-001`、`ARCH-001`、`ARCH-002`、`ARCH-003`，状态均为 `verified`
+- 当前状态：前后端骨架均已验证，等待固定 C++ 与模型服务边界
+- 当前任务：`ARCH-004` 固定 C++ 与模型服务边界，状态为 `ready`
 
 ## 已完成
 
@@ -26,6 +26,7 @@
 
 - `ARCH-002` 已建立 Java 模块化单体、公共错误与 Gateway 契约。
 - 目标后端未迁入旧 Controller、MySQL DDL 或完整产品业务。
+- `ARCH-003` 已建立 Vue 3、TypeScript、Vite 的前端骨架和公共 API 边界。
 
 ## 当前边界
 
@@ -42,9 +43,9 @@
 ## 下一步
 
 1. 下一位 Agent 运行 `./scripts/harness-init.ps1`。
-2. 阅读 Agent 入口、任务状态、交接、前端架构和后端公共契约。
-3. 从 `refactor/frontend-skeleton` 分支执行 `ARCH-003`，先建立不连接后端的前端骨架。
-4. 不迁移旧单页 HTML、全局脚本或完整产品页面。
+2. 阅读 Agent 入口、任务状态、交接、C++ 现状盘点和后端公共契约。
+3. 从 `refactor/ai-boundary` 分支执行 `ARCH-004`，先固定 Java Gateway 与 C++ 服务协议。
+4. 不迁移旧服务管理、模型进程或业务编排细节。
 
 ## 会话变更
 

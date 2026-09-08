@@ -93,3 +93,11 @@ CI 在 Pull Request 中使用基线 commit 运行：
 | Windows 构建脚本 | `powershell -ExecutionPolicy Bypass -File .\\backend\\scripts\\build.ps1` | 通过；脚本确认 Java 21 并原样返回 Maven 退出码 |
 | HTTP 公共契约 | `HealthControllerTest`、`ErrorContractTest` | 验证 `/api/v1/health`、请求 ID 和 404 错误响应 |
 | 依赖与配置 | 审核 `backend/pom.xml`、`application.yml` | 仅 PostgreSQL 驱动和环境变量占位；无 MySQL、H2、JPA、MyBatis、Flyway 或密钥 |
+
+## ARCH-003 验证记录
+
+| 检查 | 命令或证据 | 结果 |
+| --- | --- | --- |
+| 前端质量入口 | `pnpm run check` | 通过：ESLint、Prettier、vue-tsc、Vitest 和 Vite 生产构建均完成 |
+| 数据边界样例 | `architecture-sample` 模块 | 外部 DTO 经 Zod Schema 与 mapper 转为内部领域模型 |
+| 模块边界 | `app`、`modules`、`shared`、`types` 目录与模块 `index.ts` | 已建立；未迁入旧全局 Vue 页面和脚本 |
