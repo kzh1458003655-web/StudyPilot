@@ -2,12 +2,40 @@ name: source-check
 
 on:
   push:
-    branches: [main, "feature/**", "fix/**"]
+    branches: [main, "feature/**", "fix/**", "docs/**", "refactor/**", "test/**", "chore/**", "build/**"]
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
+  harness-check:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Validate Harness, commits, and task scope
+        shell: pwsh
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
+          HEAD_BRANCH: ${{ github.head_ref }}
+          REF_BRANCH: ${{ github.ref_name }}
+        run: |
+          $baseRef = if ($env:PR_BASE_SHA) { $env:PR_BASE_SHA } else { $env:PUSH_BEFORE_SHA }
+          $branchName = if ($env:HEAD_BRANCH) { $env:HEAD_BRANCH } else { $env:REF_BRANCH }
+          if (-not $baseRef -or $baseRef -match '^0+$') {
+            .\scripts\harness-check.ps1
+          } elseif ($branchName -eq 'docs/harness-foundation') {
+            .\scripts\harness-check.ps1 -BaseRef $baseRef -CheckCommits -EnforceHarnessScope
+          } else {
+            .\scripts\harness-check.ps1 -BaseRef $baseRef -CheckCommits
+          }
+
   build-and-test:
+    needs: harness-check
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v5
