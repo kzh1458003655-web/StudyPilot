@@ -12,7 +12,7 @@
 - 资料、问答、真题、试卷、作答和诊断均以 `projectId` 为边界；模拟卷固定生成 2 道单选和 2 道简答。
 - `scripts\verify-target.ps1` 已在 Windows PowerShell 验证通过，输出摘要和日志到 `D:\大四课程设计\StudyPilot-output`。它覆盖后端 41 项测试、前端检查、Harness 和模拟卷 HTTP 工作流。
 - `start-target.ps1 -StartAiService` 需要操作者先启动 llama.cpp 18082；脚本启动 C++ 18081、Java 8080 和 Vite 5173。完整步骤见 `docs/部署与运行指南.md`。
-- `GroundedQaEndToEndTest` 是真实 C++／本地模型资料问答链路的已有证据；本机当前未保持模型进程运行。
+- 2026-09-09 已用 Qwen3-4B Q4 复跑 `GroundedQaEndToEndTest`；真实 C++／本地模型资料问答链路通过。本机当前未保持模型进程运行。
 
 ## 下一会话启动顺序
 

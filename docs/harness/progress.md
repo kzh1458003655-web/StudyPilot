@@ -21,8 +21,9 @@
 - 后端 Maven 测试 41 项零失败，2 项明确依赖外部 C++／模型服务的 E2E 测试未在本轮启用；
 - 前端 `pnpm run check` 通过，包含 ESLint、Prettier、TypeScript、Vitest 与生产构建；
 - 模拟卷 HTTP 工作流通过，使用临时 PostgreSQL 和受控 Gateway 完成项目、PDF、组卷、作答和评分；
+- 真实 `GroundedQaEndToEndTest` 通过：Qwen3-4B Q4、C++ 检索服务、Spring Boot 与临时 PostgreSQL 完成 PDF 导入、检索和带引用回答；
 - Harness 检查通过；详细日志和验证摘要保留在 D 盘输出目录。
 
 ## 当前边界与下一步
 
-部署入口已切换为 `start-target.ps1`、`stop-target.ps1` 和 `verify-target.ps1`，不再将旧 MySQL 课程脚本作为目标架构的启动方式。完整本地模型实连测试仍需先启动 llama.cpp 和 C++ 服务，再运行 `GroundedQaEndToEndTest`；浏览器级 Playwright 场景尚未建立，因此 `VERIFY-001` 保持 `ready`，不能提前标为已验证。
+部署入口已切换为 `start-target.ps1`、`stop-target.ps1` 和 `verify-target.ps1`，不再将旧 MySQL 课程脚本作为目标架构的启动方式。真实本地模型实连已复跑通过；浏览器级 Playwright 场景尚未建立，因此 `VERIFY-001` 保持 `ready`，不能提前标为已验证。

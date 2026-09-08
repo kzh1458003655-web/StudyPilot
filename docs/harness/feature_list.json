@@ -1,7 +1,7 @@
 {
   "$schema": "./feature_list.schema.json",
   "schemaVersion": 1,
-  "lastUpdated": "2026-09-09T00:14:00+08:00",
+  "lastUpdated": "2026-09-09T01:03:00+08:00",
   "features": [
     {
       "id": "HARNESS-001",
@@ -278,7 +278,10 @@
         "未通过项均有明确阻塞或后续处理结论"
       ],
       "branch": "test/system-verification",
-      "evidence": [],
+      "evidence": [
+        "2026-09-09：scripts/verify-target.ps1 通过，后端 41 项测试、前端完整检查、Harness 和模拟卷 HTTP 工作流均通过；日志与摘要写入 D 盘输出目录。",
+        "2026-09-09：在 Qwen3-4B Q4、真实 C++ 索引服务与临时 PostgreSQL 环境下执行 GroundedQaEndToEndTest 通过，完成 PDF 导入、检索和带引用回答。"
+      ],
       "docsToUpdate": [
         "README.md",
         "docs/harness/verification.md",
