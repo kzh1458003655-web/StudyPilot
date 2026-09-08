@@ -6,6 +6,9 @@ spring:
     exclude: org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
 
 studypilot:
+  ai:
+    base-url: ${STUDYPILOT_AI_BASE_URL:http://127.0.0.1:18081}
+    connect-timeout: ${STUDYPILOT_AI_CONNECT_TIMEOUT:3s}
   database:
     url: ${STUDYPILOT_DB_URL:}
     username: ${STUDYPILOT_DB_USERNAME:}
