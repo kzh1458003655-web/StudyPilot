@@ -110,3 +110,14 @@ CI 在 Pull Request 中使用基线 commit 运行：
 | C++ 服务健康 | 实际运行 `study-ai.exe` 后调用 `GET /health` | 返回 `model_ready=true`、队列与索引指标 |
 | 检索服务 | 实际调用 `POST /retrieve` | 按协议返回 `hits` 数组 |
 | 本地模型转发 | 实际调用 `POST /completion` | C++ 成功转发到本地 Qwen3.5-4B，最小提示返回 `OK` |
+
+## DB-001 验证记录
+
+| 检查 | 命令或证据 | 结果 |
+| --- | --- | --- |
+| DDL 的真实 PostgreSQL 解释 | `backend\\mvnw.cmd -Dtest=PostgreSqlSchemaIntegrationTest test` | 通过；临时启动并关闭 Embedded PostgreSQL 14.22 |
+| 可重复初始化 | 上述测试连续执行 `00`、`10`、`20`、`30`、`40`、`50`、`90` 七份 SQL | 通过；第二遍 DDL 不报错 |
+| 结构与外键行为 | 上述测试查询 Schema、写入项目/资料/页/分块，并删除项目 | 通过；24 张表、JSONB 字段、级联删除均符合设计 |
+| JDBC 边界 | `PostgreSqlJdbcConfigTest` | 通过；无变量时无数据源，完整变量时创建 Hikari 与 `NamedParameterJdbcTemplate` |
+| 静态约束 | `SchemaConventionTest` | 通过；文件使用目标 Schema，未含旧 MySQL 关键字 |
+| 外部测试库脚本 | `backend/scripts/verify-schema.ps1` | 已检查其缺失 URL 时的保护性失败；本机没有 `psql` 和受控测试库，未将其冒充为实连验证 |

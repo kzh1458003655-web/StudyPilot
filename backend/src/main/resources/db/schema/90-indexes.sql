@@ -1,1 +1,23 @@
--- 仅在各业务表与查询模式确定后建立 PostgreSQL 索引。
+SET search_path TO studypilot, public;
+
+CREATE INDEX IF NOT EXISTS idx_documents_project ON documents(project_id);
+CREATE INDEX IF NOT EXISTS idx_documents_project_status ON documents(project_id, status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_pages_document ON document_pages(document_id);
+CREATE INDEX IF NOT EXISTS idx_chunks_document ON document_chunks(document_id, chunk_index);
+CREATE INDEX IF NOT EXISTS idx_sessions_project ON qa_sessions(project_id);
+CREATE INDEX IF NOT EXISTS idx_messages_session ON qa_messages(session_id);
+CREATE INDEX IF NOT EXISTS idx_retrieval_message ON qa_retrieval_records(assistant_message_id, rank_position);
+CREATE INDEX IF NOT EXISTS idx_citations_message ON qa_citations(assistant_message_id);
+CREATE INDEX IF NOT EXISTS idx_source_questions_project ON source_questions(project_id, question_type);
+CREATE INDEX IF NOT EXISTS idx_question_options_question ON question_options(question_id);
+CREATE INDEX IF NOT EXISTS idx_knowledge_points_point ON question_knowledge_points(knowledge_point);
+CREATE INDEX IF NOT EXISTS idx_blueprints_project ON exam_blueprints(project_id);
+CREATE INDEX IF NOT EXISTS idx_exams_project ON mock_exams(project_id);
+CREATE INDEX IF NOT EXISTS idx_items_exam ON mock_exam_items(exam_id);
+CREATE INDEX IF NOT EXISTS idx_validation_item ON question_validation_records(exam_item_id);
+CREATE INDEX IF NOT EXISTS idx_attempts_exam ON exam_attempts(exam_id);
+CREATE INDEX IF NOT EXISTS idx_answers_attempt ON attempt_answers(attempt_id);
+CREATE INDEX IF NOT EXISTS idx_wrong_questions_project ON wrong_questions(project_id, knowledge_point);
+CREATE INDEX IF NOT EXISTS idx_mastery_project ON mastery_records(project_id);
+CREATE INDEX IF NOT EXISTS idx_recommendations_project ON recommendation_records(project_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_tasks_project_status ON study_tasks(project_id, status, due_at);

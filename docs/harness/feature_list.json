@@ -1,7 +1,7 @@
 {
   "$schema": "./feature_list.schema.json",
   "schemaVersion": 1,
-  "lastUpdated": "2026-09-08T16:32:00+08:00",
+  "lastUpdated": "2026-09-08T18:35:00+08:00",
   "features": [
     {
       "id": "HARNESS-001",
@@ -143,7 +143,7 @@
       "name": "建立 PostgreSQL 数据库与访问骨架",
       "description": "按目标架构建立 studypilot Schema、分模块 SQL、Repository 契约、迁移记录和可复现验证路径。",
       "dependencies": ["ARCH-004"],
-      "status": "ready",
+      "status": "verified",
       "acceptanceCriteria": [
         "SQL 文件顺序和表归属符合数据库设计基线",
         "外键、索引、时间和 JSONB 规范有可执行体现",
@@ -151,7 +151,12 @@
         "仓库不包含凭据、真实连接地址或项目密钥"
       ],
       "branch": "refactor/database-contracts",
-      "evidence": [],
+      "evidence": [
+        "2026-09-08：Maven 测试临时启动真实 Embedded PostgreSQL 14.22，连续执行两遍全部七份 DDL，确认 24 张表和幂等初始化",
+        "2026-09-08：真实 PostgreSQL 中写入资料、页面、分块和索引状态，验证 JSONB 列及项目删除的级联清理",
+        "2026-09-08：PostgreSqlJdbcConfig 与 JdbcProjectRepository 使用环境变量和 NamedParameterJdbcTemplate；无数据库变量时不创建数据源",
+        "2026-09-08：仓库未记录真实连接 URL、用户名、密码或项目密钥；verify-schema.ps1 要求操作者显式提供测试库连接串"
+      ],
       "docsToUpdate": [
         "backend/docs/后端框架设计.md",
         "docs/关键记录/数据库演进记录.md",
@@ -164,7 +169,7 @@
       "name": "验证目标架构基础链路",
       "description": "验证前端、后端、数据库、C++ 检索和本地模型之间的基础契约及失败行为，不扩展产品功能。",
       "dependencies": ["DB-001"],
-      "status": "blocked",
+      "status": "ready",
       "acceptanceCriteria": [
         "各层可独立构建并通过基础测试",
         "跨层契约通过最小集成验证",

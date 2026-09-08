@@ -1,7 +1,8 @@
 spring:
   application:
     name: studypilot-backend
-  # ARCH-002 只验证骨架，不在没有 PostgreSQL 的电脑上尝试建立连接。
+  # 数据源由 PostgreSqlJdbcConfig 在明确配置 STUDYPILOT_DB_URL 时创建。
+  # 因此无数据库的开发机仍能运行接口与 Gateway 契约测试。
   autoconfigure:
     exclude: org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
 
@@ -10,6 +11,3 @@ studypilot:
     base-url: ${STUDYPILOT_AI_BASE_URL:http://127.0.0.1:18081}
     connect-timeout: ${STUDYPILOT_AI_CONNECT_TIMEOUT:3s}
   database:
-    url: ${STUDYPILOT_DB_URL:}
-    username: ${STUDYPILOT_DB_USERNAME:}
-    password: ${STUDYPILOT_DB_PASSWORD:}
