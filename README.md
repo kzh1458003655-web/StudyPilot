@@ -14,7 +14,7 @@ Agent Harness、四项架构任务、数据库任务与基础集成任务已验�
 - Harness 状态：[docs/harness/](docs/harness/README.md)
 - 架构、数据库、接口和决策：[docs/关键记录/](docs/关键记录/README.md)
 - 已完成任务：`HARNESS-001`、`ARCH-001` 至 `ARCH-004`、`DB-001`、`INT-001`，状态均为 `verified`
-- 当前任务：`PROD-003`，实现在线作答与智能测评
+- 当前任务：`VERIFY-001`，完成系统级验证与交付准备
 
 后续开发顺序固定为：架构重构、数据库与基础链路、三个产品模块、系统验证、最终交付。具体依赖和验收标准以 `docs/harness/feature_list.json` 为准。
 
@@ -186,50 +186,44 @@ StudyPilot/
 
 ## Windows 快速开始
 
-当前可运行版本面向 64 位 Windows，推荐使用 NVIDIA GPU。首次部署需要 Git、Visual Studio 2022 的“使用 C++ 的桌面开发”工作负载，以及可访问依赖下载地址的网络环境。
+当前目标版本使用 PostgreSQL、C++ 检索服务与 llama.cpp，不使用早期课程版的 MySQL 脚本。完整的依赖准备、数据库初始化、模型启动、停止和测试步骤见 [部署与运行指南](docs/部署与运行指南.md)。
 
-在仓库根目录执行：
-
-```powershell
-Set-ExecutionPolicy -Scope Process Bypass
-.\scripts\setup.ps1
-.\scripts\start.ps1
-```
-
-部署脚本会准备项目独立的 Java 21、Maven、MySQL、llama.cpp 和本地运行配置，不要求把这些工具加入系统 PATH，也不需要管理员权限。首次部署还会下载本地模型，耗时和空间需求取决于网络与磁盘情况。
-
-浏览器访问：<http://127.0.0.1:18080>
-
-停止服务：
+已配置数据库环境变量并启动本地模型后，在仓库根目录执行：
 
 ```powershell
-.\scripts\stop.ps1
+.\scripts\start-target.ps1 -StartAiService
 ```
 
-本机配置、数据库、模型、日志和构建缓存不应提交到 Git。相关路径已在 `.gitignore` 中排除。
+浏览器访问：<http://127.0.0.1:5173>。运行日志、进程记录和测试产物默认写入 `D:\大四课程设计\StudyPilot-output`；用户资料和 C++ 索引默认写入 `D:\大四课程设计\StudyPilot-runtime`。
+
+停止由该入口启动的服务：
+
+```powershell
+.\scripts\stop-target.ps1
+```
 
 ## 构建与测试
 
 ```powershell
-# 编译 Java、运行 Java 测试并编译 C++ 服务
-.\scripts\build.ps1
+# 后端单元、集成与真实 PostgreSQL Schema 测试
+cd backend
+.\mvnw.cmd test
 
-# 构建、启动、健康检查和真实模型接口测试
-.\scripts\test.ps1 -SkipBrowser
+# 前端静态检查、单元测试与生产构建
+cd ..\frontend
+pnpm run check
 
-# 在已安装 Node.js 时，同时执行浏览器端测试
-.\scripts\test.ps1
+# 在仓库根目录汇总执行上述检查、Harness 和模拟卷 HTTP 工作流
+cd ..
+.\scripts\verify-target.ps1
 ```
 
 最近一次测试记录覆盖：
 
-- Java 计划约束单元测试 8 项，全部通过；
-- 真实模型集成测试 9 项，全部通过；
-- 异常与边界测试 6 项，全部通过；
-- 桌面端和移动端页面检查通过，无脚本错误和横向溢出；
-- 主流程覆盖服务健康、PDF 上传与索引、重复资料拒绝、带引用问答、计划生成、打卡、调整计划和非法条件拒绝；
-- 异常流程覆盖无资料依据拒答、取消生成、损坏 PDF、跨站写入、不存在计划和非法打卡数据。
-- 评测流程覆盖题库初始化、课程内考频、组卷、服务端评分、历史记录与跨课程访问拒绝。
+- 2026-09-09：`scripts\verify-target.ps1` 通过，后端 41 项测试零失败，2 项需外部 C++／模型服务的测试按设计跳过；
+- 前端 ESLint、Prettier、TypeScript、Vitest 和生产构建通过，测评页面覆盖“加载试卷、开始作答、提交完整答案、显示评分报告”的交互测试；
+- `MockExamWorkflowEndToEndTest` 通过，覆盖项目、PDF 导入、模拟组卷、独立作答与评分的真实 HTTP 路径，并使用临时 PostgreSQL；
+- Harness 结构和任务状态检查通过。每次运行生成的摘要与详细日志保存在 `D:\大四课程设计\StudyPilot-output`。
 
 ## 模型评测结论
 
@@ -280,6 +274,7 @@ StudyPilot/
 - [关键记录](docs/关键记录/README.md)：架构迁移、数据库、接口、旧代码复用和 ADR。
 - [产品架构](docs/产品相关/产品架构.md)：项目边界、模块职责、数据关系和用户体验预期。
 - [最终需求结论](docs/产品相关/需求规划.md)：核心模块、题型范围、Agent 定位、成员分工和最终演示流程。
+- [部署与运行指南](docs/部署与运行指南.md)：本地依赖、PostgreSQL、模型、启动、停止和验证的完整步骤。
 - [后端框架设计](backend/docs/后端框架设计.md)：模块化单体、Gateway、数据库和后端依赖规则。
 - [前端框架设计](frontend/前端框架设计.md)：模块结构、状态管理、API 边界、校验、样式和测试规范。
 - [模型选型实测](tests/model-evaluation/模型选型实测报告.md)：最新专项模型对比、原始数据和复现方法。

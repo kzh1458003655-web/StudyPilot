@@ -67,8 +67,8 @@ onMounted(load);
       <RouterLink :to="`/projects/${projectId}/exams`">返回模拟考</RouterLink>
     </div>
     <p v-if="error" class="error">{{ error }}</p>
-    <template v-if="exam"
-      ><article class="exam-card">
+    <template v-if="exam">
+      <article class="exam-card">
         <h2>{{ exam.title }}</h2>
         <button :disabled="!!attemptId" @click="start">
           {{ attemptId ? "已开始作答" : "开始本次作答" }}
