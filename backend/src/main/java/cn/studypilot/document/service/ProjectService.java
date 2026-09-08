@@ -5,8 +5,10 @@ import cn.studypilot.common.repository.ProjectRepository;
 import cn.studypilot.document.dto.CreateProjectRequest;
 import cn.studypilot.document.dto.ProjectResponse;
 import org.springframework.stereotype.Service;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 @Service
+@ConditionalOnProperty(prefix = "studypilot.database", name = "url")
 public class ProjectService {
   private final ProjectRepository projects;
   public ProjectService(ProjectRepository projects) { this.projects = projects; }

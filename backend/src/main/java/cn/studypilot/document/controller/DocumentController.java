@@ -13,11 +13,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
 import org.springframework.http.HttpStatus;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/v1/documents")
+@ConditionalOnProperty(prefix = "studypilot.database", name = "url")
 public class DocumentController {
   private static final Set<String> DOCUMENT_TYPES = Set.of("TEXTBOOK", "LECTURE", "KNOWLEDGE", "PAST_EXAM", "REFERENCE_ANSWER");
   private final LocalDocumentStorage storage; private final DocumentImportService importer; private final DocumentResourceService resources;

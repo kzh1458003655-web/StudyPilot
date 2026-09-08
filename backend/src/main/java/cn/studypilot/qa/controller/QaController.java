@@ -11,10 +11,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 /** Public non-streaming endpoint; the same service can later be adapted to SSE without changing RAG rules. */
 @RestController
 @RequestMapping("/api/v1/qa")
+@ConditionalOnProperty(prefix = "studypilot.database", name = "url")
 public class QaController {
   private final GroundedQaService service;
   public QaController(GroundedQaService service) { this.service = service; }

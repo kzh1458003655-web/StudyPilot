@@ -22,7 +22,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
 /** Checks the multipart boundary and the public response; PDF parsing is covered by service tests. */
-@WebMvcTest(controllers = DocumentController.class)
+@WebMvcTest(controllers = DocumentController.class, properties = "studypilot.database.url=jdbc:postgresql://localhost/test")
 @Import({GlobalExceptionHandler.class, RequestIdFilter.class})
 class DocumentControllerTest {
   @Autowired MockMvc mvc;

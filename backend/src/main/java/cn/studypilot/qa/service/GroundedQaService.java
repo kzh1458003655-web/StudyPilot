@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -29,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
  * project; citations in the response are constructed from the retrieval snapshot, never model text.
  */
 @Service
+@ConditionalOnProperty(prefix = "studypilot.database", name = "url")
 public class GroundedQaService {
   private static final String INSUFFICIENT_EVIDENCE = "INSUFFICIENT_EVIDENCE";
   private final DocumentQueryService documents;

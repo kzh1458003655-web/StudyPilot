@@ -20,7 +20,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-@WebMvcTest(controllers = QaController.class)
+@WebMvcTest(controllers = QaController.class, properties = "studypilot.database.url=jdbc:postgresql://localhost/test")
 @Import({GlobalExceptionHandler.class, RequestIdFilter.class})
 class QaControllerTest {
   @Autowired MockMvc mvc;
