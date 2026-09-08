@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.Optional;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
 
 /** PostgreSQL implementation of the project lookup contract using named, parameterized SQL. */
@@ -22,6 +24,13 @@ public class JdbcProjectRepository implements ProjectRepository {
 
   public JdbcProjectRepository(NamedParameterJdbcTemplate jdbc) {
     this.jdbc = jdbc;
+  }
+
+  @Override public ProjectRecord create(String name, String description) {
+    GeneratedKeyHolder key = new GeneratedKeyHolder();
+    jdbc.update("INSERT INTO studypilot.projects (name, description) VALUES (:name, :description)",
+        new MapSqlParameterSource().addValue("name", name).addValue("description", description), key, new String[] {"id"});
+    return findById(key.getKey().longValue()).orElseThrow();
   }
 
   @Override
