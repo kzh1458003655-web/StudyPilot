@@ -76,7 +76,7 @@ $requiredPaths = @(
     'docs/产品相关/仓库组织预期.md',
     'docs/产品相关/产品架构.md',
     'docs/产品相关/需求规划.md',
-    'backend/后端框架设计.md',
+    'backend/docs/后端框架设计.md',
     'frontend/前端框架设计.md'
 )
 

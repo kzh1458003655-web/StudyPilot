@@ -1,0 +1,13 @@
+package cn.studypilot.common.exception;
+
+/** 骨架阶段固定公共错误码，业务模块只能在自己的错误文档中扩展。 */
+public enum ErrorCode {
+  VALIDATION_ERROR,
+  RESOURCE_NOT_FOUND,
+  CONFLICT,
+  MODEL_OUTPUT_INVALID,
+  EXTERNAL_SERVICE_INVALID_RESPONSE,
+  EXTERNAL_SERVICE_UNAVAILABLE,
+  BUSINESS_RULE_VIOLATION,
+  INTERNAL_ERROR
+}

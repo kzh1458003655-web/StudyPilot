@@ -22,7 +22,7 @@ StudyPilot 当前采用 Harness 驱动的接力开发方式。仓库的第一优
 ## 文档事实来源
 
 - 产品目标：`docs/产品相关/`
-- 后端目标：`backend/后端框架设计.md`
+- 后端目标：`backend/docs/后端框架设计.md`
 - 前端目标：`frontend/前端框架设计.md`
 - 跨模块架构、数据库、接口和决策：`docs/关键记录/`
 - 任务状态、进度、验证和交接：`docs/harness/`

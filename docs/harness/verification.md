@@ -84,3 +84,12 @@ CI 在 Pull Request 中使用基线 commit 运行：
 | 归档分支 | `git branch --show-current` 与 `git worktree list` | `archive/legacy-course-prototype` 指向 `8fce55f`，worktree 位于主仓库之外 |
 | Java 行为基线 | 归档 worktree 中执行 Maven 测试 | 16 项通过 |
 | 文档与复用记录 | `现状盘点-ARCH-001.md`、重构复用清单、进度与交接 | 已记录边界、候选、风险和下一任务 |
+
+## ARCH-002 验证记录
+
+| 检查 | 命令或证据 | 结果 |
+| --- | --- | --- |
+| Maven Wrapper | Java 21 下在 `backend` 执行 `mvnw.cmd clean test` | 2 项测试通过，无需 PostgreSQL、C++ 服务或本地模型 |
+| Windows 构建脚本 | `powershell -ExecutionPolicy Bypass -File .\\backend\\scripts\\build.ps1` | 通过；脚本确认 Java 21 并原样返回 Maven 退出码 |
+| HTTP 公共契约 | `HealthControllerTest`、`ErrorContractTest` | 验证 `/api/v1/health`、请求 ID 和 404 错误响应 |
+| 依赖与配置 | 审核 `backend/pom.xml`、`application.yml` | 仅 PostgreSQL 驱动和环境变量占位；无 MySQL、H2、JPA、MyBatis、Flyway 或密钥 |

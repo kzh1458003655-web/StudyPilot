@@ -182,7 +182,7 @@ StudyPilot/
 
 目标结构中的依赖方向为：`frontend → backend API → database / Gateway`，`backend → ai service`，三个技术目录共同遵守 `common` 中的接口和协议约束。前端不直接访问数据库或本地模型，后端业务模块不直接依赖 C++ 实现细节。
 
-当前仓库中的 `common/` 目标目录尚未独立创建；其中的共享约束目前分散记录在 `docs/`、`backend/后端框架设计.md` 和 `frontend/前端框架设计.md` 中，具体公共子目录在创建正式工程骨架时统一确定。
+当前仓库中的 `common/` 目标目录尚未独立创建；其中的共享约束目前分散记录在 `docs/`、`backend/docs/后端框架设计.md` 和 `frontend/前端框架设计.md` 中，具体公共子目录在创建正式工程骨架时统一确定。
 
 ## Windows 快速开始
 
@@ -280,7 +280,7 @@ StudyPilot/
 - [关键记录](docs/关键记录/README.md)：架构迁移、数据库、接口、旧代码复用和 ADR。
 - [产品架构](docs/产品相关/产品架构.md)：项目边界、模块职责、数据关系和用户体验预期。
 - [最终需求结论](docs/产品相关/需求规划.md)：核心模块、题型范围、Agent 定位、成员分工和最终演示流程。
-- [后端框架设计](backend/后端框架设计.md)：模块化单体、Gateway、数据库和后端依赖规则。
+- [后端框架设计](backend/docs/后端框架设计.md)：模块化单体、Gateway、数据库和后端依赖规则。
 - [前端框架设计](frontend/前端框架设计.md)：模块结构、状态管理、API 边界、校验、样式和测试规范。
 - [模型选型实测](tests/model-evaluation/模型选型实测报告.md)：最新专项模型对比、原始数据和复现方法。
 - [本地量化 Benchmark](tests/model-benchmark/README.md)：多任务模型评测指标和运行方式。

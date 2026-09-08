@@ -1,7 +1,7 @@
 {
   "$schema": "./feature_list.schema.json",
   "schemaVersion": 1,
-  "lastUpdated": "2026-09-08T15:42:00+08:00",
+  "lastUpdated": "2026-09-08T15:56:00+08:00",
   "features": [
     {
       "id": "HARNESS-001",
@@ -68,7 +68,7 @@
       "name": "建立后端目标骨架",
       "description": "按照后端架构基线建立 Java 21、Spring Boot 3.5 模块化单体、公共异常与 Gateway 契约，不迁入旧架构。",
       "dependencies": ["ARCH-001"],
-      "status": "ready",
+      "status": "verified",
       "acceptanceCriteria": [
         "目标包结构和依赖方向与后端架构文档一致",
         "Maven Wrapper 和无外部服务骨架测试可运行",
@@ -76,9 +76,14 @@
         "没有实现完整产品业务"
       ],
       "branch": "refactor/backend-skeleton",
-      "evidence": [],
+      "evidence": [
+        "2026-09-08：backend Maven Wrapper 在 Java 21 下执行 clean test，2 项无外部服务测试通过",
+        "2026-09-08：backend/scripts/build.ps1 在 Windows PowerShell 下检查 Java 21 并返回 Maven 成功退出码",
+        "2026-09-08：目标包边界、PostgreSQL-only 依赖、版本化健康接口、统一错误响应和两个 Gateway 契约已建立",
+        "2026-09-08：敏感连接信息已从架构文档移除；仓库扫描未发现真实数据库主机、项目标识或密码"
+      ],
       "docsToUpdate": [
-        "backend/后端框架设计.md",
+        "backend/docs/后端框架设计.md",
         "docs/关键记录/架构迁移总纲.md",
         "docs/关键记录/接口契约索引.md"
       ]
@@ -89,7 +94,7 @@
       "name": "建立前端目标骨架",
       "description": "按照前端架构基线建立 Vue 3、TypeScript、Vite 以及 app、modules、shared、types 的单向依赖结构。",
       "dependencies": ["ARCH-002"],
-      "status": "blocked",
+      "status": "ready",
       "acceptanceCriteria": [
         "前端目标目录和模块出口已建立",
         "外部 DTO、Schema、mapper 和内部模型边界可验证",
@@ -141,7 +146,7 @@
       "branch": "refactor/database-contracts",
       "evidence": [],
       "docsToUpdate": [
-        "backend/后端框架设计.md",
+        "backend/docs/后端框架设计.md",
         "docs/关键记录/数据库演进记录.md",
         "docs/关键记录/接口契约索引.md"
       ]

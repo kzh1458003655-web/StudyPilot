@@ -2,11 +2,11 @@
 
 ## 当前状态
 
-- 最后更新：2026-09-08 15:42 +08:00
-- 当前分支：`refactor/architecture-baseline`
-- 已完成任务：`HARNESS-001`、`ARCH-001`，状态均为 `verified`
-- 当前状态：旧课程版已归档，目标架构尚未开始实现
-- 下一任务：`ARCH-002` 建立后端目标骨架，状态为唯一 `ready`
+- 最后更新：2026-09-08 15:56 +08:00
+- 当前分支：`refactor/backend-skeleton`
+- 已完成任务：`HARNESS-001`、`ARCH-001`、`ARCH-002`，状态均为 `verified`
+- 当前状态：后端目标骨架已验证，等待前端目标骨架
+- 当前任务：`ARCH-003` 建立前端目标骨架，状态为 `ready`
 
 ## 已完成
 
@@ -24,27 +24,27 @@
 
 ## 当前进行
 
-- 当前没有正在执行的实现任务。
-- `ARCH-001` 已按架构优先门禁结束，不提前进入后端、数据库或产品开发。
+- `ARCH-002` 已建立 Java 模块化单体、公共错误与 Gateway 契约。
+- 目标后端未迁入旧 Controller、MySQL DDL 或完整产品业务。
 
 ## 当前边界
 
-- 本任务未修改 `backend/src`、`ai/src` 或当前前端业务文件。
-- 本任务未创建目标数据库 Schema、未迁移 MySQL、未连接 Supabase。
-- 旧业务代码未被移动、删除或重构；仅建立了归档分支与仓库外 worktree。
+- `backend/src` 已替换为目标骨架；`ai/src` 和当前前端业务文件未改动。
+- 本任务仅建立数据库配置和 SQL 文件顺序占位，未迁移 MySQL、未连接 Supabase、未实现业务表。
+- 旧业务代码保留在归档分支与仓库外 worktree，未直接迁入目标骨架。
 
 ## 风险和注意事项
 
-- 当前代码仍是课程版原型，不能误写成已完成目标架构。
+- 当前前端和 C++ 仍是课程版原型，不能误写成已完成目标架构。
 - 归档版本的 `scripts/build.ps1` 在 Windows PowerShell 5.1 下存在 UTF-8 无 BOM 的解析风险；已记录，不能将其当作通过证据。
 - 目标 PostgreSQL/Supabase 测试环境尚未接入，后续不得伪造数据库集成结果。
 
 ## 下一步
 
 1. 下一位 Agent 运行 `./scripts/harness-init.ps1`。
-2. 阅读 Agent 入口、任务状态、交接和后端架构文档。
-3. 从 `refactor/backend-skeleton` 分支执行 `ARCH-002`，先建立无外部服务可测试的 Java 骨架。
-4. 不迁移旧 Controller、旧 MySQL SQL 或旧运行时建表逻辑。
+2. 阅读 Agent 入口、任务状态、交接、前端架构和后端公共契约。
+3. 从 `refactor/frontend-skeleton` 分支执行 `ARCH-003`，先建立不连接后端的前端骨架。
+4. 不迁移旧单页 HTML、全局脚本或完整产品页面。
 
 ## 会话变更
 
@@ -58,6 +58,7 @@
 - `fix(harness): 修正初始化退出状态判断`
 - `fix(harness): 修复 Windows PowerShell 兼容`
 - `refactor(architecture): 归档课程版并建立行为基线`
+- `refactor(backend): 建立 Java 目标骨架和公共 Gateway 契约`
 
 ## 关键决策
 
@@ -66,6 +67,7 @@
 - 旧代码通过独立分支和仓库外 worktree 保留。
 - Commit 使用 Conventional Commit 类型、稳定 scope 和中文动作摘要。
 - 当前没有旧实现被直接复用到目标架构。
+- 后端骨架已通过 Maven Wrapper 和 Windows 构建脚本验证，无需外部服务。
 
 具体理由和影响记录在 `docs/关键记录/决策记录/`。
 
@@ -77,3 +79,4 @@
 - JSON Schema：12 个任务全部通过结构校验。
 - 归档 worktree Maven 测试：16 个 Java 测试通过。
 - 业务范围：本轮未修改 `backend/src`、`ai/src` 或前端运行文件。
+- 后端骨架 Maven Wrapper 与 Windows 构建脚本：2 项测试通过。

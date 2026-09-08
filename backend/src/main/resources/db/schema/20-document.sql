@@ -1,0 +1,1 @@
+-- document 模块表由 DB-001 按 PostgreSQL 规范定义。
