@@ -92,7 +92,17 @@ class MockExamWorkflowEndToEndTest {
     int examId = ((Number) ((Map<?, ?>) generated.getBody().get("data")).get("examId")).intValue();
     ResponseEntity<Map> paper = http.getForEntity(url("/api/v1/exams/" + examId + "?projectId=" + projectId), Map.class);
     assertThat(paper.getStatusCode().is2xxSuccessful()).isTrue();
-    assertThat((List<?>) ((Map<?, ?>) paper.getBody().get("data")).get("items")).hasSize(4);
+    List<Map<String, Object>> items = (List<Map<String, Object>>) ((Map<?, ?>) paper.getBody().get("data")).get("items");
+    assertThat(items).hasSize(4);
+    ResponseEntity<Map> started = http.postForEntity(url("/api/v1/assessments/attempts?projectId=" + projectId + "&examId=" + examId), null, Map.class);
+    assertThat(started.getStatusCode().is2xxSuccessful()).isTrue();
+    int attemptId = ((Number) ((Map<?, ?>) started.getBody().get("data")).get("attemptId")).intValue();
+    List<Map<String, Object>> answers = List.of(
+        Map.of("itemId", items.get(0).get("id"), "answer", "A"), Map.of("itemId", items.get(1).get("id"), "answer", "B"),
+        Map.of("itemId", items.get(2).get("id"), "answer", "An executing program."), Map.of("itemId", items.get(3).get("id"), "answer", "An execution unit."));
+    ResponseEntity<Map> assessed = http.postForEntity(url("/api/v1/assessments/attempts/" + attemptId + "/submit?projectId=" + projectId), Map.of("answers", answers), Map.class);
+    assertThat(assessed.getStatusCode().is2xxSuccessful()).isTrue();
+    assertThat(((List<?>) ((Map<?, ?>) assessed.getBody().get("data")).get("answers"))).hasSize(4);
     assertThat(http.exchange(url("/api/v1/documents/" + documentId + "?projectId=" + projectId), org.springframework.http.HttpMethod.DELETE, null, Void.class)
         .getStatusCode().value()).isEqualTo(204);
   }
@@ -113,7 +123,8 @@ class MockExamWorkflowEndToEndTest {
       @Override public void remove(String documentId) { }
     }; }
     @Bean @Primary RetrievalGateway retrievalGateway() { return request -> new RetrievalResponse(List.of(new RetrievalHit(SOURCE_ID.get(), 1, "A process is an executing program.", 0.9))); }
-    @Bean @Primary ModelGateway modelGateway() { return request -> new ModelResponse("controlled-e2e", json(SOURCE_ID.get()), Duration.ofMillis(1)); }
+    @Bean @Primary ModelGateway modelGateway() { return request -> new ModelResponse("controlled-e2e",
+        request.taskType() == cn.studypilot.model.dto.ModelTaskType.SHORT_ANSWER_ASSESSMENT ? "{\"score\":10,\"feedback\":\"答案完整。\"}" : json(SOURCE_ID.get()), Duration.ofMillis(1)); }
     private static String json(String id) { return """
         [{"type":"SINGLE_CHOICE","prompt":"Which statement describes a process?","options":["An executing program","A static file"],"answer":"A","analysis":"","knowledgePoint":"process","score":5,"sourceDocumentIds":["%s"]},
         {"type":"SINGLE_CHOICE","prompt":"Which unit executes inside a process?","options":["A thread","A disk"],"answer":"A","analysis":"","knowledgePoint":"thread","score":5,"sourceDocumentIds":["%s"]},

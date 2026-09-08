@@ -22,3 +22,7 @@
 3. 从 `PROD-003` 开始，为 attempt、answer、grading、mastery/report 建立项目隔离的 Repository、Service、REST 与 Vue 模块。
 4. 先写客观题确定性判分和 attempt 多次独立记录，再接入简答题模型辅助评分。
 5. 完成后同步更新 Harness、接口和数据库记录，并运行后端、前端和端到端验证。
+
+## PROD-003 已完成
+
+测评模块实现与证据见 `docs/产品相关/在线作答与智能测评模块实现说明.md`。下一任务为 `VERIFY-001`：执行系统级构建、端到端、异常、项目隔离、浏览器和模型验证，生成最终交付资料。

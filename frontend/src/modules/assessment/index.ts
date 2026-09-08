@@ -1,0 +1,1 @@
+export { assessmentRoutes } from "./routes";

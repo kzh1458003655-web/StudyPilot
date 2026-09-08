@@ -150,3 +150,12 @@ CI 在 Pull Request 中使用基线 commit 运行：
 | REST 契约 | `backend\mvnw.cmd -Dtest=ExamControllerTest test` | 通过；分析、考频、组卷、读取试卷均返回统一响应。 |
 | HTTP 工作流 | `backend\mvnw.cmd -Dstudypilot.e2e=true -Dtest=MockExamWorkflowEndToEndTest test` | 通过；临时 PostgreSQL、PDF 导入、生成、读取与清理走真实 HTTP 路径；外部网关受控以稳定校验模型 JSON。 |
 | 前端 | `frontend\pnpm run check` | 通过；新增考试页面、路由和 API Schema，包含生产构建。 |
+
+## PROD-003 验证记录
+
+| 检查 | 命令或证据 | 结果 |
+| --- | --- | --- |
+| 判分与诊断规则 | `AssessmentServiceTest` | 通过；单选规则评分、简答 JSON 评分、缺题拒绝、掌握度写入均已验证。 |
+| PostgreSQL 写入 | `PostgreSqlSchemaIntegrationTest` | 通过；独立 attempt、答案、评分依据、错题、掌握度与建议记录均写入真实 Embedded PostgreSQL。 |
+| HTTP 工作流 | `-Dstudypilot.e2e=true -Dtest=MockExamWorkflowEndToEndTest` | 通过；创建项目、上传、组卷、开始作答、提交答案和返回评分结果。 |
+| 前端入口 | `frontend\pnpm run check` | 通过；模拟卷跳转、逐题作答、提交和评分结果页面可构建。 |

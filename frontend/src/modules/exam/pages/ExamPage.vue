@@ -128,6 +128,9 @@ onMounted(async () => {
           <li v-for="option in item.options" :key="option">{{ option }}</li>
         </ol>
         <p class="subtle">知识点：{{ item.knowledgePoint }}</p>
+        <RouterLink :to="`/projects/${projectId}/assessment?examId=${exam.id}`">
+          开始在线作答
+        </RouterLink>
         <details>
           <summary>展开参考答案与解析</summary>
           <p>答案：{{ item.answer }}</p>

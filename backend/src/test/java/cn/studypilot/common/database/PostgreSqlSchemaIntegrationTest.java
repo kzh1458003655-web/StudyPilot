@@ -9,6 +9,8 @@ import cn.studypilot.document.model.ExtractedPage;
 import cn.studypilot.document.repository.JdbcDocumentRepository;
 import cn.studypilot.exam.model.GeneratedExamItem;
 import cn.studypilot.exam.repository.JdbcMockExamRepository;
+import cn.studypilot.assessment.model.GradedAnswer;
+import cn.studypilot.assessment.repository.JdbcAssessmentRepository;
 import cn.studypilot.qa.model.QaCitationEvidence;
 import cn.studypilot.qa.repository.JdbcQaRepository;
 import java.sql.Connection;
@@ -91,6 +93,21 @@ class PostgreSqlSchemaIntegrationTest {
         assertThat(mockExams.findByProject(1L, saved.id()).orElseThrow().items())
             .extracting("options").containsExactly(List.of("程序的一次执行", "静态文件"), List.of());
         assertThat(mockExams.findByProject(2L, saved.id())).isEmpty();
+
+        // One exam can create independent attempts; grading writes are scoped through the exam's project.
+        var assessments = new JdbcAssessmentRepository(new NamedParameterJdbcTemplate(dataSource));
+        long attemptId = assessments.createAttempt(1L, saved.id());
+        var assessable = assessments.findInProgressAttempt(1L, attemptId).items();
+        assertThat(assessable).hasSize(2);
+        var first = assessable.getFirst();
+        assessments.saveGradedAnswer(attemptId, new GradedAnswer(first.id(), first.knowledgePoint(), 0, first.maxScore(), "答案不正确", "RULE_GRADED"), "B");
+        assessments.updateMastery(1L, first.knowledgePoint(), 0);
+        assessments.recordWrongAnswer(1L, attemptId, new GradedAnswer(first.id(), first.knowledgePoint(), 0, first.maxScore(), "答案不正确", "RULE_GRADED"));
+        assessments.recordRecommendation(1L, attemptId, first.knowledgePoint(), "复习进程与线程");
+        assessments.completeAttempt(attemptId, 0);
+        assertThat(queryLong(connection, "SELECT count(*) FROM studypilot.wrong_questions WHERE project_id = 1")).isEqualTo(1L);
+        assertThat(queryLong(connection, "SELECT evidence_count FROM studypilot.mastery_records WHERE project_id = 1")).isEqualTo(1L);
+        assertThat(queryLong(connection, "SELECT count(*) FROM studypilot.recommendation_records WHERE source_attempt_id = " + attemptId)).isEqualTo(1L);
 
         execute(connection, "DELETE FROM studypilot.projects WHERE id = 1");
         assertThat(queryLong(connection, "SELECT count(*) FROM studypilot.documents"))
