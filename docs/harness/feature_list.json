@@ -1,7 +1,7 @@
 {
   "$schema": "./feature_list.schema.json",
   "schemaVersion": 1,
-  "lastUpdated": "2026-09-08T16:24:00+08:00",
+  "lastUpdated": "2026-09-08T16:28:00+08:00",
   "features": [
     {
       "id": "HARNESS-001",
@@ -118,7 +118,7 @@
       "name": "固定 C++ 与模型服务边界",
       "description": "明确检索、模型调用、流式输出、队列、取消和健康检查协议，Java 仅通过 Gateway 调用。",
       "dependencies": ["ARCH-003"],
-      "status": "ready",
+      "status": "in_progress",
       "acceptanceCriteria": [
         "C++ 服务职责和外部协议有正式记录",
         "后端不依赖 C++ 内部实现细节",
