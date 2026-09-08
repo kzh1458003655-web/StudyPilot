@@ -1,7 +1,7 @@
 {
   "$schema": "./feature_list.schema.json",
   "schemaVersion": 1,
-  "lastUpdated": "2026-09-08T13:23:10+08:00",
+  "lastUpdated": "2026-09-08T15:42:00+08:00",
   "features": [
     {
       "id": "HARNESS-001",
@@ -40,7 +40,7 @@
       "name": "盘点现有实现并隔离旧代码",
       "description": "建立旧课程版归档分支和仓库外 worktree，形成现状清单、行为基线和可复用候选，当前目录不保留平行旧代码。",
       "dependencies": ["HARNESS-001"],
-      "status": "ready",
+      "status": "verified",
       "acceptanceCriteria": [
         "archive/legacy-course-prototype 分支可用于回看旧实现",
         "旧代码 worktree 位于当前仓库目录之外",
@@ -49,7 +49,12 @@
         "未开始产品功能实现"
       ],
       "branch": "refactor/architecture-baseline",
-      "evidence": [],
+      "evidence": [
+        "2026-09-08：archive/legacy-course-prototype 分支固定在 8fce55f，仓库外 StudyPilot-legacy worktree 可检出",
+        "2026-09-08：归档 worktree 执行 Maven 测试，16 个 Java 测试通过",
+        "2026-09-08：现状盘点和重构复用清单已记录旧版边界、候选、风险和验证证据",
+        "2026-09-08：本任务未新增或改写产品业务源码、数据库实现或旧版运行行为"
+      ],
       "docsToUpdate": [
         "docs/harness/progress.md",
         "docs/harness/session-handoff.md",
@@ -63,7 +68,7 @@
       "name": "建立后端目标骨架",
       "description": "按照后端架构基线建立 Java 21、Spring Boot 3.5 模块化单体、公共异常与 Gateway 契约，不迁入旧架构。",
       "dependencies": ["ARCH-001"],
-      "status": "blocked",
+      "status": "ready",
       "acceptanceCriteria": [
         "目标包结构和依赖方向与后端架构文档一致",
         "Maven Wrapper 和无外部服务骨架测试可运行",

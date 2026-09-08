@@ -2,11 +2,11 @@
 
 ## 当前状态
 
-- 最后更新：2026-09-08 13:23 +08:00
-- 当前分支：`docs/harness-foundation`
-- 已完成任务：`HARNESS-001` 建设 Agent Harness，状态为 `verified`
-- 当前状态：Harness 已建设并通过结构、提交、范围和初始化验证
-- 下一任务：`ARCH-001` 盘点现有实现并隔离旧代码，状态为唯一 `ready`
+- 最后更新：2026-09-08 15:42 +08:00
+- 当前分支：`refactor/architecture-baseline`
+- 已完成任务：`HARNESS-001`、`ARCH-001`，状态均为 `verified`
+- 当前状态：旧课程版已归档，目标架构尚未开始实现
+- 下一任务：`ARCH-002` 建立后端目标骨架，状态为唯一 `ready`
 
 ## 已完成
 
@@ -25,28 +25,26 @@
 ## 当前进行
 
 - 当前没有正在执行的实现任务。
-- 本轮必须在 Harness 完成后停止，不自动执行 `ARCH-001`。
+- `ARCH-001` 已按架构优先门禁结束，不提前进入后端、数据库或产品开发。
 
 ## 当前边界
 
-- 本任务不修改 `backend/src`、`ai/src` 或当前前端业务文件。
-- 本任务不创建数据库 Schema、不迁移 MySQL、不连接 Supabase。
-- 本任务不移动、删除或重构旧业务代码。
-- 本任务结束后立即停止，不自动执行 `ARCH-001`。
+- 本任务未修改 `backend/src`、`ai/src` 或当前前端业务文件。
+- 本任务未创建目标数据库 Schema、未迁移 MySQL、未连接 Supabase。
+- 旧业务代码未被移动、删除或重构；仅建立了归档分支与仓库外 worktree。
 
 ## 风险和注意事项
 
 - 当前代码仍是课程版原型，不能误写成已完成目标架构。
-- 当前有效文档与旧实现存在差异，后续必须通过架构迁移记录明确处理。
-- 文档已移动到 `docs/产品相关/`，所有入口链接需要使用新位置。
-- 旧文档在本次基线登记后冻结，后续修改必须由检查脚本阻止。
+- 归档版本的 `scripts/build.ps1` 在 Windows PowerShell 5.1 下存在 UTF-8 无 BOM 的解析风险；已记录，不能将其当作通过证据。
+- 目标 PostgreSQL/Supabase 测试环境尚未接入，后续不得伪造数据库集成结果。
 
 ## 下一步
 
 1. 下一位 Agent 运行 `./scripts/harness-init.ps1`。
-2. 阅读 Agent 入口、任务状态、交接和目标架构文档。
-3. 从包含最新 Harness 的基线创建 `refactor/architecture-baseline`。
-4. 只执行 `ARCH-001`，完成现状盘点、旧代码归档和行为基线。
+2. 阅读 Agent 入口、任务状态、交接和后端架构文档。
+3. 从 `refactor/backend-skeleton` 分支执行 `ARCH-002`，先建立无外部服务可测试的 Java 骨架。
+4. 不迁移旧 Controller、旧 MySQL SQL 或旧运行时建表逻辑。
 
 ## 会话变更
 
@@ -58,6 +56,8 @@
 - `build(ci): 接入 Harness 和提交规范检查`
 - `docs(harness): 同步有效文档和当前阶段`
 - `fix(harness): 修正初始化退出状态判断`
+- `fix(harness): 修复 Windows PowerShell 兼容`
+- `refactor(architecture): 归档课程版并建立行为基线`
 
 ## 关键决策
 
@@ -65,6 +65,7 @@
 - 架构重构完成前禁止开始产品任务。
 - 旧代码通过独立分支和仓库外 worktree 保留。
 - Commit 使用 Conventional Commit 类型、稳定 scope 和中文动作摘要。
+- 当前没有旧实现被直接复用到目标架构。
 
 具体理由和影响记录在 `docs/关键记录/决策记录/`。
 
@@ -74,4 +75,5 @@
 - `./scripts/harness-check.ps1 -BaseRef origin/main -CheckCommits -EnforceHarnessScope`：通过。
 - `./scripts/harness-init.ps1`：通过，能够输出当前分支、环境和唯一推荐任务。
 - JSON Schema：12 个任务全部通过结构校验。
+- 归档 worktree Maven 测试：16 个 Java 测试通过。
 - 业务范围：本轮未修改 `backend/src`、`ai/src` 或前端运行文件。

@@ -4,9 +4,9 @@ StudyPilot 当前采用 Harness 驱动的接力开发方式。仓库的第一优
 
 ## 当前状态
 
-- `HARNESS-001` 已验证完成，下一项唯一可执行任务是 `ARCH-001`。
-- `ARCH-001` 负责盘点现有实现，并为旧课程版代码建立独立归档分支和仓库外 worktree。
-- 建设 Harness 的 Agent 已在完成后停止；后续会话不得跳过 `ARCH-001`。
+- `HARNESS-001`、`ARCH-001` 已验证完成，下一项唯一可执行任务是 `ARCH-002`。
+- `ARCH-001` 已将课程版固定在 `archive/legacy-course-prototype` 分支和仓库外 worktree，现状盘点见 `docs/关键记录/现状盘点-ARCH-001.md`。
+- 后续会话不得跳过 `ARCH-002` 的后端目标骨架与 Gateway 契约。
 
 ## 每次开始工作
 
@@ -62,7 +62,7 @@ test(qa): 增加无依据拒答验证
 ## 旧代码复用
 
 - 当前目标工作目录不得长期保留一套平行旧代码。
-- 执行 `ARCH-001` 时，先建立 `archive/legacy-course-prototype` 分支和仓库外 worktree。
+- 旧代码仅从 `archive/legacy-course-prototype` 的仓库外 worktree 读取。
 - 不整目录复制旧实现；优先复用已有测试、纯算法、业务约束和已验证行为。
 - 复用前补充行为特征测试，并在 `docs/关键记录/重构复用清单.md` 记录旧位置、目标模块、调整原因和验证结果。
 - 架构耦合严重的实现只作参考，不强行迁移。

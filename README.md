@@ -8,13 +8,13 @@ StudyPilot 面向课程考试、考研、笔试和面试等以文本资料为主
 
 ## 当前开发阶段
 
-Agent Harness 已于 2026-09-08 建设并验证完成。本分支已在可运行课程原型中补齐考频、模拟出题和答题评测的最小闭环；后续架构重构仍以 `ARCH-001` 的验收标准为准。
+Agent Harness 与 `ARCH-001` 已验证完成。课程版原型（含考频、模拟出题和答题评测的最小闭环）已归档；后续架构重构从 `ARCH-002` 的后端目标骨架开始。
 
 - Agent 入口：[AGENTS.md](AGENTS.md)
 - Harness 状态：[docs/harness/](docs/harness/README.md)
 - 架构、数据库、接口和决策：[docs/关键记录/](docs/关键记录/README.md)
-- 已完成任务：`HARNESS-001`，状态为 `verified`
-- 下一任务：`ARCH-001`，用于将课程原型迁移到完整备考项目架构
+- 已完成任务：`HARNESS-001`、`ARCH-001`，状态均为 `verified`
+- 下一任务：`ARCH-002`，建立后端目标骨架与 Gateway 契约
 
 后续开发顺序固定为：架构重构、数据库与基础链路、三个产品模块、系统验证、最终交付。具体依赖和验收标准以 `docs/harness/feature_list.json` 为准。
 

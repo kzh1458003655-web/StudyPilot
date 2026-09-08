@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [string]$BaseRef = '',
     [switch]$CheckCommits,
@@ -99,7 +99,8 @@ $schemaPath = Join-Path $projectRoot 'docs/harness/feature_list.schema.json'
 if ((Test-Path -LiteralPath $featurePath) -and (Test-Path -LiteralPath $schemaPath)) {
     try {
         $featureRaw = Get-Content -LiteralPath $featurePath -Raw -Encoding UTF8
-        $featureList = $featureRaw | ConvertFrom-Json -Depth 100
+        # Keep the Harness check usable from both Windows PowerShell 5.1 and PowerShell 7.
+        $featureList = $featureRaw | ConvertFrom-Json
         if (Get-Command Test-Json -ErrorAction SilentlyContinue) {
             $schemaRaw = Get-Content -LiteralPath $schemaPath -Raw -Encoding UTF8
             if (-not (Test-Json -Json $featureRaw -Schema $schemaRaw -ErrorAction Stop)) {

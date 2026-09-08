@@ -52,7 +52,7 @@ Harness 采用指令、状态、验证、范围和生命周期五个部分，参
 - `done`：实现结束但证据尚未完整；
 - `verified`：验收标准和证据全部满足。
 
-同一时间最多一个任务为 `in_progress`。初始 Harness 完成后，只有 `ARCH-001` 为 `ready`，其余后续任务保持 `blocked`。
+同一时间最多一个任务为 `in_progress`。每次开始工作以 `feature_list.json` 的唯一 `ready` 任务为准，不能跳过依赖。
 
 ## 只读检查
 

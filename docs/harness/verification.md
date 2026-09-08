@@ -75,3 +75,12 @@ CI 在 Pull Request 中使用基线 commit 运行：
 初始化演练曾发现脚本误用外部命令退出码，已通过 `fix(harness): 修正初始化退出状态判断` 修复并重新验证。
 
 本次未运行产品构建和端到端测试，因为 Harness 任务没有修改业务源码，也不得借验证开始后续重构。现有 CI 仍会在 Harness 检查通过后执行原有 Java 和 C++ 构建。
+
+## ARCH-001 验证记录
+
+| 检查 | 命令或证据 | 结果 |
+| --- | --- | --- |
+| Harness 脚本兼容性 | Windows PowerShell 5.1 执行 `harness-check.ps1`、`harness-init.ps1` | 通过；修复 UTF-8 BOM 和 `ConvertFrom-Json -Depth` 兼容问题 |
+| 归档分支 | `git branch --show-current` 与 `git worktree list` | `archive/legacy-course-prototype` 指向 `8fce55f`，worktree 位于主仓库之外 |
+| Java 行为基线 | 归档 worktree 中执行 Maven 测试 | 16 项通过 |
+| 文档与复用记录 | `现状盘点-ARCH-001.md`、重构复用清单、进度与交接 | 已记录边界、候选、风险和下一任务 |
