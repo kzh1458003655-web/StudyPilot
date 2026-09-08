@@ -6,6 +6,8 @@ import io.zonky.test.db.postgres.embedded.EmbeddedPostgres;
 import cn.studypilot.document.model.DocumentChunk;
 import cn.studypilot.document.model.ExtractedPage;
 import cn.studypilot.document.repository.JdbcDocumentRepository;
+import cn.studypilot.qa.model.QaCitationEvidence;
+import cn.studypilot.qa.repository.JdbcQaRepository;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -50,7 +52,24 @@ class PostgreSqlSchemaIntegrationTest {
         long documentId = repository.create(1, indexId, "数据库.pdf", "LECTURE", "test.pdf", "hash-1");
         repository.replaceExtractedContent(documentId, List.of(new ExtractedPage(1, "第一页")),
             List.of(new DocumentChunk(1, 0, "测试片段", 4)));
-        assertThat(repository.findReadyIndexIds(1, List.of("LECTURE"))).containsExactly(indexId.toString());
+        assertThat(repository.findReadyDocuments(1, List.of("LECTURE"))).isEmpty();
+        repository.markReady(documentId);
+        assertThat(repository.findReadyDocuments(1, List.of("LECTURE")))
+            .extracting("indexId").containsExactly(indexId.toString());
+        assertThat(queryLong(connection, """
+            SELECT count(*) FROM studypilot.document_index_status
+            WHERE document_id = %d AND status = 'READY' AND chunk_count = 1
+            """.formatted(documentId))).isEqualTo(1L);
+
+        JdbcQaRepository qa = new JdbcQaRepository(new NamedParameterJdbcTemplate(dataSource));
+        long sessionId = qa.createSession(1L, "进程问题");
+        var exchange = qa.saveExchange(1L, sessionId, "什么是进程？", "进程是程序的一次执行过程。",
+            List.of(new QaCitationEvidence(indexId.toString(), "数据库.pdf", 1, "第一页", 0.91, 1)));
+        assertThat(qa.belongsToProject(sessionId, 1L)).isTrue();
+        assertThat(qa.belongsToProject(sessionId, 2L)).isFalse();
+        assertThat(qa.recentMessages(sessionId, 6)).extracting("role").containsExactly("USER", "ASSISTANT");
+        assertThat(queryLong(connection, "SELECT count(*) FROM studypilot.qa_citations WHERE assistant_message_id = " + exchange.assistantMessageId()))
+            .isEqualTo(1L);
 
         assertThat(queryLong(connection, """
             SELECT count(*) FROM information_schema.columns

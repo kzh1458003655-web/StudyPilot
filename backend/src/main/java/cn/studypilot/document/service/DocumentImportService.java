@@ -23,11 +23,17 @@ public class DocumentImportService {
       String contentHash, InputStream source) throws IOException {
     UUID indexId = UUID.randomUUID();
     long documentId = documents.create(projectId, indexId, displayName, documentType, filePath, contentHash);
-    var result = ingestion.ingest(source);
-    documents.replaceExtractedContent(documentId, result.pages(), result.chunks());
-    index.index(new IndexDocumentRequest(indexId.toString(), displayName,
-        result.pages().stream().map(page -> new IndexDocumentRequest.IndexPage(page.pageNumber(), page.text())).toList()));
-    return new ImportedDocument(documentId, indexId.toString(), result.pages().size(), result.chunks().size());
+    try {
+      var result = ingestion.ingest(source);
+      documents.replaceExtractedContent(documentId, result.pages(), result.chunks());
+      index.index(new IndexDocumentRequest(indexId.toString(), displayName,
+          result.pages().stream().map(page -> new IndexDocumentRequest.IndexPage(page.pageNumber(), page.text())).toList()));
+      documents.markReady(documentId);
+      return new ImportedDocument(documentId, indexId.toString(), result.pages().size(), result.chunks().size());
+    } catch (IOException | RuntimeException error) {
+      documents.markFailed(documentId, error.getMessage());
+      throw error;
+    }
   }
 
   public record ImportedDocument(long documentId, String indexId, int pageCount, int chunkCount) {}

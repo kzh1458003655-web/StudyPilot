@@ -1,6 +1,9 @@
 <template>
   <main class="app-shell">
-    <header><strong>StudyPilot</strong><span>架构骨架</span></header>
+    <header>
+      <RouterLink to="/projects"><strong>StudyPilot</strong></RouterLink
+      ><span>本地资料学习助手</span>
+    </header>
     <slot />
   </main>
 </template>

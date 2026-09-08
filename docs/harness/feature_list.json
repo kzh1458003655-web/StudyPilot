@@ -1,7 +1,7 @@
 {
   "$schema": "./feature_list.schema.json",
   "schemaVersion": 1,
-  "lastUpdated": "2026-09-08T18:45:00+08:00",
+  "lastUpdated": "2026-09-08T19:10:00+08:00",
   "features": [
     {
       "id": "HARNESS-001",
@@ -203,7 +203,11 @@
         "模块前后端、数据库和端到端测试通过"
       ],
       "branch": "feat/grounded-qa",
-      "evidence": [],
+      "evidence": [
+        "2026-09-08：完成 PDF 保存、页级提取、分块、C++ 索引、资料列表/删除及失败状态处理；只有索引成功才允许问答读取资料。",
+        "2026-09-08：完成项目范围问答、检索结果白名单过滤、本地模型调用、引用快照和资料不足拒答；Maven 全量 26 项测试通过，含真实 Embedded PostgreSQL 14.22。",
+        "2026-09-08：完成 Vue 项目创建、资料上传和知识问答页面；前端检查待最终页面变更后复跑。"
+      ],
       "docsToUpdate": [
         "docs/产品相关/产品架构.md",
         "docs/产品相关/需求规划.md",

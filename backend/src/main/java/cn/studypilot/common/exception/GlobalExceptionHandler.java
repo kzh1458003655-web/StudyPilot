@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 /** 将模块异常转换为稳定 HTTP 响应；完整业务错误由后续模块扩展。 */
 @RestControllerAdvice
@@ -23,6 +24,14 @@ public class GlobalExceptionHandler {
       default -> HttpStatus.BAD_REQUEST;
     };
     return ResponseEntity.status(status).body(error(error.code(), error.getMessage(), request));
+  }
+  @ExceptionHandler(IllegalArgumentException.class)
+  ResponseEntity<ErrorResponse> validation(IllegalArgumentException error, HttpServletRequest request) {
+    return ResponseEntity.badRequest().body(error(ErrorCode.VALIDATION_ERROR, error.getMessage(), request));
+  }
+  @ExceptionHandler(MethodArgumentNotValidException.class)
+  ResponseEntity<ErrorResponse> invalidRequest(MethodArgumentNotValidException error, HttpServletRequest request) {
+    return ResponseEntity.badRequest().body(error(ErrorCode.VALIDATION_ERROR, "请求参数不合法", request));
   }
   @ExceptionHandler(Exception.class)
   ResponseEntity<ErrorResponse> unexpected(Exception error, HttpServletRequest request) {
