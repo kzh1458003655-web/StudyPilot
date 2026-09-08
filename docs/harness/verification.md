@@ -78,6 +78,15 @@ CI 在 Pull Request 中使用基线 commit 运行：
 
 ## ARCH-001 验证记录
 
+## PROD-001 验证记录
+
+| 检查 | 命令或证据 | 结果 |
+| --- | --- | --- |
+| 后端完整测试 | `backend\mvnw.cmd test` | 27 项通过，覆盖资料解析、状态、项目隔离、引用快照、资料删除和数据库持久化。 |
+| 前端质量入口 | `frontend\pnpm run check` | 通过：ESLint、Prettier、vue-tsc、Vitest 和生产构建。 |
+| 无数据库启动 | `spring-boot:run --server.port=18083` | 服务启动；`/health` 返回 UP，依赖检查返回真实 C++ 与模型状态。 |
+| 真实产品路径 | `-Dstudypilot.e2e=true -Dtest=GroundedQaEndToEndTest test` | 通过：临时 PostgreSQL、Spring Boot、真实 C++ 索引和本地模型完成项目、PDF、问答引用和清理。 |
+
 | 检查 | 命令或证据 | 结果 |
 | --- | --- | --- |
 | Harness 脚本兼容性 | Windows PowerShell 5.1 执行 `harness-check.ps1`、`harness-init.ps1` | 通过；修复 UTF-8 BOM 和 `ConvertFrom-Json -Depth` 兼容问题 |
