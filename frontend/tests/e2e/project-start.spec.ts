@@ -37,8 +37,9 @@ test("creates a project and enters its isolated Q&A workspace", async ({
   });
 
   await page.goto("/projects");
-  await page.getByLabel("项目名称").fill("操作系统期末复习");
-  await page.getByRole("button", { name: "创建课程并进入问答" }).click();
+  await page.getByRole("button", { name: "新建课程" }).click();
+  await page.getByLabel("课程名称").fill("操作系统期末复习");
+  await page.getByRole("button", { name: "创建课程", exact: true }).click();
 
   await expect(page).toHaveURL(/\/projects\/42\/qa$/);
   await expect(page.getByRole("heading", { name: "知识问答" })).toBeVisible();

@@ -12,8 +12,9 @@ test("creates a project through the running local API", async ({ page }) => {
   const projectName = `浏览器验收-${Date.now()}`;
 
   await page.goto("/projects");
-  await page.getByLabel("项目名称").fill(projectName);
-  await page.getByRole("button", { name: "创建课程并进入问答" }).click();
+  await page.getByRole("button", { name: "新建课程" }).click();
+  await page.getByLabel("课程名称").fill(projectName);
+  await page.getByRole("button", { name: "创建课程", exact: true }).click();
 
   await expect(page).toHaveURL(/\/projects\/\d+\/qa$/);
   await expect(page.getByRole("heading", { name: "知识问答" })).toBeVisible();

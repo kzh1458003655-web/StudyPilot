@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { listProjects } from "@/modules/project/api/requests";
+import { createProject, listProjects } from "@/modules/project/api/requests";
 import type { StudyProject } from "@/modules/project/types/domain";
 
 const route = useRoute();
@@ -9,6 +9,11 @@ const router = useRouter();
 const projects = ref<StudyProject[]>([]);
 const loading = ref(false);
 const loadFailed = ref(false);
+const courseDialogOpen = ref(false);
+const courseName = ref("");
+const courseDescription = ref("");
+const creatingCourse = ref(false);
+const courseError = ref("");
 const quotes = [
   "慢慢来，把今天的一个问题弄懂就很好。",
   "暂时不会，是理解开始的地方。",
@@ -45,13 +50,43 @@ async function refreshProjects() {
 function openProject(project: StudyProject) {
   router.push(`/projects/${project.id}/qa`);
 }
-function createCourse() {
-  router.push("/projects");
+function openCourseDialog() {
+  courseError.value = "";
+  courseDialogOpen.value = true;
+}
+async function createCourse() {
+  if (!courseName.value.trim()) {
+    courseError.value = "请填写课程名称。";
+    return;
+  }
+  creatingCourse.value = true;
+  courseError.value = "";
+  try {
+    const project = await createProject(
+      courseName.value.trim(),
+      courseDescription.value.trim(),
+    );
+    await refreshProjects();
+    courseDialogOpen.value = false;
+    courseName.value = "";
+    courseDescription.value = "";
+    await router.push(`/projects/${project.id}/qa`);
+  } catch {
+    courseError.value = "课程创建失败，请确认本地服务已启动。";
+  } finally {
+    creatingCourse.value = false;
+  }
 }
 
 onMounted(refreshProjects);
 // Creating a project changes the route, so the course list refreshes automatically.
-watch(() => route.fullPath, refreshProjects);
+watch(
+  () => route.fullPath,
+  () => {
+    refreshProjects();
+    if (route.query.create === "1") openCourseDialog();
+  },
+);
 </script>
 
 <template>
@@ -61,7 +96,7 @@ watch(() => route.fullPath, refreshProjects);
         <span class="brand-mark">S</span>
         <span><strong>StudyPilot</strong><small>LOCAL STUDY SPACE</small></span>
       </RouterLink>
-      <button class="new-course" type="button" @click="createCourse">
+      <button class="new-course" type="button" @click="openCourseDialog">
         <span>＋</span> 新建课程
       </button>
 
@@ -130,5 +165,50 @@ watch(() => route.fullPath, refreshProjects);
       </header>
       <div class="workspace-content"><slot /></div>
     </main>
+    <div
+      v-if="courseDialogOpen"
+      class="modal-backdrop"
+      @click.self="courseDialogOpen = false"
+    >
+      <section
+        class="course-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="course-dialog-title"
+      >
+        <p class="eyebrow">NEW COURSE</p>
+        <h2 id="course-dialog-title">新建课程</h2>
+        <p class="subtle">每门课程都有独立的资料、问答、模拟考和测评记录。</p>
+        <form class="course-dialog-form" @submit.prevent="createCourse">
+          <label
+            >课程名称<input
+              v-model="courseName"
+              autofocus
+              maxlength="100"
+              placeholder="例如：操作系统期末复习"
+          /></label>
+          <label
+            >说明（可选）<textarea
+              v-model="courseDescription"
+              maxlength="1000"
+              placeholder="写下这门课程的学习目标"
+            />
+          </label>
+          <p v-if="courseError" class="error" role="alert">{{ courseError }}</p>
+          <div class="dialog-actions">
+            <button
+              class="secondary-button"
+              type="button"
+              @click="courseDialogOpen = false"
+            >
+              取消
+            </button>
+            <button :disabled="creatingCourse" type="submit">
+              {{ creatingCourse ? "正在创建…" : "创建课程" }}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
   </div>
 </template>
