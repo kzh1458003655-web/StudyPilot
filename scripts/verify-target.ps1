@@ -1,7 +1,8 @@
 ﻿[CmdletBinding()]
 param(
     [string]$OutputRoot,
-    [switch]$SkipWorkflow
+    [switch]$SkipWorkflow,
+    [switch]$RunBrowser
 )
 
 $ErrorActionPreference = 'Stop'
@@ -31,8 +32,12 @@ Invoke-LoggedCommand 'harness-check' $Script:StudyPilotRoot 'powershell.exe' @('
 if (-not $SkipWorkflow) {
     Invoke-LoggedCommand 'mock-exam-workflow' (Join-Path $Script:StudyPilotRoot 'backend') '.\mvnw.cmd' @('-Dstudypilot.e2e=true', '-Dtest=MockExamWorkflowEndToEndTest', 'test')
 }
+if ($RunBrowser) {
+    Invoke-LoggedCommand 'browser-e2e' (Join-Path $Script:StudyPilotRoot 'frontend') 'pnpm.cmd' @('run', 'test:e2e')
+}
 
 $workflow = if ($SkipWorkflow) { 'HTTP 工作流：本次按 -SkipWorkflow 跳过。' } else { 'HTTP 工作流：MockExamWorkflowEndToEndTest，使用临时 PostgreSQL 和受控网关。' }
+$browser = if ($RunBrowser) { '浏览器 E2E：Playwright Chromium 已执行。' } else { '浏览器 E2E：本次未启用，可附加 -RunBrowser。' }
 @(
     '# StudyPilot 目标架构验证记录', '',
     "- 执行时间：$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss K')",
@@ -40,6 +45,7 @@ $workflow = if ($SkipWorkflow) { 'HTTP 工作流：本次按 -SkipWorkflow 跳�
     '- 前端：ESLint、Prettier、类型检查、Vitest 与生产构建。',
     '- Harness：任务状态和文档链接检查。',
     "- $workflow",
+    "- $browser",
     "- 详细命令日志目录：$output"
 ) | Set-Content -LiteralPath (Join-Path $output "$stamp-验证摘要.md") -Encoding utf8
 Write-Host "验证通过。摘要与日志已写入 $output"

@@ -45,10 +45,14 @@ $actionable = @($featureList.features | Where-Object status -in @('ready', 'in_p
 $current = $actionable[0]
 
 Write-Host ''
-Write-Host '当前唯一推荐任务：' -ForegroundColor Cyan
-Write-Host "  $($current.id) [$($current.status)] $($current.name)"
-Write-Host "  分支：$($current.branch)"
-Write-Host "  说明：$($current.description)"
+if ($null -eq $current) {
+    Write-Host '当前任务状态：全部任务已 verified，无待执行任务。' -ForegroundColor Green
+} else {
+    Write-Host '当前唯一推荐任务：' -ForegroundColor Cyan
+    Write-Host "  $($current.id) [$($current.status)] $($current.name)"
+    Write-Host "  分支：$($current.branch)"
+    Write-Host "  说明：$($current.description)"
+}
 
 Write-Host ''
 Write-Host '开始修改前请依次阅读：'

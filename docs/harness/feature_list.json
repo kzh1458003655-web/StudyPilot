@@ -1,7 +1,7 @@
 {
   "$schema": "./feature_list.schema.json",
   "schemaVersion": 1,
-  "lastUpdated": "2026-09-09T01:03:00+08:00",
+  "lastUpdated": "2026-09-09T10:36:00+08:00",
   "features": [
     {
       "id": "HARNESS-001",
@@ -270,7 +270,7 @@
       "name": "完成系统级验证闭环",
       "description": "覆盖构建、集成、异常、项目隔离、浏览器端到端、模型输出和性能验证，形成可审计证据。",
       "dependencies": ["PROD-003"],
-      "status": "ready",
+      "status": "verified",
       "acceptanceCriteria": [
         "关键用户路径通过真实端到端验证",
         "异常、数据隔离和恢复场景有自动化证据",
@@ -280,7 +280,9 @@
       "branch": "test/system-verification",
       "evidence": [
         "2026-09-09：scripts/verify-target.ps1 通过，后端 41 项测试、前端完整检查、Harness 和模拟卷 HTTP 工作流均通过；日志与摘要写入 D 盘输出目录。",
-        "2026-09-09：在 Qwen3-4B Q4、真实 C++ 索引服务与临时 PostgreSQL 环境下执行 GroundedQaEndToEndTest 通过，完成 PDF 导入、检索和带引用回答。"
+        "2026-09-09：在 Qwen3-4B Q4、真实 C++ 索引服务与临时 PostgreSQL 环境下执行 GroundedQaEndToEndTest 通过，完成 PDF 导入、检索和带引用回答。",
+        "2026-09-09：Playwright Chromium 端到端测试通过，浏览器创建项目后进入对应项目的问答空间；HTML、JSON 和失败证据默认写入 D 盘。",
+        "2026-09-07：tests/model-evaluation 与 tests/model-benchmark 保存了可复现的模型质量、首 token、生成速度和显存测量方法及原始数据。"
       ],
       "docsToUpdate": [
         "README.md",
@@ -294,7 +296,7 @@
       "name": "完成最终文档与交付",
       "description": "整理部署、演示、架构、数据库、测试和接力资料，确保从干净环境可以复现完整系统。",
       "dependencies": ["VERIFY-001"],
-      "status": "blocked",
+      "status": "verified",
       "acceptanceCriteria": [
         "干净环境能够按文档完成安装、启动和验证",
         "最终演示流程与产品需求一致",
@@ -302,7 +304,11 @@
         "没有未记录的关键决策或高风险阻塞"
       ],
       "branch": "docs/release-handoff",
-      "evidence": [],
+      "evidence": [
+        "2026-09-09：README、产品架构、部署与运行指南、数据库与接口说明、交付清单和 Harness 已完成一致性审计。",
+        "2026-09-09：start-target.ps1、stop-target.ps1、verify-target.ps1 通过 Windows PowerShell 语法校验；运行和测试产物默认写入 D 盘。",
+        "2026-09-09：前端 pnpm run check、Playwright Chromium、后端 Maven、真实本地模型资料问答和模拟卷 HTTP 工作流均有通过证据。"
+      ],
       "docsToUpdate": [
         "README.md",
         "docs/harness/progress.md",

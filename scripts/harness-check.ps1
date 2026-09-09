@@ -214,7 +214,11 @@ if ($null -ne $featureList) {
     }
 
     $actionable = @($features | Where-Object status -in @('ready', 'in_progress', 'done'))
-    if ($actionable.Count -ne 1) {
+    # 全部任务均已验证时没有下一任务是合法终态；开发中仍要求唯一可操作任务。
+    $allVerified = $features.Count -gt 0 -and @($features | Where-Object status -ne 'verified').Count -eq 0
+    if ($actionable.Count -eq 0 -and $allVerified) {
+        # Final delivery state: no additional work item should be invented merely to satisfy the checker.
+    } elseif ($actionable.Count -ne 1) {
         Add-CheckFailure "必须恰好存在一个可操作任务（ready/in_progress/done），当前为：$($actionable.id -join ', ')"
     }
 }
@@ -309,7 +313,7 @@ if ($failures.Count -gt 0) {
 
 $actionableSummary = if ($null -ne $featureList) {
     $current = @($featureList.features | Where-Object status -in @('ready', 'in_progress', 'done')) | Select-Object -First 1
-    "$($current.id) [$($current.status)] $($current.name)"
+    if ($null -eq $current) { '全部任务已 verified' } else { "$($current.id) [$($current.status)] $($current.name)" }
 } else {
     '任务清单未加载'
 }

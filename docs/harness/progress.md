@@ -4,7 +4,7 @@
 
 - 最后更新：2026-09-09 00:46 +08:00
 - 已验证任务：`HARNESS-001`、`ARCH-001` 至 `ARCH-004`、`DB-001`、`INT-001`、`PROD-001` 至 `PROD-003`。
-- 当前任务：`VERIFY-001` 系统级验证闭环。
+- 交付状态：`RELEASE-001` 已完成，所有 Harness 任务均为 `verified`。
 
 ## 已完成产品能力
 
@@ -22,8 +22,9 @@
 - 前端 `pnpm run check` 通过，包含 ESLint、Prettier、TypeScript、Vitest 与生产构建；
 - 模拟卷 HTTP 工作流通过，使用临时 PostgreSQL 和受控 Gateway 完成项目、PDF、组卷、作答和评分；
 - 真实 `GroundedQaEndToEndTest` 通过：Qwen3-4B Q4、C++ 检索服务、Spring Boot 与临时 PostgreSQL 完成 PDF 导入、检索和带引用回答；
+- Playwright Chromium 浏览器测试通过：创建项目后进入该项目的问答空间，HTML/JSON 报告写入 D 盘；
 - Harness 检查通过；详细日志和验证摘要保留在 D 盘输出目录。
 
 ## 当前边界与下一步
 
-部署入口已切换为 `start-target.ps1`、`stop-target.ps1` 和 `verify-target.ps1`，不再将旧 MySQL 课程脚本作为目标架构的启动方式。真实本地模型实连已复跑通过；浏览器级 Playwright 场景尚未建立，因此 `VERIFY-001` 保持 `ready`，不能提前标为已验证。
+部署入口已切换为 `start-target.ps1`、`stop-target.ps1` 和 `verify-target.ps1`，不再将旧 MySQL 课程脚本作为目标架构的启动方式。真实本地模型实连、浏览器级 Playwright 场景和最终文档一致性审计均已通过；交付入口见 [最终交付清单](../交付清单.md)。
