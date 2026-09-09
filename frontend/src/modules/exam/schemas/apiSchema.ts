@@ -31,7 +31,12 @@ export const generatedExamSchema = envelope(
             ordinal: z.number().int().positive(),
             type: z.enum(["SINGLE_CHOICE", "SHORT_ANSWER"]),
             prompt: z.string().min(1),
-            options: z.array(z.string()),
+            // Short-answer items have no choices. The database represents that as
+            // null, while the page can use one stable empty-array shape.
+            options: z
+              .array(z.string())
+              .nullable()
+              .transform((options) => options ?? []),
             answer: z.string(),
             analysis: z.string(),
             knowledgePoint: z.string(),
