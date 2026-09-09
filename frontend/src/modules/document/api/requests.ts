@@ -29,14 +29,9 @@ export type CourseDocument = z.infer<
   typeof documentListResponseSchema
 >["data"][number];
 
-export async function uploadDocument(
-  projectId: number,
-  documentType: string,
-  file: File,
-) {
+export async function uploadDocument(projectId: number, file: File) {
   const body = new FormData();
   body.append("projectId", String(projectId));
-  body.append("documentType", documentType);
   body.append("file", file);
   const response = await http.post<unknown>("/documents", body);
   return importResponseSchema.parse(response.data).data;

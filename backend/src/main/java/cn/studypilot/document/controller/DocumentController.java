@@ -31,16 +31,24 @@ public class DocumentController {
     return new ApiResponse<>(data, request.getAttribute(RequestIdFilter.ATTRIBUTE).toString());
   }
   @PostMapping(consumes = "multipart/form-data") @ResponseStatus(HttpStatus.CREATED)
-  public ApiResponse<DocumentImportResponse> upload(@RequestParam long projectId, @RequestParam String documentType,
+  public ApiResponse<DocumentImportResponse> upload(@RequestParam long projectId, @RequestParam(required = false) String documentType,
       @RequestPart MultipartFile file, HttpServletRequest request) throws IOException {
     if (projectId <= 0) throw new IllegalArgumentException("课程项目编号必须为正数");
     if (file.isEmpty()) throw new IllegalArgumentException("上传文件不能为空");
-    if (!DOCUMENT_TYPES.contains(documentType)) throw new IllegalArgumentException("资料类型不合法");
+    if (documentType != null && !DOCUMENT_TYPES.contains(documentType)) throw new IllegalArgumentException("资料类型不合法");
+    documentType = documentType == null ? classify(file.getOriginalFilename()) : documentType;
     var stored = storage.store(projectId, file);
     try (var source = Files.newInputStream(Path.of(stored.path()))) {
       var imported = importer.importPdf(projectId, stored.displayName(), documentType, stored.path(), stored.contentHash(), source);
       return new ApiResponse<>(new DocumentImportResponse(imported.documentId(), imported.indexId(), imported.pageCount(), imported.chunkCount()), request.getAttribute(RequestIdFilter.ATTRIBUTE).toString());
     }
+  }
+  /** Keeps the upload form simple while routing likely papers to the analysis workflow. */
+  private String classify(String filename) {
+    String value = filename == null ? "" : filename.toLowerCase(java.util.Locale.ROOT);
+    if (value.contains("final") || value.contains("midterm") || value.contains("exam") || value.contains("试卷") || value.contains("真题")) return "PAST_EXAM";
+    if (value.contains("answer") || value.contains("答案")) return "REFERENCE_ANSWER";
+    return "LECTURE";
   }
   @DeleteMapping("/{documentId}") @ResponseStatus(HttpStatus.NO_CONTENT)
   public void delete(@PathVariable long documentId, @RequestParam long projectId) throws IOException {

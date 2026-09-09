@@ -42,8 +42,8 @@ const archivedProjects = computed(() =>
   projects.value.filter((project) => project.archivedAt),
 );
 const currentSection = computed(() => {
+  if (route.path.endsWith("/frequency")) return "frequency";
   if (route.path.endsWith("/exams")) return "exams";
-  if (route.path.endsWith("/assessment")) return "assessment";
   return "qa";
 });
 
@@ -224,10 +224,10 @@ watch(
           模拟考
         </RouterLink>
         <RouterLink
-          :class="{ active: currentSection === 'assessment' }"
-          :to="`/projects/${projectId}/assessment`"
+          :class="{ active: currentSection === 'frequency' }"
+          :to="`/projects/${projectId}/frequency`"
         >
-          测评
+          考频分析
         </RouterLink>
       </nav>
 

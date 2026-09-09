@@ -6,4 +6,10 @@ export const examRoutes: RouteRecordRaw[] = [
     component: () => import("./pages/ExamPage.vue"),
     meta: { title: "真题分析与模拟考" },
   },
+  {
+    path: "/projects/:projectId/frequency",
+    name: "project-frequency",
+    component: () => import("./pages/FrequencyPage.vue"),
+    meta: { title: "考频分析" },
+  },
 ];

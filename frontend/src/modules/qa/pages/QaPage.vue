@@ -26,17 +26,8 @@ const documentsLoading = ref(false);
 const documentError = ref("");
 const documentNotice = ref("");
 const selectedFile = ref<File>();
-const documentType = ref("LECTURE");
 const uploading = ref(false);
 const fileInput = ref<HTMLInputElement>();
-
-const documentTypeLabel: Record<string, string> = {
-  TEXTBOOK: "教材",
-  LECTURE: "讲义",
-  KNOWLEDGE: "知识点",
-  PAST_EXAM: "历年题",
-  REFERENCE_ANSWER: "参考答案",
-};
 
 async function loadDocuments() {
   if (!Number.isInteger(projectId.value) || projectId.value <= 0) return;
@@ -62,11 +53,7 @@ async function uploadMaterial() {
   documentError.value = "";
   documentNotice.value = "";
   try {
-    const result = await uploadDocument(
-      projectId.value,
-      documentType.value,
-      selectedFile.value,
-    );
+    const result = await uploadDocument(projectId.value, selectedFile.value);
     documentNotice.value = `已提取 ${result.pageCount} 页，建立 ${result.chunkCount} 个检索片段。`;
     selectedFile.value = undefined;
     if (fileInput.value) fileInput.value.value = "";
@@ -215,13 +202,6 @@ watch(projectId, () => {
         </div>
         <p>资料只用于当前课程，回答会引用命中的原文页码。</p>
         <form class="side-upload" @submit.prevent="uploadMaterial">
-          <select v-model="documentType" aria-label="资料类型">
-            <option value="TEXTBOOK">教材</option>
-            <option value="LECTURE">讲义</option>
-            <option value="KNOWLEDGE">知识点</option>
-            <option value="PAST_EXAM">历年题</option>
-            <option value="REFERENCE_ANSWER">参考答案</option>
-          </select>
           <label class="upload-picker">
             <input
               ref="fileInput"
@@ -252,11 +232,7 @@ watch(projectId, () => {
             <div>
               <strong>{{ document.displayName }}</strong>
               <small>
-                {{
-                  documentTypeLabel[document.documentType] ??
-                  document.documentType
-                }}
-                · {{ document.pageCount }} 页 ·
+                {{ document.pageCount }} 页 ·
                 {{ document.status === "READY" ? "已就绪" : "处理中" }}
               </small>
             </div>
