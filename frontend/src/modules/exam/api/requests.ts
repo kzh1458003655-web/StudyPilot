@@ -51,3 +51,11 @@ export async function getMockExam(
   });
   return generatedExamSchema.parse(response.data).data;
 }
+export async function listMockExams(
+  projectId: number,
+): Promise<Array<{ id: number; title: string; itemCount: number }>> {
+  const response = await http.get<{
+    data: Array<{ id: number; title: string; itemCount: number }>;
+  }>("/exams", { params: { projectId } });
+  return response.data.data;
+}

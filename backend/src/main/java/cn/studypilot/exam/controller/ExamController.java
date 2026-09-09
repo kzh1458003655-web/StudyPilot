@@ -39,4 +39,8 @@ public class ExamController {
   public ApiResponse<cn.studypilot.exam.model.MockExamDetail> find(@PathVariable long examId, @RequestParam long projectId, HttpServletRequest request) {
     return new ApiResponse<>(query.find(projectId, examId), request.getAttribute(RequestIdFilter.ATTRIBUTE).toString());
   }
+  @GetMapping
+  public ApiResponse<java.util.List<cn.studypilot.exam.model.MockExamSummary>> list(@RequestParam long projectId, HttpServletRequest request) {
+    return new ApiResponse<>(query.list(projectId), request.getAttribute(RequestIdFilter.ATTRIBUTE).toString());
+  }
 }

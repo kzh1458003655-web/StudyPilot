@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import cn.studypilot.exam.model.GeneratedExamItem;
 import cn.studypilot.exam.model.MockExamDetail;
 import cn.studypilot.exam.model.MockExamItemView;
+import cn.studypilot.exam.model.MockExamSummary;
 import cn.studypilot.exam.model.SavedMockExam;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +52,14 @@ public class JdbcMockExamRepository implements MockExamRepository {
         row.getString("analysis"), row.getString("knowledge_point"), row.getDouble("score")));
     Object[] record = header.getFirst();
     return Optional.of(new MockExamDetail((long) record[0], (String) record[1], items));
+  }
+  @Override public List<MockExamSummary> listByProject(long projectId) {
+    return jdbc.query("""
+        SELECT e.id, e.title, count(i.id) AS item_count
+        FROM studypilot.mock_exams e LEFT JOIN studypilot.mock_exam_items i ON i.exam_id = e.id
+        WHERE e.project_id = :projectId GROUP BY e.id, e.title ORDER BY e.id DESC
+        """, Map.of("projectId", projectId), (row, ignored) -> new MockExamSummary(
+        row.getLong("id"), row.getString("title"), row.getInt("item_count")));
   }
   private String serialize(List<String> options) { try { return json.writeValueAsString(options); } catch (Exception error) { throw new IllegalStateException(error); } }
   private List<String> deserialize(String options) { try { return json.readValue(options, new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {}); } catch (Exception error) { throw new IllegalStateException(error); } }

@@ -16,4 +16,7 @@ public class MockExamQueryService {
     return exams.findByProject(projectId, examId)
         .orElseThrow(() -> new ResourceNotFoundException("模拟卷不存在或不属于当前项目"));
   }
+  public java.util.List<cn.studypilot.exam.model.MockExamSummary> list(long projectId) {
+    return exams.listByProject(projectId);
+  }
 }

@@ -9,6 +9,7 @@ vi.mock("../api/requests", () => ({
   generateMockExam,
   getKnowledgePoints: vi.fn().mockResolvedValue([]),
   getMockExam: vi.fn(),
+  listMockExams: vi.fn().mockResolvedValue([]),
 }));
 
 describe("ExamPage", () => {

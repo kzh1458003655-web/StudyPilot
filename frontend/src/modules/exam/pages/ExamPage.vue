@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { toAppError } from "@/shared/api/http";
-import { generateMockExam } from "../api/requests";
+import { generateMockExam, listMockExams } from "../api/requests";
 
 const route = useRoute();
 const router = useRouter();
@@ -10,6 +10,18 @@ const projectId = computed(() => Number(route.params.projectId));
 const instructions = ref("");
 const generating = ref(false);
 const errorMessage = ref("");
+const history = ref<Array<{ id: number; title: string; itemCount: number }>>(
+  [],
+);
+
+async function loadHistory() {
+  history.value = await listMockExams(projectId.value);
+}
+onMounted(() =>
+  loadHistory().catch(() => {
+    /* The empty history message remains usable. */
+  }),
+);
 async function generate() {
   generating.value = true;
   errorMessage.value = "";
@@ -18,6 +30,7 @@ async function generate() {
       projectId.value,
       instructions.value.trim(),
     );
+    await loadHistory();
     await router.push(`/projects/${projectId.value}/exams/${id}/take`);
   } catch (error) {
     errorMessage.value = toAppError(error).message;
@@ -62,5 +75,18 @@ async function generate() {
         </button>
       </article>
     </div>
+    <article class="exam-card">
+      <h2>已生成的模拟卷</h2>
+      <p v-if="!history.length" class="subtle">本课程还没有生成记录。</p>
+      <div v-for="exam in history" :key="exam.id" class="frequency-paper">
+        <span
+          ><strong>{{ exam.title }}</strong
+          ><small>{{ exam.itemCount }} 道题</small></span
+        >
+        <RouterLink :to="`/projects/${projectId}/exams/${exam.id}/take`"
+          >继续作答</RouterLink
+        >
+      </div>
+    </article>
   </section>
 </template>
