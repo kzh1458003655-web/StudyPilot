@@ -9,12 +9,12 @@ import cn.studypilot.exam.service.PastPaperAnalysisService;
 import cn.studypilot.exam.service.MockExamGenerationService;
 import cn.studypilot.exam.service.MockExamQueryService;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import cn.studypilot.common.database.ConditionalOnStudyPilotDatabase;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/exams")
-@ConditionalOnProperty(prefix = "studypilot.database", name = "url")
+@ConditionalOnStudyPilotDatabase
 public class ExamController {
   private final PastPaperAnalysisService service; private final MockExamGenerationService generation; private final MockExamQueryService query;
   public ExamController(PastPaperAnalysisService service, MockExamGenerationService generation, MockExamQueryService query) { this.service = service; this.generation = generation; this.query = query; }

@@ -128,6 +128,16 @@ flowchart LR
 
 当前工作目录是目标版本：以“备考项目”为边界，使用 PostgreSQL、资料驱动组卷和结构化模型评分。课程版原型仅保留在 `archive/legacy-course-prototype` 分支供回看，不能使用其中的 MySQL 启动脚本。
 
+### 快速体验（无需预装 PostgreSQL）
+
+在仓库根目录执行：
+
+```powershell
+.\scripts\start-local-demo.ps1
+```
+
+随后访问 <http://127.0.0.1:5173/>。该命令使用临时嵌入式 PostgreSQL，关闭服务后数据不作为正式资料保留；正式部署仍按 [部署与运行指南](docs/部署与运行指南.md) 配置 PostgreSQL。
+
 目标版本已经实现 PDF 资料处理、溯源问答、真题分析、固定四题模拟卷、在线作答与测评。完整运行需要 PostgreSQL、C++ 检索服务和本地模型服务；详细功能边界见 [产品架构与当前实现](docs/产品相关/产品架构.md)。
 
 ## 目标仓库结构

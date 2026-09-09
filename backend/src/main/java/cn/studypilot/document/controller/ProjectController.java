@@ -8,12 +8,12 @@ import cn.studypilot.document.service.ProjectService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import cn.studypilot.common.database.ConditionalOnStudyPilotDatabase;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/projects")
-@ConditionalOnProperty(prefix = "studypilot.database", name = "url")
+@ConditionalOnStudyPilotDatabase
 public class ProjectController {
   private final ProjectService projects;
   public ProjectController(ProjectService projects) { this.projects = projects; }

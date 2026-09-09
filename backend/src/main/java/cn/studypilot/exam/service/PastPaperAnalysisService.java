@@ -9,13 +9,13 @@ import cn.studypilot.exam.repository.ExamAnalysisRepository;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import cn.studypilot.common.database.ConditionalOnStudyPilotDatabase;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /** Fixed workflow: extract only reliable text questions, normalize points, then replace this paper's analysis. */
 @Service
-@ConditionalOnProperty(prefix = "studypilot.database", name = "url")
+@ConditionalOnStudyPilotDatabase
 public class PastPaperAnalysisService {
   private final DocumentQueryService documents; private final PastPaperQuestionParser parser;
   private final KnowledgePointNormalizer normalizer; private final ExamAnalysisRepository repository;

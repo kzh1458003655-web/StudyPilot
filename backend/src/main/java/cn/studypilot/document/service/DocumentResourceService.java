@@ -6,12 +6,12 @@ import cn.studypilot.retrieval.gateway.DocumentIndexGateway;
 import java.io.IOException;
 import java.util.List;
 import org.springframework.stereotype.Service;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import cn.studypilot.common.database.ConditionalOnStudyPilotDatabase;
 import org.springframework.transaction.annotation.Transactional;
 
 /** Read and deletion workflow for the resource centre, always constrained by its project id. */
 @Service
-@ConditionalOnProperty(prefix = "studypilot.database", name = "url")
+@ConditionalOnStudyPilotDatabase
 public class DocumentResourceService {
   private final DocumentRepository documents;
   private final DocumentIndexGateway index;

@@ -7,11 +7,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import cn.studypilot.common.database.ConditionalOnStudyPilotDatabase;
 
 /** Coordinates one document import; controllers never talk to the repository or C++ gateway directly. */
 @Service
-@ConditionalOnProperty(prefix = "studypilot.database", name = "url")
+@ConditionalOnStudyPilotDatabase
 public class DocumentImportService {
   private final DocumentIngestionService ingestion;
   private final DocumentRepository documents;

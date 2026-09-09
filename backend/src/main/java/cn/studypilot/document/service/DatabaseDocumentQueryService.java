@@ -5,7 +5,7 @@ import cn.studypilot.document.model.DocumentReference;
 import cn.studypilot.document.model.DocumentPageForAnalysis;
 import java.util.List;
 import org.springframework.stereotype.Service;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import cn.studypilot.common.database.ConditionalOnStudyPilotDatabase;
 
 /**
  * Resolves the evidence scope used by grounded QA.
@@ -15,7 +15,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
  * a different module's answer key.</p>
  */
 @Service
-@ConditionalOnProperty(prefix = "studypilot.database", name = "url")
+@ConditionalOnStudyPilotDatabase
 public class DatabaseDocumentQueryService implements DocumentQueryService {
   private static final List<String> QA_DOCUMENT_TYPES = List.of("TEXTBOOK", "LECTURE", "KNOWLEDGE");
   private final DocumentRepository documents;

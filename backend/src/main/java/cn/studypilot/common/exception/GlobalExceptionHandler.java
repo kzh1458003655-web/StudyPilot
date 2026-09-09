@@ -9,10 +9,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** 将模块异常转换为稳定 HTTP 响应；完整业务错误由后续模块扩展。 */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+  private static final Logger LOG = LoggerFactory.getLogger(GlobalExceptionHandler.class);
   @ExceptionHandler(BusinessException.class)
   ResponseEntity<ErrorResponse> business(BusinessException error, HttpServletRequest request) {
     HttpStatus status = switch (error.code()) {
@@ -35,6 +38,8 @@ public class GlobalExceptionHandler {
   }
   @ExceptionHandler(Exception.class)
   ResponseEntity<ErrorResponse> unexpected(Exception error, HttpServletRequest request) {
+    LOG.error("Unhandled request failure: method={} uri={} requestId={}", request.getMethod(),
+        request.getRequestURI(), request.getAttribute(RequestIdFilter.ATTRIBUTE), error);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
         .body(error(ErrorCode.INTERNAL_ERROR, "服务暂时不可用", request));
   }

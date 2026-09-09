@@ -3,12 +3,12 @@ package cn.studypilot.exam.service;
 import cn.studypilot.common.exception.ResourceNotFoundException;
 import cn.studypilot.exam.model.MockExamDetail;
 import cn.studypilot.exam.repository.MockExamRepository;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import cn.studypilot.common.database.ConditionalOnStudyPilotDatabase;
 import org.springframework.stereotype.Service;
 
 /** Keeps generated-paper lookup project-scoped, matching the rest of the product API. */
 @Service
-@ConditionalOnProperty(prefix = "studypilot.database", name = "url")
+@ConditionalOnStudyPilotDatabase
 public class MockExamQueryService {
   private final MockExamRepository exams;
   public MockExamQueryService(MockExamRepository exams) { this.exams = exams; }

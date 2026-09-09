@@ -18,13 +18,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import cn.studypilot.common.database.ConditionalOnStudyPilotDatabase;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /** Generates a small new exam from evidence, never copies a past-paper stem into the saved exam. */
 @Service
-@ConditionalOnProperty(prefix = "studypilot.database", name = "url")
+@ConditionalOnStudyPilotDatabase
 public class MockExamGenerationService {
   private final DocumentQueryService documents; private final RetrievalGateway retrieval; private final ModelGateway model;
   private final GeneratedExamItemParser parser; private final GeneratedExamValidator validator; private final MockExamRepository exams;
