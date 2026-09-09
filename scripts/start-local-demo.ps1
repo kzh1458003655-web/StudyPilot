@@ -10,6 +10,8 @@ param(
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 New-Item -ItemType Directory -Force -Path $OutputRoot | Out-Null
+$javaTempRoot = Join-Path $OutputRoot 'java-tmp'
+New-Item -ItemType Directory -Force -Path $javaTempRoot | Out-Null
 
 foreach ($port in @($BackendPort, $FrontendPort)) {
     if (Get-NetTCPConnection -State Listen -LocalPort $port -ErrorAction SilentlyContinue) {
@@ -19,7 +21,7 @@ foreach ($port in @($BackendPort, $FrontendPort)) {
 
 # Spring Boot receives both values through one Maven property. Without the inner quotes,
 # Maven parses the database flag as a Maven CLI option and the demonstration server never starts.
-$backendCommand = ".\mvnw.cmd spring-boot:run `"-Dspring-boot.run.arguments=--server.port=$BackendPort --studypilot.local-embedded-db.enabled=true`""
+$backendCommand = "set `"JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=$javaTempRoot`"&& set `"MAVEN_USER_HOME=$javaTempRoot\m2`"&& .\mvnw.cmd spring-boot:run `"-Dspring-boot.run.arguments=--server.port=$BackendPort --studypilot.local-embedded-db.enabled=true`""
 $backend = Start-Process -FilePath 'cmd.exe' -ArgumentList @('/d', '/c', $backendCommand) -WorkingDirectory (Join-Path $projectRoot 'backend') -WindowStyle Hidden -RedirectStandardOutput (Join-Path $OutputRoot 'local-demo-backend.stdout.log') -RedirectStandardError (Join-Path $OutputRoot 'local-demo-backend.stderr.log') -PassThru
 try {
     $ready = $false
