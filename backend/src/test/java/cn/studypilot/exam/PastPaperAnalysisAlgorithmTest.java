@@ -19,4 +19,14 @@ class PastPaperAnalysisAlgorithmTest {
     assertThat(new KnowledgePointNormalizer().extractAndNormalize("请比较 process 与 thread，并说明线程调度。"))
         .containsExactlyInAnyOrder("进程与线程", "进程调度");
   }
+
+  @Test void recognizesProblemHeadersAndParenthesizedQuestionNumbersAcrossPages() {
+    var parser = new PastPaperQuestionParser();
+    assertThat(parser.parse(java.util.List.of(
+        new ExtractedPage(1, "Problem 1. 第一题内容\nProblem 2. 第二题内容"))))
+        .extracting("ordinal").containsExactly(1, 2);
+    assertThat(parser.parse(java.util.List.of(
+        new ExtractedPage(1, "(1) 第一题内容\n(a) 小问\n(2) 第二题内容"))))
+        .extracting("ordinal").containsExactly(1, 2);
+  }
 }

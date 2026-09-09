@@ -38,7 +38,9 @@ test("completes the browser workflow from course creation to assessment", async 
     page.getByRole("heading", { name: "历年试卷考频" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "开始分析" }).click();
-  await expect(page.locator(".success")).toContainText("识别", {
+  // The fixture has ten explicit “Problem N.” headers; option numbers must not
+  // inflate this count.
+  await expect(page.locator(".success")).toContainText("识别 10 题", {
     timeout: 60_000,
   });
 
