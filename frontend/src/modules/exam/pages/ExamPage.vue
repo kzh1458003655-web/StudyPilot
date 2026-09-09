@@ -69,7 +69,7 @@ onMounted(async () => {
         <p class="eyebrow">本课程 · 真题分析</p>
         <h1>真题分析与模拟考</h1>
       </div>
-      <RouterLink :to="`/projects/${projectId}/resources`">管理资料</RouterLink>
+      <RouterLink :to="`/projects/${projectId}/qa`">课程问答</RouterLink>
     </div>
     <p class="subtle">
       先上传“历年真题”PDF。填写上传完成后显示的资料编号，系统会提取题目、归一知识点并统计考频；模拟卷仅依据已就绪的教材、讲义和知识点资料生成。

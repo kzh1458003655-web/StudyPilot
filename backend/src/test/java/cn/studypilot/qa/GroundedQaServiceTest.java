@@ -51,20 +51,23 @@ class GroundedQaServiceTest {
     verify(qa).saveExchange(eq(7L), eq(101L), anyString(), anyString(), argThat(items -> items.size() == 1));
   }
 
-  @Test void refusesDeterministicAnswerWithoutReadyKnowledgeDocuments() {
+  @Test void answersGeneralQuestionWithoutCourseMaterialsAndDoesNotInventCitations() {
     DocumentQueryService documents = Mockito.mock(DocumentQueryService.class);
     RetrievalGateway retrieval = Mockito.mock(RetrievalGateway.class);
     ModelGateway model = Mockito.mock(ModelGateway.class);
     QaRepository qa = Mockito.mock(QaRepository.class);
     given(qa.createSession(eq(7L), anyString())).willReturn(101L);
     given(documents.availableDocuments("7")).willReturn(List.of());
+    given(model.complete(any())).willReturn(new ModelResponse("Qwen", "进程是程序的一次运行实例。", Duration.ofMillis(20)));
     given(qa.saveExchange(eq(7L), eq(101L), anyString(), anyString(), anyList())).willReturn(new SavedQaExchange(201L, 202L));
 
     var response = new GroundedQaService(documents, retrieval, model, qa).ask(new AskQaRequest(7L, null, "什么是进程？"));
 
-    assertThat(response.status()).isEqualTo("INSUFFICIENT_EVIDENCE");
+    assertThat(response.status()).isEqualTo("ANSWERED");
+    assertThat(response.answer()).contains("进程");
     assertThat(response.citations()).isEmpty();
-    verifyNoInteractions(retrieval, model);
+    verifyNoInteractions(retrieval);
+    verify(model).complete(argThat(request -> request.messages().getFirst().content().contains("尚未添加资料")));
   }
 
   @Test void rejectsAConversationBelongingToAnotherProject() {

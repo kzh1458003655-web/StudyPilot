@@ -37,6 +37,12 @@ test("creates a project and enters its isolated Q&A workspace", async ({
       }),
     });
   });
+  await page.route("**/api/v1/documents?projectId=42", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ data: [], requestId: "playwright-document-list" }),
+    });
+  });
 
   await page.goto("/projects");
   await page.getByRole("button", { name: "新建课程" }).click();
@@ -47,6 +53,6 @@ test("creates a project and enters its isolated Q&A workspace", async ({
   await expect(page.getByRole("heading", { name: "知识问答" })).toBeVisible();
   await expect(page.getByText("本课程 · 可追溯回答")).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "操作系统期末复习" }),
+    page.locator(".course-item", { hasText: "操作系统期末复习" }),
   ).toBeVisible();
 });

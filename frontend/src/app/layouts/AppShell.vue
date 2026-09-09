@@ -19,6 +19,7 @@ const courseName = ref("");
 const courseDescription = ref("");
 const creatingCourse = ref(false);
 const courseError = ref("");
+const courseMenuProjectId = ref<number>();
 const quotes = [
   "慢慢来，把今天的一个问题弄懂就很好。",
   "暂时不会，是理解开始的地方。",
@@ -41,7 +42,6 @@ const archivedProjects = computed(() =>
   projects.value.filter((project) => project.archivedAt),
 );
 const currentSection = computed(() => {
-  if (route.path.endsWith("/resources")) return "resources";
   if (route.path.endsWith("/exams")) return "exams";
   if (route.path.endsWith("/assessment")) return "assessment";
   return "qa";
@@ -65,16 +65,15 @@ function openCourseDialog() {
   courseError.value = "";
   courseDialogOpen.value = true;
 }
-async function archiveCurrentCourse() {
-  if (!activeProject.value) return;
-  if (
-    !window.confirm(`归档“${activeProject.value.name}”吗？资料和记录会保留。`)
-  )
-    return;
+function toggleCourseMenu(id: number) {
+  courseMenuProjectId.value = courseMenuProjectId.value === id ? undefined : id;
+}
+async function archiveCourse(project: StudyProject) {
   try {
-    await archiveProject(activeProject.value.id);
+    await archiveProject(project.id);
     await refreshProjects();
-    await router.push("/projects");
+    courseMenuProjectId.value = undefined;
+    if (project.id === projectId.value) await router.push("/projects");
   } catch {
     courseError.value = "课程归档失败，请稍后重试。";
   }
@@ -83,6 +82,7 @@ async function restoreCourse(project: StudyProject) {
   try {
     await restoreProject(project.id);
     await refreshProjects();
+    courseMenuProjectId.value = undefined;
     await router.push(`/projects/${project.id}/qa`);
   } catch {
     courseError.value = "课程恢复失败，请稍后重试。";
@@ -125,7 +125,7 @@ watch(
 
 <template>
   <div class="study-shell">
-    <aside class="course-sidebar">
+    <aside class="course-sidebar" @click="courseMenuProjectId = undefined">
       <RouterLink class="brand" to="/projects" aria-label="StudyPilot 课程主页">
         <span class="brand-mark">S</span>
         <span><strong>StudyPilot</strong><small>LOCAL STUDY SPACE</small></span>
@@ -144,16 +144,35 @@ watch(
           <p v-else-if="!visibleProjects.length" class="side-muted">
             还没有课程，先新建一个。
           </p>
-          <button
+          <div
             v-for="project in visibleProjects"
             :key="project.id"
-            class="course-item"
-            :class="{ selected: project.id === projectId }"
-            type="button"
-            @click="openProject(project)"
+            class="course-row"
           >
-            <span class="course-folder">□</span><span>{{ project.name }}</span>
-          </button>
+            <button
+              class="course-item"
+              :class="{ selected: project.id === projectId }"
+              type="button"
+              @click="openProject(project)"
+            >
+              <span class="course-folder">□</span
+              ><span>{{ project.name }}</span>
+            </button>
+            <button
+              class="course-more"
+              :aria-expanded="courseMenuProjectId === project.id"
+              :aria-label="`课程操作：${project.name}`"
+              type="button"
+              @click.stop="toggleCourseMenu(project.id)"
+            >
+              ⋯
+            </button>
+            <div v-if="courseMenuProjectId === project.id" class="course-menu">
+              <button type="button" @click="archiveCourse(project)">
+                归档课程
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -172,7 +191,20 @@ watch(
             class="archived-course"
           >
             <span>□ {{ project.name }}</span>
-            <button type="button" @click="restoreCourse(project)">恢复</button>
+            <button
+              class="course-more"
+              :aria-expanded="courseMenuProjectId === project.id"
+              :aria-label="`课程操作：${project.name}`"
+              type="button"
+              @click.stop="toggleCourseMenu(project.id)"
+            >
+              ⋯
+            </button>
+            <div v-if="courseMenuProjectId === project.id" class="course-menu">
+              <button type="button" @click="restoreCourse(project)">
+                恢复课程
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -186,12 +218,6 @@ watch(
           问答
         </RouterLink>
         <RouterLink
-          :class="{ active: currentSection === 'resources' }"
-          :to="`/projects/${projectId}/resources`"
-        >
-          资料库
-        </RouterLink>
-        <RouterLink
           :class="{ active: currentSection === 'exams' }"
           :to="`/projects/${projectId}/exams`"
         >
@@ -203,19 +229,10 @@ watch(
         >
           测评
         </RouterLink>
-        <button
-          class="archive-course"
-          type="button"
-          @click="archiveCurrentCourse"
-        >
-          归档本课程
-        </button>
       </nav>
 
       <div class="study-quote"><span>学习提醒</span>{{ quote }}</div>
-      <div class="local-state">
-        <i /> 本地学习空间 <small>课程资料互不共享</small>
-      </div>
+      <div class="local-state"><i /> 本地学习空间</div>
     </aside>
     <main class="main-pane">
       <header class="workspace-header">

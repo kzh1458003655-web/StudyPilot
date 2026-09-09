@@ -47,7 +47,7 @@ public class GroundedQaService {
     long projectId = request.projectId();
     long sessionId = resolveSession(projectId, request.sessionId(), request.question());
     List<DocumentReference> available = documents.availableDocuments(Long.toString(projectId));
-    if (available.isEmpty()) return saveInsufficient(projectId, sessionId, request.question(), "当前项目没有可用于问答的知识资料。请先上传教材、讲义或知识点资料并等待处理完成。");
+    if (available.isEmpty()) return answerWithoutCourseMaterials(projectId, sessionId, request.question());
 
     Map<String, String> names = available.stream().collect(Collectors.toMap(DocumentReference::indexId,
         DocumentReference::displayName, (first, ignored) -> first, LinkedHashMap::new));
@@ -74,6 +74,18 @@ public class GroundedQaService {
   private QaAnswerResponse saveInsufficient(long projectId, long sessionId, String question, String answer) {
     var saved = qa.saveExchange(projectId, sessionId, question.trim(), answer, List.of());
     return new QaAnswerResponse(sessionId, saved.userMessageId(), saved.assistantMessageId(), INSUFFICIENT_EVIDENCE, answer, List.of());
+  }
+
+  /** Uses the local model for a new course, while intentionally returning no course citations. */
+  private QaAnswerResponse answerWithoutCourseMaterials(long projectId, long sessionId, String question) {
+    List<ModelMessage> messages = List.of(
+        new ModelMessage("system", "你是学习助手。当前课程尚未添加资料，可以回答通用知识问题。使用简洁中文；不要声称答案来自课程资料，也不要编造引用。"),
+        new ModelMessage("user", question.trim()));
+    String answer = model.complete(new ModelRequest(ModelTaskType.QA_ANSWER, messages,
+        0.3, 600, Duration.ofSeconds(60))).content().trim();
+    if (answer.isBlank()) throw new IllegalStateException("模型没有返回可用回答");
+    var saved = qa.saveExchange(projectId, sessionId, question.trim(), answer, List.of());
+    return new QaAnswerResponse(sessionId, saved.userMessageId(), saved.assistantMessageId(), "ANSWERED", answer, List.of());
   }
 
   private List<QaCitationEvidence> toEvidence(List<RetrievalHit> hits, Map<String, String> names) {

@@ -1,7 +1,13 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { toAppError } from "@/shared/api/http";
+import {
+  deleteDocument,
+  listDocuments,
+  uploadDocument,
+} from "@/modules/document/api/requests";
+import type { CourseDocument } from "@/modules/document/api/requests";
 import { askQuestion } from "../api/requests";
 import type { QaAnswer } from "../types/domain";
 interface Turn {
@@ -15,6 +21,77 @@ const sessionId = ref<number>();
 const turns = ref<Turn[]>([]);
 const asking = ref(false);
 const errorMessage = ref("");
+const documents = ref<CourseDocument[]>([]);
+const documentsLoading = ref(false);
+const documentError = ref("");
+const documentNotice = ref("");
+const selectedFile = ref<File>();
+const documentType = ref("LECTURE");
+const uploading = ref(false);
+const fileInput = ref<HTMLInputElement>();
+
+const documentTypeLabel: Record<string, string> = {
+  TEXTBOOK: "教材",
+  LECTURE: "讲义",
+  KNOWLEDGE: "知识点",
+  PAST_EXAM: "历年题",
+  REFERENCE_ANSWER: "参考答案",
+};
+
+async function loadDocuments() {
+  if (!Number.isInteger(projectId.value) || projectId.value <= 0) return;
+  documentsLoading.value = true;
+  documentError.value = "";
+  try {
+    documents.value = await listDocuments(projectId.value);
+  } catch (error) {
+    documentError.value = toAppError(error).message;
+  } finally {
+    documentsLoading.value = false;
+  }
+}
+function selectFile(event: Event) {
+  selectedFile.value = (event.target as HTMLInputElement).files?.[0];
+}
+async function uploadMaterial() {
+  if (!selectedFile.value) {
+    documentError.value = "请选择一份文字型 PDF。";
+    return;
+  }
+  uploading.value = true;
+  documentError.value = "";
+  documentNotice.value = "";
+  try {
+    const result = await uploadDocument(
+      projectId.value,
+      documentType.value,
+      selectedFile.value,
+    );
+    documentNotice.value = `已提取 ${result.pageCount} 页，建立 ${result.chunkCount} 个检索片段。`;
+    selectedFile.value = undefined;
+    if (fileInput.value) fileInput.value.value = "";
+    await loadDocuments();
+  } catch (error) {
+    documentError.value = toAppError(error).message;
+  } finally {
+    uploading.value = false;
+  }
+}
+async function removeDocument(document: CourseDocument) {
+  if (
+    !window.confirm(
+      `删除“${document.displayName}”吗？这会移除本课程中的文件和索引。`,
+    )
+  )
+    return;
+  try {
+    await deleteDocument(projectId.value, document.id);
+    documentNotice.value = "资料已删除。";
+    await loadDocuments();
+  } catch (error) {
+    documentError.value = toAppError(error).message;
+  }
+}
 async function ask() {
   if (
     !question.value.trim() ||
@@ -40,6 +117,15 @@ async function ask() {
     asking.value = false;
   }
 }
+
+onMounted(loadDocuments);
+watch(projectId, () => {
+  sessionId.value = undefined;
+  turns.value = [];
+  selectedFile.value = undefined;
+  documentNotice.value = "";
+  loadDocuments();
+});
 </script>
 <template>
   <section class="workspace">
@@ -49,9 +135,6 @@ async function ask() {
         <h1>知识问答</h1>
       </div>
       <div class="workspace-links">
-        <RouterLink :to="`/projects/${projectId}/resources`">
-          管理资料
-        </RouterLink>
         <RouterLink :to="`/projects/${projectId}/exams`">
           真题分析与模拟考
         </RouterLink>
@@ -111,7 +194,11 @@ async function ask() {
             :disabled="asking"
           />
           <div class="composer-foot">
-            <span>仅使用当前课程资料</span>
+            <span>{{
+              documents.length
+                ? "优先使用当前课程资料"
+                : "当前无资料，将使用本地模型回答"
+            }}</span>
             <span v-if="errorMessage" class="error" role="alert">{{
               errorMessage
             }}</span>
@@ -124,12 +211,64 @@ async function ask() {
       <aside class="qa-sidecard">
         <div class="panel-heading">
           <h3>本课程资料</h3>
-          <span>独立存储</span>
+          <span>{{ documents.length }} 份</span>
         </div>
-        <p>教材、讲义和知识点资料只会用于当前课程的回答。</p>
-        <RouterLink :to="`/projects/${projectId}/resources`">
-          管理课程资料 →
-        </RouterLink>
+        <p>资料只用于当前课程，回答会引用命中的原文页码。</p>
+        <form class="side-upload" @submit.prevent="uploadMaterial">
+          <select v-model="documentType" aria-label="资料类型">
+            <option value="TEXTBOOK">教材</option>
+            <option value="LECTURE">讲义</option>
+            <option value="KNOWLEDGE">知识点</option>
+            <option value="PAST_EXAM">历年题</option>
+            <option value="REFERENCE_ANSWER">参考答案</option>
+          </select>
+          <label class="upload-picker">
+            <input
+              ref="fileInput"
+              accept="application/pdf,.pdf"
+              type="file"
+              @change="selectFile"
+            />
+            <span>{{ selectedFile?.name ?? "选择 PDF 文件" }}</span>
+          </label>
+          <button type="submit" :disabled="uploading">
+            {{ uploading ? "正在建立索引…" : "上传资料" }}
+          </button>
+        </form>
+        <p v-if="documentNotice" class="success side-message" role="status">
+          {{ documentNotice }}
+        </p>
+        <p v-if="documentError" class="error side-message" role="alert">
+          {{ documentError }}
+        </p>
+        <div class="document-list" aria-label="当前课程资料列表">
+          <p v-if="documentsLoading" class="side-muted">正在读取资料…</p>
+          <p v-else-if="!documents.length" class="side-muted">尚未添加资料。</p>
+          <article
+            v-for="document in documents"
+            :key="document.id"
+            class="document-item"
+          >
+            <div>
+              <strong>{{ document.displayName }}</strong>
+              <small>
+                {{
+                  documentTypeLabel[document.documentType] ??
+                  document.documentType
+                }}
+                · {{ document.pageCount }} 页 ·
+                {{ document.status === "READY" ? "已就绪" : "处理中" }}
+              </small>
+            </div>
+            <button
+              type="button"
+              :aria-label="`删除 ${document.displayName}`"
+              @click="removeDocument(document)"
+            >
+              ×
+            </button>
+          </article>
+        </div>
         <div class="side-note">
           <strong>让回答更有依据</strong><br />添加文字型 PDF
           后，回答会附上页码和原文片段。
