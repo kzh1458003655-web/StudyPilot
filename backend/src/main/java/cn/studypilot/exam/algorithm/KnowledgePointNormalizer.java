@@ -27,7 +27,7 @@ public class KnowledgePointNormalizer {
     DICTIONARY.put("连续性", List.of("continuous", "continuity", "连续函数", "连续性"));
     DICTIONARY.put("一致收敛", List.of("uniform convergence", "converges uniformly", "一致收敛"));
     DICTIONARY.put("实变函数与可积性", List.of("riemann", "step function", "real analysis", "实变", "黎曼"));
-    DICTIONARY.put("数列", List.of("subsequence", "sequence {", "数列", "子列"));
+    DICTIONARY.put("序列与子序列", List.of("subsequence", "sequence {", "数列", "子列"));
     DICTIONARY.put("数学归纳法", List.of("induction", "归纳法"));
     DICTIONARY.put("进程与线程", List.of("进程", "线程", "process", "thread"));
     DICTIONARY.put("进程调度", List.of("调度", "时间片", "scheduler"));

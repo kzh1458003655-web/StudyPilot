@@ -23,7 +23,7 @@ class PastPaperAnalysisAlgorithmTest {
   @Test void avoidsBroadEnglishWordsThatCreateFalseMathOrDatabaseTopics() {
     assertThat(new KnowledgePointNormalizer().extractAndNormalize(
         "The input size limit is documented. The sequence of transactions is sorted."))
-        .doesNotContain("极限", "数列", "数据库事务");
+        .doesNotContain("极限", "序列与子序列", "数据库事务");
   }
 
   @Test void recognizesProblemHeadersAndParenthesizedQuestionNumbersAcrossPages() {
