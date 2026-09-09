@@ -43,7 +43,7 @@ import org.springframework.util.MultiValueMap;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class GroundedQaEndToEndTest {
   private static final EmbeddedPostgres POSTGRES = startPostgres();
-  private static final List<String> SCRIPTS = List.of("00-schema.sql", "10-common.sql", "20-document.sql", "30-qa.sql", "40-exam.sql", "50-assessment.sql", "90-indexes.sql");
+  private static final List<String> SCRIPTS = List.of("00-schema.sql", "10-common.sql", "20-document.sql", "30-qa.sql", "40-exam.sql", "50-assessment.sql", "60-project-archive.sql", "90-indexes.sql");
   @LocalServerPort int port;
   @Autowired TestRestTemplate http;
 

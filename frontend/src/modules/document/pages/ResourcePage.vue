@@ -44,7 +44,7 @@ async function submit() {
   <section class="workspace">
     <div class="workspace-head">
       <div>
-        <p class="eyebrow">项目 {{ projectId }}</p>
+        <p class="eyebrow">本课程 · 独立资料库</p>
         <h1>资料管理</h1>
       </div>
       <div class="workspace-links">

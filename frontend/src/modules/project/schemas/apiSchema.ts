@@ -6,6 +6,7 @@ export const projectResponseSchema = z.object({
     name: z.string().min(1),
     description: z.string(),
     createdAt: z.string(),
+    archivedAt: z.string().nullable(),
   }),
   requestId: z.string().min(1),
 });

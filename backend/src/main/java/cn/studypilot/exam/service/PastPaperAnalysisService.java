@@ -26,7 +26,10 @@ public class PastPaperAnalysisService {
     var pages = documents.pastPaperPages(Long.toString(projectId), documentId);
     if (pages.isEmpty()) throw new IllegalArgumentException("未找到可分析的已就绪历年真题资料");
     var questions = parser.parse(pages.stream().map(page -> new ExtractedPage(page.pageNumber(), page.text())).toList());
-    Map<Integer, List<String>> points = questions.stream().collect(Collectors.toMap(question -> question.ordinal(), question -> normalizer.extractAndNormalize(question.text())));
+    // Numbering can restart on a new page or in a nested section.  The parsed question itself is
+    // the stable key, so every extracted occurrence keeps its own knowledge-point result.
+    Map<cn.studypilot.exam.model.ParsedSourceQuestion, List<String>> points = questions.stream()
+        .collect(Collectors.toMap(question -> question, question -> normalizer.extractAndNormalize(question.text())));
     repository.replaceAnalysis(projectId, documentId, questions, points);
     long analyzed = points.values().stream().filter(list -> !list.isEmpty()).count();
     return new AnalysisResult(questions.size(), analyzed, questions.size() - analyzed);

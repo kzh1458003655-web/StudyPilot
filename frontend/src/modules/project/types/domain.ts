@@ -3,4 +3,5 @@ export interface StudyProject {
   name: string;
   description: string;
   createdAt: string;
+  archivedAt: string | null;
 }

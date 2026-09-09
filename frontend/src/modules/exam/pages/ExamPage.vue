@@ -66,7 +66,7 @@ onMounted(async () => {
   <section class="workspace">
     <div class="workspace-head">
       <div>
-        <p class="eyebrow">项目 {{ projectId }}</p>
+        <p class="eyebrow">本课程 · 真题分析</p>
         <h1>真题分析与模拟考</h1>
       </div>
       <RouterLink :to="`/projects/${projectId}/resources`">管理资料</RouterLink>

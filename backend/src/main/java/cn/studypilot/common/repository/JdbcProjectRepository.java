@@ -1,6 +1,5 @@
 package cn.studypilot.common.repository;
 
-import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.Optional;
@@ -15,14 +14,25 @@ import org.springframework.stereotype.Repository;
 @ConditionalOnBean(NamedParameterJdbcTemplate.class)
 public class JdbcProjectRepository implements ProjectRepository {
   private static final String FIND_BY_ID = """
-      SELECT id, name, description, created_at, updated_at
+      SELECT id, name, description, created_at, updated_at, archived_at
       FROM studypilot.projects
       WHERE id = :projectId
       """;
   private static final String LIST = """
-      SELECT id, name, description, created_at, updated_at
+      SELECT id, name, description, created_at, updated_at, archived_at
       FROM studypilot.projects
+      WHERE (:includeArchived OR archived_at IS NULL)
       ORDER BY updated_at DESC, id DESC
+      """;
+  private static final String ARCHIVE = """
+      UPDATE studypilot.projects
+      SET archived_at = now(), updated_at = now()
+      WHERE id = :projectId AND archived_at IS NULL
+      """;
+  private static final String RESTORE = """
+      UPDATE studypilot.projects
+      SET archived_at = NULL, updated_at = now()
+      WHERE id = :projectId AND archived_at IS NOT NULL
       """;
 
   private final NamedParameterJdbcTemplate jdbc;
@@ -39,25 +49,35 @@ public class JdbcProjectRepository implements ProjectRepository {
   }
 
   @Override
-  public java.util.List<ProjectRecord> list() {
-    return jdbc.query(LIST, (resultSet, rowNumber) -> new ProjectRecord(
-        resultSet.getLong("id"),
-        resultSet.getString("name"),
-        resultSet.getString("description"),
-        resultSet.getObject("created_at", OffsetDateTime.class).toInstant(),
-        resultSet.getObject("updated_at", OffsetDateTime.class).toInstant()));
+  public java.util.List<ProjectRecord> list(boolean includeArchived) {
+    return jdbc.query(LIST, Map.of("includeArchived", includeArchived),
+        (resultSet, rowNumber) -> mapProject(resultSet));
   }
 
   @Override
   public Optional<ProjectRecord> findById(long projectId) {
     return jdbc.query(FIND_BY_ID, Map.of("projectId", projectId), (resultSet, rowNumber) ->
-        new ProjectRecord(
-            resultSet.getLong("id"),
-            resultSet.getString("name"),
-            resultSet.getString("description"),
-            resultSet.getObject("created_at", OffsetDateTime.class).toInstant(),
-            resultSet.getObject("updated_at", OffsetDateTime.class).toInstant()))
+        mapProject(resultSet))
         .stream()
         .findFirst();
+  }
+
+  @Override
+  public boolean archive(long projectId) {
+    return jdbc.update(ARCHIVE, Map.of("projectId", projectId)) == 1;
+  }
+
+  @Override
+  public boolean restore(long projectId) {
+    return jdbc.update(RESTORE, Map.of("projectId", projectId)) == 1;
+  }
+
+  private ProjectRecord mapProject(java.sql.ResultSet resultSet) throws java.sql.SQLException {
+    OffsetDateTime archivedAt = resultSet.getObject("archived_at", OffsetDateTime.class);
+    return new ProjectRecord(
+        resultSet.getLong("id"), resultSet.getString("name"), resultSet.getString("description"),
+        resultSet.getObject("created_at", OffsetDateTime.class).toInstant(),
+        resultSet.getObject("updated_at", OffsetDateTime.class).toInstant(),
+        archivedAt == null ? null : archivedAt.toInstant());
   }
 }

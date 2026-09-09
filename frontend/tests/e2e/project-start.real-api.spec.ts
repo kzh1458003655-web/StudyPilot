@@ -18,6 +18,16 @@ test("creates a project through the running local API", async ({ page }) => {
 
   await expect(page).toHaveURL(/\/projects\/\d+\/qa$/);
   await expect(page.getByRole("heading", { name: "知识问答" })).toBeVisible();
-  await expect(page.getByText(/项目 \d+/)).toBeVisible();
+  await expect(page.getByText("本课程 · 可追溯回答")).toBeVisible();
   await expect(page.getByRole("button", { name: projectName })).toBeVisible();
+
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "归档本课程" }).click();
+  await expect(page).toHaveURL(/\/projects$/);
+  const archivedCourse = page.locator(".archived-course", {
+    hasText: projectName,
+  });
+  await expect(archivedCourse).toBeVisible();
+  await archivedCourse.getByRole("button", { name: "恢复" }).click();
+  await expect(page).toHaveURL(/\/projects\/\d+\/qa$/);
 });

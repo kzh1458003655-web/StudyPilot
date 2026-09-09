@@ -45,7 +45,7 @@ async function ask() {
   <section class="workspace">
     <div class="workspace-head">
       <div>
-        <p class="eyebrow">项目 {{ projectId }}</p>
+        <p class="eyebrow">本课程 · 可追溯回答</p>
         <h1>知识问答</h1>
       </div>
       <div class="workspace-links">

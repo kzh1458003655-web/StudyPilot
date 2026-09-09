@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface ExamAnalysisRepository {
-  void replaceAnalysis(long projectId, long documentId, List<ParsedSourceQuestion> questions, Map<Integer, List<String>> knowledgePoints);
+  void replaceAnalysis(long projectId, long documentId, List<ParsedSourceQuestion> questions,
+      Map<ParsedSourceQuestion, List<String>> knowledgePoints);
   List<KnowledgePointFrequency> frequencies(long projectId);
 }

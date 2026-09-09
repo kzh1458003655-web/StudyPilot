@@ -58,7 +58,7 @@ import org.springframework.util.MultiValueMap;
 class MockExamWorkflowEndToEndTest {
   private static final EmbeddedPostgres POSTGRES = startPostgres();
   private static final AtomicReference<String> SOURCE_ID = new AtomicReference<>();
-  private static final List<String> SCRIPTS = List.of("00-schema.sql", "10-common.sql", "20-document.sql", "30-qa.sql", "40-exam.sql", "50-assessment.sql", "90-indexes.sql");
+  private static final List<String> SCRIPTS = List.of("00-schema.sql", "10-common.sql", "20-document.sql", "30-qa.sql", "40-exam.sql", "50-assessment.sql", "60-project-archive.sql", "90-indexes.sql");
   @LocalServerPort int port;
   @Autowired TestRestTemplate http;
 

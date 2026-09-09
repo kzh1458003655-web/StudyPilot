@@ -61,7 +61,7 @@ onMounted(load);
   <section class="workspace">
     <div class="workspace-head">
       <div>
-        <p class="eyebrow">项目 {{ projectId }}</p>
+        <p class="eyebrow">本课程 · 作答评测</p>
         <h1>在线作答与测评</h1>
       </div>
       <RouterLink :to="`/projects/${projectId}/exams`">返回模拟考</RouterLink>

@@ -23,7 +23,12 @@ public class ProjectController {
     return new ApiResponse<>(projects.create(request), http.getAttribute(RequestIdFilter.ATTRIBUTE).toString());
   }
   @GetMapping
-  public ApiResponse<List<ProjectResponse>> list(HttpServletRequest http) {
-    return new ApiResponse<>(projects.list(), http.getAttribute(RequestIdFilter.ATTRIBUTE).toString());
+  public ApiResponse<List<ProjectResponse>> list(
+      @RequestParam(defaultValue = "false") boolean includeArchived, HttpServletRequest http) {
+    return new ApiResponse<>(projects.list(includeArchived), http.getAttribute(RequestIdFilter.ATTRIBUTE).toString());
   }
+  @PostMapping("/{projectId}/archive") @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void archive(@PathVariable long projectId) { projects.archive(projectId); }
+  @PostMapping("/{projectId}/restore") @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void restore(@PathVariable long projectId) { projects.restore(projectId); }
 }

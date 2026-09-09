@@ -12,7 +12,7 @@ import org.springframework.core.io.ClassPathResource;
 class SchemaConventionTest {
   private static final List<String> FILES = List.of(
       "00-schema.sql", "10-common.sql", "20-document.sql", "30-qa.sql",
-      "40-exam.sql", "50-assessment.sql", "90-indexes.sql");
+      "40-exam.sql", "50-assessment.sql", "60-project-archive.sql", "90-indexes.sql");
 
   @Test void schemaFilesUseTargetSchemaAndAvoidLegacyMysqlSyntax() throws IOException {
     for (String file : FILES) {

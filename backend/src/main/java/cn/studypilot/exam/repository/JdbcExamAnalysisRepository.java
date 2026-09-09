@@ -15,7 +15,8 @@ import org.springframework.stereotype.Repository;
 public class JdbcExamAnalysisRepository implements ExamAnalysisRepository {
   private final NamedParameterJdbcTemplate jdbc;
   public JdbcExamAnalysisRepository(NamedParameterJdbcTemplate jdbc) { this.jdbc = jdbc; }
-  @Override public void replaceAnalysis(long projectId, long documentId, List<ParsedSourceQuestion> questions, Map<Integer, List<String>> points) {
+  @Override public void replaceAnalysis(long projectId, long documentId, List<ParsedSourceQuestion> questions,
+      Map<ParsedSourceQuestion, List<String>> points) {
     jdbc.update("DELETE FROM studypilot.source_questions WHERE project_id = :projectId AND document_id = :documentId", Map.of("projectId", projectId, "documentId", documentId));
     for (ParsedSourceQuestion question : questions) {
       GeneratedKeyHolder key = new GeneratedKeyHolder();
@@ -24,7 +25,7 @@ public class JdbcExamAnalysisRepository implements ExamAnalysisRepository {
           VALUES (:projectId, :documentId, :page, 'SHORT_ANSWER', :stem, '', :raw)
           """, new MapSqlParameterSource().addValue("projectId", projectId).addValue("documentId", documentId).addValue("page", question.pageNumber()).addValue("stem", question.text()).addValue("raw", question.text()), key, new String[] {"id"});
       long questionId = key.getKey().longValue();
-      for (String point : points.getOrDefault(question.ordinal(), List.of())) jdbc.update("""
+      for (String point : points.getOrDefault(question, List.of())) jdbc.update("""
           INSERT INTO studypilot.question_knowledge_points (question_id, knowledge_point, confidence)
           VALUES (:questionId, :point, 1.0)
           """, Map.of("questionId", questionId, "point", point));

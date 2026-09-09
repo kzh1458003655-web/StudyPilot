@@ -2,6 +2,7 @@ package cn.studypilot.document.service;
 
 import cn.studypilot.common.repository.ProjectRecord;
 import cn.studypilot.common.repository.ProjectRepository;
+import cn.studypilot.common.exception.ResourceNotFoundException;
 import cn.studypilot.document.dto.CreateProjectRequest;
 import cn.studypilot.document.dto.ProjectResponse;
 import java.util.List;
@@ -15,11 +16,18 @@ public class ProjectService {
   public ProjectService(ProjectRepository projects) { this.projects = projects; }
   public ProjectResponse create(CreateProjectRequest request) {
     ProjectRecord project = projects.create(request.name().trim(), request.description() == null ? "" : request.description().trim());
-    return new ProjectResponse(project.id(), project.name(), project.description(), project.createdAt());
+    return toResponse(project);
   }
-  public List<ProjectResponse> list() {
-    return projects.list().stream()
-        .map(project -> new ProjectResponse(project.id(), project.name(), project.description(), project.createdAt()))
-        .toList();
+  public List<ProjectResponse> list(boolean includeArchived) {
+    return projects.list(includeArchived).stream().map(this::toResponse).toList();
+  }
+  public void archive(long projectId) {
+    if (!projects.archive(projectId)) throw new ResourceNotFoundException("课程不存在或已经归档");
+  }
+  public void restore(long projectId) {
+    if (!projects.restore(projectId)) throw new ResourceNotFoundException("课程不存在或未归档");
+  }
+  private ProjectResponse toResponse(ProjectRecord project) {
+    return new ProjectResponse(project.id(), project.name(), project.description(), project.createdAt(), project.archivedAt());
   }
 }

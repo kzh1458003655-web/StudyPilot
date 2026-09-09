@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { createProject, listProjects } from "@/modules/project/api/requests";
+import {
+  archiveProject,
+  createProject,
+  listProjects,
+  restoreProject,
+} from "@/modules/project/api/requests";
 import type { StudyProject } from "@/modules/project/types/domain";
 
 const route = useRoute();
@@ -29,6 +34,12 @@ const projectId = computed(() => {
 const activeProject = computed(() =>
   projects.value.find((project) => project.id === projectId.value),
 );
+const visibleProjects = computed(() =>
+  projects.value.filter((project) => !project.archivedAt),
+);
+const archivedProjects = computed(() =>
+  projects.value.filter((project) => project.archivedAt),
+);
 const currentSection = computed(() => {
   if (route.path.endsWith("/resources")) return "resources";
   if (route.path.endsWith("/exams")) return "exams";
@@ -40,7 +51,7 @@ async function refreshProjects() {
   loading.value = true;
   loadFailed.value = false;
   try {
-    projects.value = await listProjects();
+    projects.value = await listProjects(true);
   } catch {
     loadFailed.value = true;
   } finally {
@@ -53,6 +64,29 @@ function openProject(project: StudyProject) {
 function openCourseDialog() {
   courseError.value = "";
   courseDialogOpen.value = true;
+}
+async function archiveCurrentCourse() {
+  if (!activeProject.value) return;
+  if (
+    !window.confirm(`归档“${activeProject.value.name}”吗？资料和记录会保留。`)
+  )
+    return;
+  try {
+    await archiveProject(activeProject.value.id);
+    await refreshProjects();
+    await router.push("/projects");
+  } catch {
+    courseError.value = "课程归档失败，请稍后重试。";
+  }
+}
+async function restoreCourse(project: StudyProject) {
+  try {
+    await restoreProject(project.id);
+    await refreshProjects();
+    await router.push(`/projects/${project.id}/qa`);
+  } catch {
+    courseError.value = "课程恢复失败，请稍后重试。";
+  }
 }
 async function createCourse() {
   if (!courseName.value.trim()) {
@@ -102,16 +136,16 @@ watch(
 
       <section class="course-section" aria-label="课程列表">
         <div class="side-heading">
-          <span>我的课程</span><small>{{ projects.length }}</small>
+          <span>我的课程</span><small>{{ visibleProjects.length }}</small>
         </div>
         <div class="course-list">
           <p v-if="loading" class="side-muted">正在读取课程…</p>
           <p v-else-if="loadFailed" class="side-muted">本地服务未连接</p>
-          <p v-else-if="!projects.length" class="side-muted">
+          <p v-else-if="!visibleProjects.length" class="side-muted">
             还没有课程，先新建一个。
           </p>
           <button
-            v-for="project in projects"
+            v-for="project in visibleProjects"
             :key="project.id"
             class="course-item"
             :class="{ selected: project.id === projectId }"
@@ -120,6 +154,26 @@ watch(
           >
             <span class="course-folder">□</span><span>{{ project.name }}</span>
           </button>
+        </div>
+      </section>
+
+      <section
+        v-if="archivedProjects.length"
+        class="course-section archived-section"
+        aria-label="已归档课程"
+      >
+        <div class="side-heading">
+          <span>已归档</span><small>{{ archivedProjects.length }}</small>
+        </div>
+        <div class="course-list">
+          <div
+            v-for="project in archivedProjects"
+            :key="project.id"
+            class="archived-course"
+          >
+            <span>□ {{ project.name }}</span>
+            <button type="button" @click="restoreCourse(project)">恢复</button>
+          </div>
         </div>
       </section>
 
@@ -149,6 +203,13 @@ watch(
         >
           测评
         </RouterLink>
+        <button
+          class="archive-course"
+          type="button"
+          @click="archiveCurrentCourse"
+        >
+          归档本课程
+        </button>
       </nav>
 
       <div class="study-quote"><span>学习提醒</span>{{ quote }}</div>

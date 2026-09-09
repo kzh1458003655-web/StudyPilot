@@ -27,9 +27,10 @@ class PastPaperAnalysisServiceTest {
 
     assertThat(result.detectedQuestions()).isEqualTo(2);
     assertThat(result.analyzedQuestions()).isEqualTo(2);
-    ArgumentCaptor<java.util.Map<Integer, List<String>>> points = ArgumentCaptor.forClass(java.util.Map.class);
+    ArgumentCaptor<java.util.Map<cn.studypilot.exam.model.ParsedSourceQuestion, List<String>>> points = ArgumentCaptor.forClass(java.util.Map.class);
     verify(repository).replaceAnalysis(eq(8L), eq(12L), anyList(), points.capture());
-    assertThat(points.getValue().get(1)).contains("进程与线程");
-    assertThat(points.getValue().get(2)).contains("死锁");
+    assertThat(points.getValue().values())
+        .anySatisfy(value -> assertThat(value).contains("进程与线程"))
+        .anySatisfy(value -> assertThat(value).contains("死锁"));
   }
 }

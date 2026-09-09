@@ -36,7 +36,7 @@ import java.util.UUID;
 class PostgreSqlSchemaIntegrationTest {
   private static final List<String> SCHEMA_FILES = List.of(
       "00-schema.sql", "10-common.sql", "20-document.sql", "30-qa.sql",
-      "40-exam.sql", "50-assessment.sql", "90-indexes.sql");
+      "40-exam.sql", "50-assessment.sql", "60-project-archive.sql", "90-indexes.sql");
 
   @Test void appliesTheCompleteSchemaAndEnforcesCoreRelationships() throws Exception {
     try (EmbeddedPostgres postgres = EmbeddedPostgres.builder().setPort(0).start()) {
