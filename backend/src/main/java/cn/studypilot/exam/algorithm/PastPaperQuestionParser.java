@@ -16,10 +16,12 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class PastPaperQuestionParser {
+  // PDF text extraction may flatten line breaks, so the explicit marker patterns
+  // intentionally work after whitespace as well as at a line boundary.
   private static final Pattern LABELED_MARKER = Pattern.compile(
-      "(?im)^\\s*(?:problem|question|题目|第)\\s*(\\d{1,3})\\s*[.．、:：)]?\\s*");
-  private static final Pattern PAREN_MARKER = Pattern.compile("(?m)^\\s*\\(\\s*(\\d{1,3})\\s*\\)\\s*");
-  private static final Pattern DOT_MARKER = Pattern.compile("(?m)^\\s*(?:第\\s*)?(\\d{1,3})\\s*[.．、)]\\s*");
+      "(?i)(?:^|\\s)(?:problem|question|题目|第)\\s*(\\d{1,3})\\s*[.．、:：)]?\\s*");
+  private static final Pattern PAREN_MARKER = Pattern.compile("(?:^|\\s)\\(\\s*(\\d{1,3})\\s*\\)\\s*");
+  private static final Pattern DOT_MARKER = Pattern.compile("(?:^|\\s)(?:第\\s*)?(\\d{1,3})\\s*[.．、)]\\s*");
 
   public List<ParsedSourceQuestion> parse(List<ExtractedPage> pages) {
     if (pages.isEmpty()) return List.of();
