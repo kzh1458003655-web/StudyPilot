@@ -62,8 +62,8 @@ describe("AssessmentPage", () => {
     });
     await flushPromises();
     expect(getMockExam).toHaveBeenCalledWith(7, 9);
+    expect(startAttempt).toHaveBeenCalledWith(7, 9);
 
-    await wrapper.get("button").trigger("click");
     await wrapper.get('input[value="A"]').setValue();
     await wrapper.get("textarea").setValue("线程是进程中的执行单位");
     await wrapper.get("form").trigger("submit.prevent");

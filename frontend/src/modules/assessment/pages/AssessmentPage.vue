@@ -28,6 +28,8 @@ async function load() {
   }
   try {
     exam.value = await getMockExam(projectId.value, examId.value);
+    // 作答页打开即创建一次作答记录，用户可以直接选择答案。
+    await start();
   } catch (e) {
     error.value = toAppError(e).message;
   }
@@ -65,6 +67,12 @@ async function askAboutResult() {
     query: { examId: String(examId.value), followUp: "assessment" },
   });
 }
+function optionText(option: string, index: number) {
+  const letter = String.fromCharCode(65 + index);
+  return option
+    .replace(new RegExp(`^\\s*${letter}[.、)）]\\s*`, "i"), "")
+    .trim();
+}
 onMounted(load);
 </script>
 <template>
@@ -80,9 +88,7 @@ onMounted(load);
     <template v-if="exam">
       <article class="exam-card">
         <h2>{{ exam.title }}</h2>
-        <button :disabled="!!attemptId" @click="start">
-          {{ attemptId ? "已开始作答" : "开始本次作答" }}
-        </button>
+        <p class="subtle">作答记录已准备好，选择答案后可以直接提交测评。</p>
       </article>
       <form class="form-stack" @submit.prevent="submit">
         <article v-for="item in exam.items" :key="item.id" class="exam-card">
@@ -90,17 +96,24 @@ onMounted(load);
             <strong>{{ item.ordinal }}. {{ item.prompt }}</strong
             >（{{ item.score }} 分）
           </p>
-          <template v-if="item.type === 'SINGLE_CHOICE'">
-            <label v-for="(option, index) in item.options" :key="option">
+          <div v-if="item.type === 'SINGLE_CHOICE'" class="exam-options">
+            <label
+              v-for="(option, index) in item.options"
+              :key="option"
+              class="exam-option"
+            >
               <input
                 v-model="answers[item.id]"
                 type="radio"
                 :name="`item-${item.id}`"
                 :value="String.fromCharCode(65 + index)"
               />
-              {{ String.fromCharCode(65 + index) }}. {{ option }}
+              <span
+                >{{ String.fromCharCode(65 + index) }}.
+                {{ optionText(option, index) }}</span
+              >
             </label>
-          </template>
+          </div>
           <textarea
             v-else
             v-model="answers[item.id]"

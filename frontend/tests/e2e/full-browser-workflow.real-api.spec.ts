@@ -29,30 +29,44 @@ test("completes the browser workflow from course creation to assessment", async 
     .getByPlaceholder("输入问题，或说说你想弄懂的知识点…")
     .fill("What is the running time of binary search?");
   await page.getByRole("button", { name: "发送问题 ↑" }).click();
-  await expect(page.locator(".citation").first()).toBeVisible({ timeout: 60_000 });
+  await expect(page.locator(".citation").first()).toBeVisible({
+    timeout: 60_000,
+  });
 
   await page.getByRole("link", { name: "考频分析" }).click();
-  await expect(page.getByRole("heading", { name: "历年试卷考频" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "历年试卷考频" }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "开始分析" }).click();
-  await expect(page.locator(".success")).toContainText("识别", { timeout: 60_000 });
+  await expect(page.locator(".success")).toContainText("识别", {
+    timeout: 60_000,
+  });
 
   await page.getByRole("link", { name: "生成模拟卷" }).click();
   await page
     .getByPlaceholder("输入题量、难度、题型或知识范围；不填写也可以直接生成")
     .fill("生成 3 道默认单选题");
   await page.getByRole("button", { name: "生成并开始作答" }).click();
-  await expect(page).toHaveURL(/\/projects\/\d+\/exams\/\d+\/take$/, { timeout: 120_000 });
-  await page.getByRole("button", { name: "开始本次作答" }).click();
+  await expect(page).toHaveURL(/\/projects\/\d+\/exams\/\d+\/take$/, {
+    timeout: 120_000,
+  });
+  await expect(
+    page.getByText("作答记录已准备好", { exact: false }),
+  ).toBeVisible();
   for (const questionCard of await page.locator("form .exam-card").all()) {
     const option = questionCard.locator('input[type="radio"]').first();
     if (await option.count()) {
       await option.check();
     }
-    const answerBox = questionCard.locator("textarea[placeholder='输入简答题答案']");
+    const answerBox = questionCard.locator(
+      "textarea[placeholder='输入简答题答案']",
+    );
     if (await answerBox.count()) {
       await answerBox.fill("这是浏览器验收作答。");
     }
   }
   await page.getByRole("button", { name: "提交并生成测评" }).click();
-  await expect(page.getByText("得分", { exact: false })).toBeVisible({ timeout: 120_000 });
+  await expect(page.getByText("得分", { exact: false })).toBeVisible({
+    timeout: 120_000,
+  });
 });
