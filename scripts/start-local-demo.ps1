@@ -30,7 +30,10 @@ try {
     }
     if (-not $ready) { throw '后端未能在 90 秒内就绪，请查看 D 盘输出目录中的 local-demo-backend.stderr.log。' }
 
-    $frontend = Start-Process -FilePath 'pnpm.cmd' -ArgumentList @('exec', 'vite', '--host', '127.0.0.1', '--port', $FrontendPort) -WorkingDirectory (Join-Path $projectRoot 'frontend') -WindowStyle Hidden -RedirectStandardOutput (Join-Path $OutputRoot 'local-demo-frontend.stdout.log') -RedirectStandardError (Join-Path $OutputRoot 'local-demo-frontend.stderr.log') -PassThru
+    # After moving the project between drives pnpm may see a stale modules path.
+    # CI=true disables its interactive reinstall prompt so the local server can start unattended.
+    $frontendCommand = "set CI=true&& pnpm exec vite --host 127.0.0.1 --port $FrontendPort"
+    $frontend = Start-Process -FilePath 'cmd.exe' -ArgumentList @('/d', '/c', $frontendCommand) -WorkingDirectory (Join-Path $projectRoot 'frontend') -WindowStyle Hidden -RedirectStandardOutput (Join-Path $OutputRoot 'local-demo-frontend.stdout.log') -RedirectStandardError (Join-Path $OutputRoot 'local-demo-frontend.stderr.log') -PassThru
     Start-Sleep -Seconds 2
     [pscustomobject]@{
         backendPid = $backend.Id
