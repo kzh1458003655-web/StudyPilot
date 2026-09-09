@@ -1,25 +1,24 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { toAppError } from "@/shared/api/http";
 import {
   analyzePastPaper,
   generateMockExam,
   getKnowledgePoints,
-  getMockExam,
 } from "../api/requests";
 import type {
   KnowledgePointFrequency,
-  MockExam,
   PastPaperAnalysis,
 } from "../types/domain";
 
 const route = useRoute();
+const router = useRouter();
 const projectId = computed(() => Number(route.params.projectId));
 const documentId = ref<number>();
 const frequencies = ref<KnowledgePointFrequency[]>([]);
 const analysis = ref<PastPaperAnalysis>();
-const exam = ref<MockExam>();
+const instructions = ref("");
 const analyzing = ref(false);
 const generating = ref(false);
 const errorMessage = ref("");
@@ -45,8 +44,11 @@ async function generate() {
   generating.value = true;
   errorMessage.value = "";
   try {
-    const id = await generateMockExam(projectId.value);
-    exam.value = await getMockExam(projectId.value, id);
+    const id = await generateMockExam(
+      projectId.value,
+      instructions.value.trim(),
+    );
+    await router.push(`/projects/${projectId.value}/exams/${id}/take`);
   } catch (error) {
     errorMessage.value = toAppError(error).message;
   } finally {
@@ -66,27 +68,45 @@ onMounted(async () => {
   <section class="workspace">
     <div class="workspace-head">
       <div>
-        <p class="eyebrow">本课程 · 真题分析</p>
-        <h1>真题分析与模拟考</h1>
+        <p class="eyebrow">本课程 · 模拟考 Skill</p>
+        <h1>生成一份模拟卷</h1>
       </div>
       <RouterLink :to="`/projects/${projectId}/qa`">课程问答</RouterLink>
     </div>
     <p class="subtle">
-      先上传“历年真题”PDF。填写上传完成后显示的资料编号，系统会提取题目、归一知识点并统计考频；模拟卷仅依据已就绪的教材、讲义和知识点资料生成。
+      直接描述你想练习的内容即可。已有课程资料会作为补充依据；没有资料时，模型也会根据课程主题和你的要求出题。
     </p>
     <p v-if="errorMessage" class="error" role="alert">{{ errorMessage }}</p>
 
     <div class="exam-grid">
       <article class="exam-card">
-        <h2>1. 分析历年真题</h2>
+        <h2>模拟出题</h2>
+        <p>
+          例如：“出一套操作系统期末模拟题，难度中等，侧重进程管理。”不填写也可以直接生成默认模拟卷。
+        </p>
+        <textarea
+          v-model="instructions"
+          maxlength="1000"
+          placeholder="输入题量、难度、题型或知识范围；不填写也可以直接生成"
+        />
+        <button class="generate-exam" :disabled="generating" @click="generate">
+          {{ generating ? "正在生成…" : "生成并开始作答" }}
+        </button>
+      </article>
+      <article class="exam-card">
+        <h2>考频分析</h2>
+        <p>
+          上传历年试卷后，可在这里输入资料编号进行考频统计；这一步不会影响模拟卷直接生成。
+        </p>
         <div class="inline-form">
           <input
             v-model.number="documentId"
             min="1"
             type="number"
-            placeholder="历年真题资料编号"
-          /><button :disabled="analyzing || !documentId" @click="analyze">
-            {{ analyzing ? "分析中…" : "开始分析" }}
+            placeholder="历年试卷资料编号"
+          />
+          <button :disabled="analyzing || !documentId" @click="analyze">
+            {{ analyzing ? "分析中…" : "分析考频" }}
           </button>
         </div>
         <p v-if="analysis" class="success">
@@ -94,16 +114,6 @@ onMounted(async () => {
           {{ analysis.analyzedQuestions }} 题，待人工补充
           {{ analysis.needsReviewQuestions }} 题。
         </p>
-      </article>
-      <article class="exam-card">
-        <h2>2. 生成模拟卷</h2>
-        <p>
-          固定生成 2 道单选题和 2
-          道简答题。生成内容必须通过结构和资料来源校验，才会保存。
-        </p>
-        <button :disabled="generating" @click="generate">
-          {{ generating ? "正在生成…" : "生成一份模拟卷" }}
-        </button>
       </article>
     </div>
 
@@ -116,27 +126,6 @@ onMounted(async () => {
           ><strong>{{ item.questionCount }} 题</strong>
         </li>
       </ol>
-    </article>
-    <article v-if="exam" class="exam-card generated-paper">
-      <h2>{{ exam.title }}</h2>
-      <section v-for="item in exam.items" :key="item.id" class="question-card">
-        <p>
-          <strong>{{ item.ordinal }}. {{ item.prompt }}</strong
-          >（{{ item.score }} 分）
-        </p>
-        <ol v-if="item.type === 'SINGLE_CHOICE'" type="A">
-          <li v-for="option in item.options" :key="option">{{ option }}</li>
-        </ol>
-        <p class="subtle">知识点：{{ item.knowledgePoint }}</p>
-        <RouterLink :to="`/projects/${projectId}/assessment?examId=${exam.id}`">
-          开始在线作答
-        </RouterLink>
-        <details>
-          <summary>展开参考答案与解析</summary>
-          <p>答案：{{ item.answer }}</p>
-          <p v-if="item.analysis">解析：{{ item.analysis }}</p>
-        </details>
-      </section>
     </article>
   </section>
 </template>

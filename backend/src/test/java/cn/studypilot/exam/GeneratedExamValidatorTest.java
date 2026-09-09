@@ -20,9 +20,9 @@ class GeneratedExamValidatorTest {
     assertThatThrownBy(() -> new GeneratedExamValidator().validate(invalid, Set.of("doc-1")))
         .hasMessageContaining("只允许单选题和简答题");
   }
-  @Test void mockExamMustUseTheFixedTwoPlusTwoQuestionShape() {
+  @Test void mockExamRejectsAnImpracticallyShortPaper() {
     var tooShort = List.of(new GeneratedExamItem("SINGLE_CHOICE", "哪项描述进程？", List.of("A", "B"), "A", "", "进程与线程", 5, List.of("doc-1")));
     assertThatThrownBy(() -> new GeneratedExamValidator().validateMockExam(tooShort, Set.of("doc-1")))
-        .hasMessageContaining("2 道单选题和 2 道简答题");
+        .hasMessageContaining("2 到 20 道之间");
   }
 }

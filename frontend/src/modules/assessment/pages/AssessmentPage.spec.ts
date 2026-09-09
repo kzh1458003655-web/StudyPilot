@@ -10,6 +10,7 @@ const { getMockExam, startAttempt, submitAttempt } = vi.hoisted(() => ({
 
 vi.mock("vue-router", () => ({
   useRoute: () => ({ params: { projectId: "7" }, query: { examId: "9" } }),
+  useRouter: () => ({ push: vi.fn() }),
 }));
 vi.mock("@/modules/exam/api/requests", () => ({ getMockExam }));
 vi.mock("../api/requests", () => ({ startAttempt, submitAttempt }));

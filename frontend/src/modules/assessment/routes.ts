@@ -5,4 +5,9 @@ export const assessmentRoutes: RouteRecordRaw[] = [
     name: "project-assessment",
     component: () => import("./pages/AssessmentPage.vue"),
   },
+  {
+    path: "/projects/:projectId/exams/:examId/take",
+    name: "project-exam-take",
+    component: () => import("./pages/AssessmentPage.vue"),
+  },
 ];

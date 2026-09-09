@@ -29,10 +29,17 @@ export async function getKnowledgePoints(
   });
   return knowledgePointsSchema.parse(response.data).data;
 }
-export async function generateMockExam(projectId: number): Promise<number> {
-  const response = await http.post<unknown>("/exams/generate", undefined, {
-    params: { projectId },
-  });
+export async function generateMockExam(
+  projectId: number,
+  instructions: string,
+): Promise<number> {
+  const response = await http.post<unknown>(
+    "/exams/generate",
+    { instructions },
+    {
+      params: { projectId },
+    },
+  );
   return generatedExamSchema.parse(response.data).data.examId;
 }
 export async function getMockExam(

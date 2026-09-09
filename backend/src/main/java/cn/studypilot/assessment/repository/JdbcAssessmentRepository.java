@@ -2,11 +2,11 @@ package cn.studypilot.assessment.repository;
 import cn.studypilot.assessment.model.*;
 import cn.studypilot.common.exception.ResourceNotFoundException;
 import java.util.*;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import cn.studypilot.common.database.ConditionalOnStudyPilotDatabase;
 import org.springframework.jdbc.core.namedparam.*;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
-@Repository @ConditionalOnProperty(prefix="studypilot.database",name="url")
+@Repository @ConditionalOnStudyPilotDatabase
 public class JdbcAssessmentRepository implements AssessmentRepository {
  private final NamedParameterJdbcTemplate jdbc; public JdbcAssessmentRepository(NamedParameterJdbcTemplate jdbc){this.jdbc=jdbc;}
  public long createAttempt(long projectId,long examId){var key=new GeneratedKeyHolder();int n=jdbc.update("INSERT INTO studypilot.exam_attempts (exam_id,status) SELECT id,'IN_PROGRESS' FROM studypilot.mock_exams WHERE id=:examId AND project_id=:projectId",new MapSqlParameterSource().addValue("examId",examId).addValue("projectId",projectId),key,new String[]{"id"});if(n!=1||key.getKey()==null)throw new ResourceNotFoundException("模拟卷不存在或不属于当前项目");return key.getKey().longValue();}

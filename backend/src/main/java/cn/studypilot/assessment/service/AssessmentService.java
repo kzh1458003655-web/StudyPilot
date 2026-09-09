@@ -1,8 +1,8 @@
 package cn.studypilot.assessment.service;
 import com.fasterxml.jackson.databind.JsonNode; import com.fasterxml.jackson.databind.ObjectMapper;
 import cn.studypilot.assessment.model.*; import cn.studypilot.assessment.repository.AssessmentRepository; import cn.studypilot.common.exception.*; import cn.studypilot.model.dto.*; import cn.studypilot.model.gateway.ModelGateway;
-import java.time.Duration; import java.util.*; import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty; import org.springframework.stereotype.Service; import org.springframework.transaction.annotation.Transactional;
-@Service @ConditionalOnProperty(prefix="studypilot.database",name="url")
+import cn.studypilot.common.database.ConditionalOnStudyPilotDatabase; import java.time.Duration; import java.util.*; import org.springframework.stereotype.Service; import org.springframework.transaction.annotation.Transactional;
+@Service @ConditionalOnStudyPilotDatabase
 public class AssessmentService {
  private final AssessmentRepository repo; private final ModelGateway model; private final ObjectMapper json;
  public AssessmentService(AssessmentRepository repo,ModelGateway model,ObjectMapper json){this.repo=repo;this.model=model;this.json=json;}

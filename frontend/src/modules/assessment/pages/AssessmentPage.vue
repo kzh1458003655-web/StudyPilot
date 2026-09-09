@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { toAppError } from "@/shared/api/http";
 import { getMockExam } from "@/modules/exam/api/requests";
 import type { MockExam } from "@/modules/exam/types/domain";
 import { startAttempt, submitAttempt } from "../api/requests";
 const route = useRoute();
+const router = useRouter();
 const projectId = computed(() => Number(route.params.projectId));
-const examId = computed(() => Number(route.query.examId));
+const examId = computed(() =>
+  Number(route.params.examId ?? route.query.examId),
+);
 const exam = ref<MockExam>();
 const attemptId = ref<number>();
 const answers = ref<Record<number, string>>({});
@@ -54,6 +57,13 @@ async function submit() {
   } finally {
     submitting.value = false;
   }
+}
+async function askAboutResult() {
+  if (!result.value) return;
+  await router.push({
+    path: `/projects/${projectId.value}/qa`,
+    query: { examId: String(examId.value), followUp: "assessment" },
+  });
 }
 onMounted(load);
 </script>
@@ -108,6 +118,9 @@ onMounted(load);
       <p v-for="item in result.answers" :key="item.itemId">
         第 {{ item.itemId }} 题：{{ item.score }} 分。{{ item.feedback }}
       </p>
+      <button type="button" @click="askAboutResult">
+        根据本次结果继续提问
+      </button>
     </article>
   </section>
 </template>

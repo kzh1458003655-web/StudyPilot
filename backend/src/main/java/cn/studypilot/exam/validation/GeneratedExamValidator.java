@@ -18,7 +18,7 @@ public class GeneratedExamValidator {
       if (!Set.of("SINGLE_CHOICE", "SHORT_ANSWER").contains(item.type())) throw invalid("只允许单选题和简答题");
       if (item.prompt() == null || item.prompt().isBlank() || item.knowledgePoint() == null || item.knowledgePoint().isBlank() || item.score() <= 0) throw invalid("题干、知识点和分值必须完整");
       if (!prompts.add(item.prompt().trim())) throw invalid("生成了重复题目");
-      if (item.sourceDocumentIds() == null || item.sourceDocumentIds().isEmpty() || !allowedSources.containsAll(item.sourceDocumentIds())) throw invalid("题目缺少当前项目的资料依据");
+      if (item.sourceDocumentIds() == null || !allowedSources.containsAll(item.sourceDocumentIds())) throw invalid("题目包含不属于当前课程的资料依据");
       if ("SINGLE_CHOICE".equals(item.type())) {
         if (item.options() == null || item.options().size() < 2 || item.options().stream().anyMatch(option -> option == null || option.isBlank())) throw invalid("单选题需要至少两个完整选项");
         if (item.answer() == null || !item.answer().matches("[A-F]")) throw invalid("单选题答案必须是选项编号");
@@ -28,13 +28,11 @@ public class GeneratedExamValidator {
     return List.copyOf(candidates);
   }
 
-  /** Enforces the fixed, easy-to-review paper shape used by the first product release. */
+  /** Accepts a compact but flexible paper shape so the learner can request a different number of questions. */
   public List<GeneratedExamItem> validateMockExam(List<GeneratedExamItem> candidates, Set<String> allowedSources) {
     List<GeneratedExamItem> validated = validate(candidates, allowedSources);
-    long choices = validated.stream().filter(item -> "SINGLE_CHOICE".equals(item.type())).count();
-    long shortAnswers = validated.stream().filter(item -> "SHORT_ANSWER".equals(item.type())).count();
-    if (validated.size() != 4 || choices != 2 || shortAnswers != 2) {
-      throw invalid("模拟卷必须包含 2 道单选题和 2 道简答题");
+    if (validated.size() < 2 || validated.size() > 20) {
+      throw invalid("模拟卷题目数量应在 2 到 20 道之间");
     }
     return validated;
   }

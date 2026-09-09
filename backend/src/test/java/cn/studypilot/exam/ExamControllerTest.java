@@ -34,8 +34,9 @@ class ExamControllerTest {
   @MockBean MockExamQueryService query;
 
   @Test void generatesTheValidatedMockExamThroughTheCommonEnvelope() throws Exception {
-    given(generation.generate(7L)).willReturn(new SavedMockExam(31L, 4));
-    mvc.perform(post("/api/v1/exams/generate").param("projectId", "7"))
+    given(generation.generate(7L, "按期末难度出题")).willReturn(new SavedMockExam(31L, 4));
+    mvc.perform(post("/api/v1/exams/generate").param("projectId", "7")
+            .contentType("application/json").content("{\"instructions\":\"按期末难度出题\"}"))
         .andExpect(status().isOk())
         .andExpect(header().exists("X-Request-Id"))
         .andExpect(jsonPath("$.data.examId").value(31))
