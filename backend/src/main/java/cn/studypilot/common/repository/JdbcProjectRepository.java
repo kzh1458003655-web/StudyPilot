@@ -19,6 +19,11 @@ public class JdbcProjectRepository implements ProjectRepository {
       FROM studypilot.projects
       WHERE id = :projectId
       """;
+  private static final String LIST = """
+      SELECT id, name, description, created_at, updated_at
+      FROM studypilot.projects
+      ORDER BY updated_at DESC, id DESC
+      """;
 
   private final NamedParameterJdbcTemplate jdbc;
 
@@ -31,6 +36,16 @@ public class JdbcProjectRepository implements ProjectRepository {
     jdbc.update("INSERT INTO studypilot.projects (name, description) VALUES (:name, :description)",
         new MapSqlParameterSource().addValue("name", name).addValue("description", description), key, new String[] {"id"});
     return findById(key.getKey().longValue()).orElseThrow();
+  }
+
+  @Override
+  public java.util.List<ProjectRecord> list() {
+    return jdbc.query(LIST, (resultSet, rowNumber) -> new ProjectRecord(
+        resultSet.getLong("id"),
+        resultSet.getString("name"),
+        resultSet.getString("description"),
+        resultSet.getObject("created_at", OffsetDateTime.class).toInstant(),
+        resultSet.getObject("updated_at", OffsetDateTime.class).toInstant()));
   }
 
   @Override

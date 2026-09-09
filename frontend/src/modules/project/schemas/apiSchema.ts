@@ -9,3 +9,8 @@ export const projectResponseSchema = z.object({
   }),
   requestId: z.string().min(1),
 });
+
+export const projectListResponseSchema = z.object({
+  data: z.array(projectResponseSchema.shape.data),
+  requestId: z.string().min(1),
+});

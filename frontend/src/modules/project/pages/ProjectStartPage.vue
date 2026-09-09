@@ -32,11 +32,23 @@ async function submit() {
 </script>
 
 <template>
-  <section class="panel project-start">
-    <p class="eyebrow">本地资料 · 可追溯回答</p>
-    <h1>开始一个学习项目</h1>
-    <p class="subtle">不同课程的资料、问答和模拟考会分别保存，互不混用。</p>
-    <form class="form-stack" @submit.prevent="submit">
+  <section class="course-start">
+    <div class="course-start-copy">
+      <p class="eyebrow">本地资料 · 可追溯回答</p>
+      <h1>新建一门课程</h1>
+      <p class="subtle">
+        课程是你的独立学习空间。资料、问答、模拟考和测评记录都只保存在当前课程内。
+      </p>
+      <div class="course-start-note">
+        <span>□</span>
+        <p>
+          <strong>课程之间互不影响</strong
+          ><br />切换课程时，系统只检索该课程已上传的资料。
+        </p>
+      </div>
+    </div>
+    <form class="course-form" @submit.prevent="submit">
+      <h2>课程信息</h2>
       <label
         >项目名称
         <input
@@ -54,7 +66,7 @@ async function submit() {
       </label>
       <p v-if="errorMessage" class="error" role="alert">{{ errorMessage }}</p>
       <button :disabled="submitting" type="submit">
-        {{ submitting ? "正在创建…" : "创建并进入问答" }}
+        {{ submitting ? "正在创建…" : "创建课程并进入问答" }}
       </button>
     </form>
   </section>

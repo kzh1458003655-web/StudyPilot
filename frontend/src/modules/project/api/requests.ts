@@ -1,5 +1,8 @@
 import { http } from "@/shared/api/http";
-import { projectResponseSchema } from "../schemas/apiSchema";
+import {
+  projectListResponseSchema,
+  projectResponseSchema,
+} from "../schemas/apiSchema";
 import type { StudyProject } from "../types/domain";
 
 export async function createProject(
@@ -8,4 +11,10 @@ export async function createProject(
 ): Promise<StudyProject> {
   const response = await http.post<unknown>("/projects", { name, description });
   return projectResponseSchema.parse(response.data).data;
+}
+
+/** Returns the local courses shown in the workspace sidebar. */
+export async function listProjects(): Promise<StudyProject[]> {
+  const response = await http.get<unknown>("/projects");
+  return projectListResponseSchema.parse(response.data).data;
 }
