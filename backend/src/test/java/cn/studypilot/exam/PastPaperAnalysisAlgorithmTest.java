@@ -20,6 +20,12 @@ class PastPaperAnalysisAlgorithmTest {
         .containsExactlyInAnyOrder("进程与线程", "进程调度");
   }
 
+  @Test void avoidsBroadEnglishWordsThatCreateFalseMathOrDatabaseTopics() {
+    assertThat(new KnowledgePointNormalizer().extractAndNormalize(
+        "The input size limit is documented. The sequence of transactions is sorted."))
+        .doesNotContain("极限", "数列", "数据库事务");
+  }
+
   @Test void recognizesProblemHeadersAndParenthesizedQuestionNumbersAcrossPages() {
     var parser = new PastPaperQuestionParser();
     assertThat(parser.parse(java.util.List.of(
