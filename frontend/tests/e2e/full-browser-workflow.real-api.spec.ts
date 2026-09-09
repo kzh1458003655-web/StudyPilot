@@ -39,7 +39,7 @@ test("completes the browser workflow from course creation to assessment", async 
   await page.getByRole("link", { name: "生成模拟卷" }).click();
   await page
     .getByPlaceholder("输入题量、难度、题型或知识范围；不填写也可以直接生成")
-    .fill("生成 3 道默认题，包含单选题和简答题");
+    .fill("生成 3 道默认单选题");
   await page.getByRole("button", { name: "生成并开始作答" }).click();
   await expect(page).toHaveURL(/\/projects\/\d+\/exams\/\d+\/take$/, { timeout: 120_000 });
   await page.getByRole("button", { name: "开始本次作答" }).click();
