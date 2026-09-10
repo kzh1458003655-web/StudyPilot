@@ -11,7 +11,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 New-Item -ItemType Directory -Force -Path $OutputRoot | Out-Null
-$javaTempRoot = Join-Path $OutputRoot 'java-tmp'
+$javaTempRoot = 'D:\StudyPilot-tmp'
 New-Item -ItemType Directory -Force -Path $javaTempRoot | Out-Null
 
 foreach ($port in @($BackendPort, $FrontendPort)) {
