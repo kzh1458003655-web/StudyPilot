@@ -28,6 +28,7 @@ const documentNotice = ref("");
 const selectedFile = ref<File>();
 const uploading = ref(false);
 const fileInput = ref<HTMLInputElement>();
+const MAX_PDF_BYTES = 25 * 1024 * 1024;
 
 async function loadDocuments() {
   if (!Number.isInteger(projectId.value) || projectId.value <= 0) return;
@@ -47,6 +48,10 @@ function selectFile(event: Event) {
 async function uploadMaterial() {
   if (!selectedFile.value) {
     documentError.value = "请选择一份文字型 PDF。";
+    return;
+  }
+  if (selectedFile.value.size > MAX_PDF_BYTES) {
+    documentError.value = "单个 PDF 文件不得超过 25 MB。";
     return;
   }
   uploading.value = true;
@@ -200,7 +205,10 @@ watch(projectId, () => {
           <h3>本课程资料</h3>
           <span>{{ documents.length }} 份</span>
         </div>
-        <p>资料只用于当前课程，回答会引用命中的原文页码。</p>
+        <p>
+          资料只用于当前课程，回答会引用命中的原文页码。仅支持不超过 25 MB
+          的文字型 PDF。
+        </p>
         <form class="side-upload" @submit.prevent="uploadMaterial">
           <label class="upload-picker">
             <input

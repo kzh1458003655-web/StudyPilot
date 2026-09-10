@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +36,11 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(MethodArgumentNotValidException.class)
   ResponseEntity<ErrorResponse> invalidRequest(MethodArgumentNotValidException error, HttpServletRequest request) {
     return ResponseEntity.badRequest().body(error(ErrorCode.VALIDATION_ERROR, "请求参数不合法", request));
+  }
+  @ExceptionHandler(MaxUploadSizeExceededException.class)
+  ResponseEntity<ErrorResponse> oversizedUpload(MaxUploadSizeExceededException error, HttpServletRequest request) {
+    return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+        .body(error(ErrorCode.VALIDATION_ERROR, "单个 PDF 文件不得超过 25 MB", request));
   }
   @ExceptionHandler(Exception.class)
   ResponseEntity<ErrorResponse> unexpected(Exception error, HttpServletRequest request) {

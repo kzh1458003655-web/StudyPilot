@@ -1,6 +1,11 @@
 spring:
   application:
     name: studypilot-backend
+  servlet:
+    multipart:
+      # 课程讲义和历年试卷通常超过 Spring Boot 默认的 1 MB 限制。
+      max-file-size: 25MB
+      max-request-size: 26MB
   # 数据源由 PostgreSqlJdbcConfig 在明确配置 STUDYPILOT_DB_URL 时创建。
   # 因此无数据库的开发机仍能运行接口与 Gateway 契约测试。
   autoconfigure:
