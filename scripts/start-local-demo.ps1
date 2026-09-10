@@ -4,7 +4,8 @@
 param(
     [int]$BackendPort = 8080,
     [int]$FrontendPort = 5173,
-    [string]$OutputRoot = 'D:\大四课程设计\StudyPilot-output'
+    [string]$OutputRoot = 'D:\大四课程设计\StudyPilot-output',
+    [string]$BindHost = '127.0.0.1'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -21,7 +22,7 @@ foreach ($port in @($BackendPort, $FrontendPort)) {
 
 # Spring Boot receives both values through one Maven property. Without the inner quotes,
 # Maven parses the database flag as a Maven CLI option and the demonstration server never starts.
-$backendCommand = "set `"JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=$javaTempRoot`"&& set `"MAVEN_USER_HOME=$javaTempRoot\m2`"&& .\mvnw.cmd spring-boot:run `"-Dspring-boot.run.arguments=--server.port=$BackendPort --studypilot.local-embedded-db.enabled=true`""
+$backendCommand = "set `"JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=$javaTempRoot`"&& set `"MAVEN_USER_HOME=$javaTempRoot\m2`"&& .\mvnw.cmd spring-boot:run `"-Dspring-boot.run.arguments=--server.port=$BackendPort --server.address=$BindHost --studypilot.local-embedded-db.enabled=true`""
 $backend = Start-Process -FilePath 'cmd.exe' -ArgumentList @('/d', '/c', $backendCommand) -WorkingDirectory (Join-Path $projectRoot 'backend') -WindowStyle Hidden -RedirectStandardOutput (Join-Path $OutputRoot 'local-demo-backend.stdout.log') -RedirectStandardError (Join-Path $OutputRoot 'local-demo-backend.stderr.log') -PassThru
 try {
     $ready = $false
@@ -34,7 +35,7 @@ try {
 
     # After moving the project between drives pnpm may see a stale modules path.
     # CI=true disables its interactive reinstall prompt so the local server can start unattended.
-    $frontendCommand = "set CI=true&& pnpm exec vite --host 127.0.0.1 --port $FrontendPort"
+    $frontendCommand = "set CI=true&& pnpm exec vite --host $BindHost --port $FrontendPort"
     $frontend = Start-Process -FilePath 'cmd.exe' -ArgumentList @('/d', '/c', $frontendCommand) -WorkingDirectory (Join-Path $projectRoot 'frontend') -WindowStyle Hidden -RedirectStandardOutput (Join-Path $OutputRoot 'local-demo-frontend.stdout.log') -RedirectStandardError (Join-Path $OutputRoot 'local-demo-frontend.stderr.log') -PassThru
     Start-Sleep -Seconds 2
     [pscustomobject]@{
@@ -42,9 +43,10 @@ try {
         frontendPid = $frontend.Id
         backendPort = $BackendPort
         frontendPort = $FrontendPort
+        bindHost = $BindHost
         mode = 'local-demo-embedded-postgresql'
     } | ConvertTo-Json | Set-Content -Encoding utf8 (Join-Path $OutputRoot 'local-demo-processes.json')
-    Write-Host "本地演示已启动：http://127.0.0.1:$FrontendPort"
+    Write-Host "本地演示已启动，监听 $BindHost`:$FrontendPort"
     Write-Host '说明：本模式的数据仅用于演示，服务停止后不会作为正式数据保留。'
 } catch {
     Stop-Process -Id $backend.Id -Force -ErrorAction SilentlyContinue
