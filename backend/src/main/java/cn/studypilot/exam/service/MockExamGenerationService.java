@@ -42,8 +42,8 @@ public class MockExamGenerationService {
     String evidence = hits.stream().map(hit -> "[" + hit.documentId() + " / " + names.get(hit.documentId()) + " 第" + hit.pageNumber() + "页]\n" + hit.excerpt()).collect(Collectors.joining("\n\n"));
     String courseName = projects.findById(projectId).map(project -> project.name()).orElse("当前课程");
     String learnerRequirement = instructions == null || instructions.isBlank() ? "未指定额外要求，请生成适合本科期末复习的 4 题试卷：2 道单选题和 2 道简答题。" : instructions.trim();
-    String sourceRule = ids.isEmpty()
-        ? "当前课程没有可用资料。请依据课程名称和用户要求独立出题，每题的 sourceDocumentIds 必须是空数组。"
+    String sourceRule = hits.isEmpty()
+        ? "本次没有检索到可用的课程资料片段。请依据课程名称和用户要求独立出题，每题的 sourceDocumentIds 必须是空数组。"
         : "如使用下列资料，请把对应资料方括号中的 ID 写入 sourceDocumentIds；也可按课程知识独立出题，此时填空数组。不得复制原文题干。\n\n资料：\n" + evidence;
     String prompt = "为课程“" + courseName + "”生成一份全新模拟卷。用户要求：" + learnerRequirement
         + "\n只返回 JSON 数组，不要 Markdown。每项字段：type,prompt,options,answer,analysis,knowledgePoint,score,sourceDocumentIds。"

@@ -48,10 +48,10 @@ async function generate() {
         <h1>生成一份模拟卷</h1>
       </div>
       <div class="workspace-links">
-        <RouterLink :to="`/projects/${projectId}/frequency`"
-          >考频分析</RouterLink
-        >
-        <RouterLink :to="`/projects/${projectId}/qa`">课程问答</RouterLink>
+        <RouterLink :to="`/projects/${projectId}/frequency`">
+          考频分析
+        </RouterLink>
+        <RouterLink :to="`/projects/${projectId}/qa`"> 课程问答 </RouterLink>
       </div>
     </div>
     <p class="subtle">
@@ -83,9 +83,9 @@ async function generate() {
           ><strong>{{ exam.title }}</strong
           ><small>{{ exam.itemCount }} 道题</small></span
         >
-        <RouterLink :to="`/projects/${projectId}/exams/${exam.id}/take`"
-          >继续作答</RouterLink
-        >
+        <RouterLink :to="`/projects/${projectId}/exams/${exam.id}/take`">
+          继续作答
+        </RouterLink>
       </div>
     </article>
   </section>

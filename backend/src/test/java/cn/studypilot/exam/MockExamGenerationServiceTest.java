@@ -16,6 +16,7 @@ import cn.studypilot.exam.service.GeneratedExamItemParser;
 import cn.studypilot.exam.service.MockExamGenerationService;
 import cn.studypilot.exam.validation.GeneratedExamValidator;
 import cn.studypilot.model.dto.ModelResponse;
+import cn.studypilot.model.dto.ModelRequest;
 import cn.studypilot.model.gateway.ModelGateway;
 import cn.studypilot.retrieval.dto.RetrievalHit;
 import cn.studypilot.retrieval.dto.RetrievalResponse;
@@ -24,6 +25,7 @@ import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.mockito.ArgumentCaptor;
 
 class MockExamGenerationServiceTest {
   @Test void retrievesProjectEvidenceValidatesJsonAndPersistsExam() {
@@ -66,5 +68,30 @@ class MockExamGenerationServiceTest {
     verify(retrieval, times(0)).retrieve(any());
     verify(exams).save(eq(6L), anyString(), argThat(items -> items.stream()
         .allMatch(item -> item.sourceDocumentIds().isEmpty())));
+  }
+
+  @Test void generatesIndependentlyWhenDocumentsExistButRetrievalFindsNoEvidence() {
+    DocumentQueryService documents = Mockito.mock(DocumentQueryService.class);
+    RetrievalGateway retrieval = Mockito.mock(RetrievalGateway.class);
+    ModelGateway model = Mockito.mock(ModelGateway.class);
+    MockExamRepository exams = Mockito.mock(MockExamRepository.class);
+    ProjectRepository projects = Mockito.mock(ProjectRepository.class);
+    given(documents.availableDocuments("6")).willReturn(List.of(new DocumentReference("doc-1", "英文讲义.pdf")));
+    given(retrieval.retrieve(any())).willReturn(new RetrievalResponse(List.of()));
+    given(model.complete(any())).willReturn(new ModelResponse("local", """
+        [{"type":"SINGLE_CHOICE","prompt":"二分查找的时间复杂度是？","options":["O(n)","O(log n)"],"answer":"B","analysis":"每轮折半。","knowledgePoint":"二分查找","score":5,"sourceDocumentIds":[]},
+        {"type":"SHORT_ANSWER","prompt":"说明分治法。","options":[],"answer":"分解、求解、合并。","analysis":"","knowledgePoint":"分治法","score":10,"sourceDocumentIds":[]}]
+        """, Duration.ofMillis(10)));
+    given(exams.save(eq(6L), anyString(), anyList())).willReturn(new SavedMockExam(11L, 2));
+
+    var service = new MockExamGenerationService(documents, retrieval, model, projects,
+        new GeneratedExamItemParser(new ObjectMapper()), new GeneratedExamValidator(), exams);
+
+    assertThat(service.generate(6L, "生成两道题").id()).isEqualTo(11L);
+    ArgumentCaptor<ModelRequest> request = ArgumentCaptor.forClass(ModelRequest.class);
+    verify(model).complete(request.capture());
+    String prompt = request.getValue().messages().get(1).content();
+    assertThat(prompt).contains("没有检索到可用的课程资料片段", "sourceDocumentIds 必须是空数组")
+        .doesNotContain("资料：");
   }
 }
