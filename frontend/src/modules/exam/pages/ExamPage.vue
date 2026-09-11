@@ -71,7 +71,7 @@ async function generate() {
           placeholder="输入题量、难度、题型或知识范围；不填写也可以直接生成"
         />
         <button class="generate-exam" :disabled="generating" @click="generate">
-          {{ generating ? "正在生成…" : "生成并开始作答" }}
+          {{ generating ? "正在生成，请稍候…" : "生成并开始作答" }}
         </button>
       </article>
     </div>

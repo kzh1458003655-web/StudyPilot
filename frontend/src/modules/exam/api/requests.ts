@@ -38,6 +38,8 @@ export async function generateMockExam(
     { instructions },
     {
       params: { projectId },
+      // Local generation can take 20–60 seconds even with GPU acceleration.
+      timeout: 120_000,
     },
   );
   return generatedExamSchema.parse(response.data).data.examId;
