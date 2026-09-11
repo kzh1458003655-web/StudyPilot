@@ -32,7 +32,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @ConditionalOnStudyPilotDatabase
 public class GroundedQaService {
-  private static final String INSUFFICIENT_EVIDENCE = "INSUFFICIENT_EVIDENCE";
   private final DocumentQueryService documents;
   private final RetrievalGateway retrieval;
   private final ModelGateway model;
@@ -47,7 +46,8 @@ public class GroundedQaService {
     long projectId = request.projectId();
     long sessionId = resolveSession(projectId, request.sessionId(), request.question());
     List<DocumentReference> available = documents.availableDocuments(Long.toString(projectId));
-    if (available.isEmpty()) return answerWithoutCourseMaterials(projectId, sessionId, request.question());
+    if (available.isEmpty()) return answerWithoutEvidence(projectId, sessionId, request.question(),
+        "当前课程尚未添加资料，请依据可靠的通用知识直接回答。不要声称答案来自课程资料，也不要编造引用。");
 
     Map<String, String> names = available.stream().collect(Collectors.toMap(DocumentReference::indexId,
         DocumentReference::displayName, (first, ignored) -> first, LinkedHashMap::new));
@@ -55,7 +55,8 @@ public class GroundedQaService {
         List.copyOf(names.keySet()), 3)).hits().stream()
         .filter(hit -> names.containsKey(hit.documentId()) && hit.pageNumber() > 0 && !hit.excerpt().isBlank() && hit.score() > 0)
         .limit(3).toList();
-    if (hits.isEmpty()) return saveInsufficient(projectId, sessionId, request.question(), "在当前项目的知识资料中没有找到足够依据，暂不能给出确定性结论。你可以补充更相关的资料或换一种问法。");
+    if (hits.isEmpty()) return answerWithoutEvidence(projectId, sessionId, request.question(),
+        "当前课程资料没有检索到与问题直接相关的片段，请依据可靠的通用知识直接回答。不要在回答中说明检索或引用情况，也不要编造资料名称或页码。");
 
     List<QaCitationEvidence> evidence = toEvidence(hits, names);
     String answer = model.complete(new ModelRequest(ModelTaskType.QA_ANSWER,
@@ -71,16 +72,13 @@ public class GroundedQaService {
     return requestedSessionId;
   }
 
-  private QaAnswerResponse saveInsufficient(long projectId, long sessionId, String question, String answer) {
-    var saved = qa.saveExchange(projectId, sessionId, question.trim(), answer, List.of());
-    return new QaAnswerResponse(sessionId, saved.userMessageId(), saved.assistantMessageId(), INSUFFICIENT_EVIDENCE, answer, List.of());
-  }
-
-  /** Uses the local model for a new course, while intentionally returning no course citations. */
-  private QaAnswerResponse answerWithoutCourseMaterials(long projectId, long sessionId, String question) {
-    List<ModelMessage> messages = List.of(
-        new ModelMessage("system", "你是学习助手。当前课程尚未添加资料，可以回答通用知识问题。使用简洁中文；不要声称答案来自课程资料，也不要编造引用。"),
-        new ModelMessage("user", question.trim()));
+  /** Falls back to general model knowledge while keeping course citations empty and truthful. */
+  private QaAnswerResponse answerWithoutEvidence(long projectId, long sessionId, String question, String evidenceNotice) {
+    List<ModelMessage> messages = new java.util.ArrayList<>();
+    messages.add(new ModelMessage("system", "你是学习助手。" + evidenceNotice + "使用简洁中文。"));
+    qa.recentMessages(sessionId, 6).forEach(item ->
+        messages.add(new ModelMessage(item.role().equals("USER") ? "user" : "assistant", item.content())));
+    messages.add(new ModelMessage("user", question.trim()));
     String answer = model.complete(new ModelRequest(ModelTaskType.QA_ANSWER, messages,
         0.3, 600, Duration.ofSeconds(60))).content().trim();
     if (answer.isBlank()) throw new IllegalStateException("模型没有返回可用回答");

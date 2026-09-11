@@ -33,6 +33,18 @@ test("completes the browser workflow from course creation to assessment", async 
     timeout: 60_000,
   });
 
+  // A broad question can miss lexical retrieval against the English PDFs.
+  // The learner should still receive a useful local-model answer without a fake citation.
+  await page
+    .getByPlaceholder("输入问题，或说说你想弄懂的知识点…")
+    .fill("这个课件讲了什么？");
+  await page.getByRole("button", { name: "发送问题 ↑" }).click();
+  await expect(page.locator(".qa-turn")).toHaveCount(2, { timeout: 60_000 });
+  await expect(page.locator(".qa-turn").last()).not.toContainText(
+    "暂不能给出确定性结论",
+  );
+  await expect(page.locator(".qa-turn").last()).not.toContainText("未引用");
+
   await page.getByRole("link", { name: "考频分析" }).click();
   await expect(
     page.getByRole("heading", { name: "历年试卷考频" }),

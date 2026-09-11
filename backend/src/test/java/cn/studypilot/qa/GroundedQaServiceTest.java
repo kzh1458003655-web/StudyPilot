@@ -70,6 +70,29 @@ class GroundedQaServiceTest {
     verify(model).complete(argThat(request -> request.messages().getFirst().content().contains("尚未添加资料")));
   }
 
+  @Test void fallsBackToGeneralKnowledgeWhenUploadedMaterialsDoNotMatchTheQuestion() {
+    DocumentQueryService documents = Mockito.mock(DocumentQueryService.class);
+    RetrievalGateway retrieval = Mockito.mock(RetrievalGateway.class);
+    ModelGateway model = Mockito.mock(ModelGateway.class);
+    QaRepository qa = Mockito.mock(QaRepository.class);
+    given(qa.createSession(eq(7L), anyString())).willReturn(101L);
+    given(documents.availableDocuments("7")).willReturn(List.of(new DocumentReference("doc-1", "算法讲义.pdf")));
+    given(retrieval.retrieve(any())).willReturn(new RetrievalResponse(List.of()));
+    given(model.complete(any())).willReturn(new ModelResponse("Qwen", "这份算法课程通常介绍复杂度、排序和图算法。", Duration.ofMillis(20)));
+    given(qa.saveExchange(eq(7L), eq(101L), anyString(), anyString(), anyList())).willReturn(new SavedQaExchange(201L, 202L));
+
+    var response = new GroundedQaService(documents, retrieval, model, qa)
+        .ask(new AskQaRequest(7L, null, "这个课件讲了什么？"));
+
+    assertThat(response.status()).isEqualTo("ANSWERED");
+    assertThat(response.answer()).contains("算法课程");
+    assertThat(response.citations()).isEmpty();
+    verify(model).complete(argThat(request -> {
+      String system = request.messages().getFirst().content();
+      return system.contains("没有检索到") && system.contains("不要在回答中说明检索或引用情况");
+    }));
+  }
+
   @Test void rejectsAConversationBelongingToAnotherProject() {
     QaRepository qa = Mockito.mock(QaRepository.class);
     given(qa.belongsToProject(22L, 7L)).willReturn(false);
