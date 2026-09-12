@@ -181,19 +181,88 @@ button:disabled {
   }
 }
 
+/* Final visual polish: keep the existing green study-space language consistent. */
+body {
+  background:
+    radial-gradient(circle at 85% 0, #edf5ed 0, transparent 30rem), #f7f9f6;
+}
+.workspace-head h1 {
+  margin-top: 8px;
+  color: #273b31;
+  font-size: clamp(25px, 3vw, 34px);
+  font-weight: 650;
+  letter-spacing: 0;
+}
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: #86ad91;
+  box-shadow: 0 0 0 3px #4f8b631c;
+  outline: none;
+}
+.chat-panel,
+.qa-sidecard,
+.exam-card,
+.upload-card {
+  box-shadow: 0 12px 32px rgba(35, 65, 48, 0.07);
+}
+.qa-turn {
+  position: relative;
+  overflow: hidden;
+}
+.qa-turn::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: #a9c9ad;
+  content: "";
+}
+.task-banner {
+  box-shadow: 0 5px 16px rgba(65, 102, 81, 0.08);
+}
+.frequency-paper {
+  transition:
+    background 160ms ease,
+    padding 160ms ease;
+}
+.frequency-paper:hover {
+  margin-inline: -10px;
+  padding-inline: 10px;
+  background: #f8fbf7;
+}
+.exam-history-actions a,
+.exam-history-actions button {
+  white-space: nowrap;
+}
+@media (max-width: 600px) {
+  .exam-history-actions {
+    width: 100%;
+  }
+  .exam-history-actions a,
+  .exam-history-actions button {
+    flex: 1;
+    text-align: center;
+  }
+}
+
 /* 课程工作台：沿用原型的安静配色和固定侧栏，让课程边界始终可见。 */
 :root {
-  --ink: #25332f;
-  --muted: #74807a;
-  --green: #356756;
-  --paper: #f8f9f6;
-  --line: #e1e6df;
-  --soft: #f0f4ee;
+  --ink: #21332c;
+  --muted: #6f7e76;
+  --green: #2f6b55;
+  --green-dark: #245240;
+  --paper: #f7f9f5;
+  --line: #dfe7df;
+  --soft: #edf3ec;
+  --shadow-sm: 0 1px 2px #20372a0a, 0 8px 28px #20372a0a;
+  --shadow-md: 0 16px 50px #20372a10;
 }
 body {
   min-width: 320px;
   color: var(--ink);
-  background: var(--paper);
+  background:
+    radial-gradient(circle at 78% -10%, #eaf2e8 0, transparent 30rem),
+    var(--paper);
   font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
 }
 .study-shell {
@@ -208,7 +277,7 @@ body {
   width: 252px;
   padding: 24px 16px 18px;
   color: #42524b;
-  background: #eff1ed;
+  background: linear-gradient(180deg, #f1f4ef 0%, #ecefea 100%);
   border-right: 1px solid #dfe4de;
 }
 .brand {
@@ -254,7 +323,7 @@ body {
   border-radius: 9px;
   color: #405048;
   background: #fff;
-  box-shadow: none;
+  box-shadow: 0 1px 2px #1734250b;
   font-size: 13px;
   font-weight: 600;
 }
@@ -410,11 +479,23 @@ body {
   margin: 0 6px 5px;
 }
 .module-nav a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   padding: 9px 11px;
   border-radius: 7px;
   color: #69756e;
   text-decoration: none;
   font-size: 12px;
+}
+.module-nav a small {
+  padding: 2px 6px;
+  border-radius: 999px;
+  color: #4d7862;
+  background: #dceadf;
+  font-size: 9px;
+  font-weight: 650;
 }
 .module-nav a:hover {
   background: #e4e9e2;
@@ -497,7 +578,7 @@ body {
   letter-spacing: 0.7px;
 }
 .workspace-content {
-  width: min(1180px, 100%);
+  width: min(1240px, 100%);
   margin: 0 auto;
   padding: 29px 36px 42px;
 }
@@ -512,7 +593,7 @@ body {
 .workspace-head h1,
 .course-start h1 {
   color: #27352f;
-  font-size: 27px;
+  font-size: 30px;
   font-weight: 650;
   letter-spacing: -0.3px;
 }
@@ -522,9 +603,11 @@ body {
   border: 1px solid #dce4dc;
   border-radius: 7px;
   color: #4f6f5d;
-  background: #fff;
+  background: #ffffffcc;
   text-decoration: none;
+  box-shadow: 0 1px 2px #20372a08;
   font-size: 11px;
+  transition: 160ms ease;
 }
 .workspace-links a {
   font-weight: 600;
@@ -616,7 +699,7 @@ body {
 .qa-turn {
   border-color: #e0e6df;
   border-radius: 12px;
-  box-shadow: none;
+  box-shadow: var(--shadow-sm);
 }
 .upload-card,
 .exam-card {
@@ -627,7 +710,8 @@ button {
   background: var(--green);
 }
 button:hover:not(:disabled) {
-  background: #285640;
+  background: var(--green-dark);
+  transform: translateY(-1px);
 }
 .ask-box {
   border: 1px solid #dde6dc;
@@ -847,7 +931,7 @@ button:hover:not(:disabled) {
   border: 1px solid #e1e7df;
   border-radius: 15px;
   background: #fff;
-  box-shadow: 0 5px 24px #243b2c06;
+  box-shadow: var(--shadow-md);
 }
 .messages {
   flex: 1;
@@ -950,12 +1034,30 @@ button:hover:not(:disabled) {
   border-radius: 10px;
   background: #f1f4ef;
 }
+.qa-turn .citation {
+  margin-top: 1px;
+  padding: 8px 2px 0;
+  border-top: 1px solid #e4ebe5;
+  color: #66756b;
+  font-size: 11px;
+}
+.qa-turn .citation summary {
+  color: #39735c;
+  font-weight: 650;
+}
+.qa-turn .citation p {
+  margin: 8px 0 2px;
+  padding: 9px 11px;
+  border-radius: 8px;
+  background: #f6f8f5;
+}
 .qa-sidecard {
   align-self: start;
   padding: 19px;
   border: 1px solid #e3e7e1;
   border-radius: 14px;
   background: #fff;
+  box-shadow: var(--shadow-sm);
 }
 .panel-heading {
   display: flex;
@@ -1129,7 +1231,7 @@ button:hover:not(:disabled) {
 }
 .exam-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 760px);
   gap: 1rem;
   margin-top: 1.25rem;
 }
@@ -1139,6 +1241,100 @@ button:hover:not(:disabled) {
   border: 1px solid #dbe3ef;
   border-radius: 10px;
   background: #fff;
+}
+.generator-card {
+  position: relative;
+  overflow: hidden;
+  padding: 24px;
+}
+.generator-card::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(90deg, #3d8064, #9ec4a6);
+  content: "";
+}
+.generator-card textarea {
+  min-height: 118px;
+  margin: 8px 0 14px;
+  border-color: #d8e3d8;
+  background: #fbfcfa;
+  line-height: 1.65;
+}
+.generator-card textarea:focus,
+.composer:focus-within {
+  border-color: #8fb19a;
+  box-shadow: 0 0 0 3px #3b765414;
+  outline: none;
+}
+.task-banner {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  max-width: 760px;
+  margin: 18px 0 0;
+  padding: 11px 14px;
+  border: 1px solid #cfe0d2;
+  border-radius: 10px;
+  color: #416651;
+  background: #edf5ed;
+  font-size: 12px;
+}
+.task-banner::before {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4f946c;
+  box-shadow: 0 0 0 4px #4f946c18;
+  content: "";
+}
+.exam-history-card {
+  margin-top: 24px;
+}
+.frequency-paper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 0;
+  border-top: 1px solid #e9eee8;
+}
+.frequency-paper > span {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+.frequency-paper strong {
+  overflow: hidden;
+  color: #344a3f;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.frequency-paper small {
+  color: #8a978f;
+  font-size: 10px;
+}
+.exam-history-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.exam-history-actions a,
+.exam-history-actions button {
+  padding: 7px 10px;
+  border: 1px solid #d9e4da;
+  border-radius: 7px;
+  color: #406b55;
+  background: #fff;
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 650;
+}
+.exam-history-actions button:hover {
+  border-color: #eccdca;
+  color: #a14f49;
+  background: #fff6f5;
 }
 .exam-grid .exam-card {
   margin-top: 0;
@@ -1215,6 +1411,10 @@ button:hover:not(:disabled) {
   }
   .inline-form {
     align-items: stretch;
+    flex-direction: column;
+  }
+  .frequency-paper {
+    align-items: flex-start;
     flex-direction: column;
   }
 }

@@ -61,3 +61,10 @@ export async function listMockExams(
   }>("/exams", { params: { projectId } });
   return response.data.data;
 }
+
+export async function deleteMockExam(
+  projectId: number,
+  examId: number,
+): Promise<void> {
+  await http.delete(`/exams/${examId}`, { params: { projectId } });
+}

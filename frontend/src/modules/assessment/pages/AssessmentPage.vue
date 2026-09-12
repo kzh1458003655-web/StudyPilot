@@ -23,7 +23,7 @@ const result = ref<{
 }>();
 async function load() {
   if (!Number.isInteger(examId.value) || examId.value <= 0) {
-    error.value = "请从模拟卷页面进入作答。";
+    error.value = "请从智能组卷页面进入作答。";
     return;
   }
   try {
@@ -82,7 +82,7 @@ onMounted(load);
         <p class="eyebrow">本课程 · 作答评测</p>
         <h1>在线作答与测评</h1>
       </div>
-      <RouterLink :to="`/projects/${projectId}/exams`">返回模拟考</RouterLink>
+      <RouterLink :to="`/projects/${projectId}/exams`">返回智能组卷</RouterLink>
     </div>
     <p v-if="error" class="error">{{ error }}</p>
     <template v-if="exam">

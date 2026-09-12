@@ -61,6 +61,10 @@ public class JdbcMockExamRepository implements MockExamRepository {
         """, Map.of("projectId", projectId), (row, ignored) -> new MockExamSummary(
         row.getLong("id"), row.getString("title"), row.getInt("item_count")));
   }
+  @Override public boolean deleteByProject(long projectId, long examId) {
+    return jdbc.update("DELETE FROM studypilot.mock_exams WHERE id = :examId AND project_id = :projectId",
+        Map.of("examId", examId, "projectId", projectId)) == 1;
+  }
   private String serialize(List<String> options) { try { return json.writeValueAsString(options); } catch (Exception error) { throw new IllegalStateException(error); } }
   private List<String> deserialize(String options) { try { return json.readValue(options, new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {}); } catch (Exception error) { throw new IllegalStateException(error); } }
 }

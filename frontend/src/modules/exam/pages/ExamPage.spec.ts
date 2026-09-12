@@ -1,5 +1,6 @@
 import { flushPromises, mount } from "@vue/test-utils";
 import { createMemoryHistory, createRouter } from "vue-router";
+import { createPinia } from "pinia";
 import { describe, expect, it, vi } from "vitest";
 import ExamPage from "./ExamPage.vue";
 
@@ -7,6 +8,7 @@ const { generateMockExam } = vi.hoisted(() => ({ generateMockExam: vi.fn() }));
 vi.mock("../api/requests", () => ({
   analyzePastPaper: vi.fn(),
   generateMockExam,
+  deleteMockExam: vi.fn(),
   getKnowledgePoints: vi.fn().mockResolvedValue([]),
   getMockExam: vi.fn(),
   listMockExams: vi.fn().mockResolvedValue([]),
@@ -27,7 +29,9 @@ describe("ExamPage", () => {
     });
     await router.push("/projects/6/exams");
     await router.isReady();
-    const wrapper = mount(ExamPage, { global: { plugins: [router] } });
+    const wrapper = mount(ExamPage, {
+      global: { plugins: [createPinia(), router] },
+    });
 
     expect(wrapper.get("textarea").attributes("placeholder")).toContain(
       "不填写也可以直接生成",

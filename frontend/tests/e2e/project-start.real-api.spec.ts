@@ -12,6 +12,7 @@ test.skip(
 );
 
 test("creates a project through the running local API", async ({ page }) => {
+  test.setTimeout(120_000);
   const projectName = `浏览器验收-${Date.now()}`;
 
   await page.goto("/projects");

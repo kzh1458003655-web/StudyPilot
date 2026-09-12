@@ -2,6 +2,9 @@ package cn.studypilot.qa.repository;
 
 import cn.studypilot.qa.model.QaCitationEvidence;
 import cn.studypilot.qa.model.QaHistoryMessage;
+import cn.studypilot.qa.model.QaHistoryCitation;
+import cn.studypilot.qa.model.QaHistorySnapshot;
+import cn.studypilot.qa.model.QaHistoryTurn;
 import cn.studypilot.qa.model.SavedQaExchange;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +41,31 @@ public class JdbcQaRepository implements QaRepository {
         ) recent ORDER BY id
         """, Map.of("sessionId", sessionId, "limit", limit), (row, ignored) ->
         new QaHistoryMessage(row.getString("role"), row.getString("content")));
+  }
+
+  @Override public QaHistorySnapshot latestHistory(long projectId) {
+    List<Long> sessions = jdbc.query("""
+        SELECT id FROM studypilot.qa_sessions WHERE project_id = :projectId
+        ORDER BY updated_at DESC, id DESC LIMIT 1
+        """, Map.of("projectId", projectId), (row, ignored) -> row.getLong("id"));
+    if (sessions.isEmpty()) return QaHistorySnapshot.empty();
+    long sessionId = sessions.getFirst();
+    List<StoredMessage> messages = jdbc.query("""
+        SELECT id, role, content FROM studypilot.qa_messages
+        WHERE session_id = :sessionId ORDER BY id
+        """, Map.of("sessionId", sessionId), (row, ignored) ->
+        new StoredMessage(row.getLong("id"), row.getString("role"), row.getString("content")));
+    List<QaHistoryTurn> turns = new java.util.ArrayList<>();
+    String question = null;
+    for (StoredMessage message : messages) {
+      if ("USER".equals(message.role())) {
+        question = message.content();
+      } else if (question != null) {
+        turns.add(new QaHistoryTurn(question, message.content(), citations(message.id())));
+        question = null;
+      }
+    }
+    return new QaHistorySnapshot(sessionId, List.copyOf(turns));
   }
 
   @Override public SavedQaExchange saveExchange(long projectId, long sessionId, String question, String answer,
@@ -81,4 +109,18 @@ public class JdbcQaRepository implements QaRepository {
     jdbc.update(sql, parameters, key, new String[] {"id"});
     return key.getKey().longValue();
   }
+
+  private List<QaHistoryCitation> citations(long assistantMessageId) {
+    return jdbc.query("""
+        SELECT c.document_name_snapshot, c.page_number, c.excerpt_snapshot,
+          COALESCE(r.score, 0) AS score
+        FROM studypilot.qa_citations c
+        LEFT JOIN studypilot.qa_retrieval_records r ON r.id = c.retrieval_record_id
+        WHERE c.assistant_message_id = :messageId ORDER BY c.id
+        """, Map.of("messageId", assistantMessageId), (row, ignored) -> new QaHistoryCitation(
+        row.getString("document_name_snapshot"), row.getInt("page_number"),
+        row.getString("excerpt_snapshot"), row.getDouble("score")));
+  }
+
+  private record StoredMessage(long id, String role, String content) {}
 }

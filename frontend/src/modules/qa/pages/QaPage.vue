@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { toAppError } from "@/shared/api/http";
 import {
@@ -8,8 +8,9 @@ import {
   uploadDocument,
 } from "@/modules/document/api/requests";
 import type { CourseDocument } from "@/modules/document/api/requests";
-import { askQuestion } from "../api/requests";
+import { getQaHistory } from "../api/requests";
 import type { QaAnswer } from "../types/domain";
+import { useQaTaskStore } from "../stores/qaTaskStore";
 interface Turn {
   question: string;
   answer: QaAnswer;
@@ -19,7 +20,8 @@ const projectId = computed(() => Number(route.params.projectId));
 const question = ref("");
 const sessionId = ref<number>();
 const turns = ref<Turn[]>([]);
-const asking = ref(false);
+const tasks = useQaTaskStore();
+const asking = computed(() => Boolean(tasks.active[projectId.value]));
 const errorMessage = ref("");
 const documents = ref<CourseDocument[]>([]);
 const documentsLoading = ref(false);
@@ -29,17 +31,49 @@ const selectedFile = ref<File>();
 const uploading = ref(false);
 const fileInput = ref<HTMLInputElement>();
 const MAX_PDF_BYTES = 25 * 1024 * 1024;
+let mounted = true;
+
+async function loadHistory() {
+  if (!Number.isInteger(projectId.value) || projectId.value <= 0) return;
+  const targetProject = projectId.value;
+  const history = await getQaHistory(targetProject);
+  if (!mounted || targetProject !== projectId.value) return;
+  sessionId.value = history.sessionId ?? undefined;
+  turns.value = history.turns;
+}
+
+async function restoreHistory() {
+  errorMessage.value = "";
+  try {
+    await loadHistory();
+    const running = tasks.current(projectId.value);
+    if (running) {
+      try {
+        await running;
+      } catch (error) {
+        if (mounted) errorMessage.value = toAppError(error).message;
+      }
+      await loadHistory();
+    }
+  } catch (error) {
+    if (mounted) errorMessage.value = toAppError(error).message;
+  }
+}
 
 async function loadDocuments() {
   if (!Number.isInteger(projectId.value) || projectId.value <= 0) return;
+  const targetProject = projectId.value;
   documentsLoading.value = true;
   documentError.value = "";
   try {
-    documents.value = await listDocuments(projectId.value);
+    const result = await listDocuments(targetProject);
+    if (mounted && targetProject === projectId.value) documents.value = result;
   } catch (error) {
-    documentError.value = toAppError(error).message;
+    if (mounted && targetProject === projectId.value)
+      documentError.value = toAppError(error).message;
   } finally {
-    documentsLoading.value = false;
+    if (mounted && targetProject === projectId.value)
+      documentsLoading.value = false;
   }
 }
 function selectFile(event: Event) {
@@ -55,10 +89,12 @@ async function uploadMaterial() {
     return;
   }
   uploading.value = true;
+  const targetProject = projectId.value;
   documentError.value = "";
   documentNotice.value = "";
   try {
-    const result = await uploadDocument(projectId.value, selectedFile.value);
+    const result = await uploadDocument(targetProject, selectedFile.value);
+    if (!mounted || targetProject !== projectId.value) return;
     documentNotice.value = `已提取 ${result.pageCount} 页，建立 ${result.chunkCount} 个检索片段。`;
     selectedFile.value = undefined;
     if (fileInput.value) fileInput.value.value = "";
@@ -76,8 +112,10 @@ async function removeDocument(document: CourseDocument) {
     )
   )
     return;
+  const targetProject = projectId.value;
   try {
-    await deleteDocument(projectId.value, document.id);
+    await deleteDocument(targetProject, document.id);
+    if (!mounted || targetProject !== projectId.value) return;
     documentNotice.value = "资料已删除。";
     await loadDocuments();
   } catch (error) {
@@ -91,32 +129,38 @@ async function ask() {
     projectId.value <= 0
   )
     return;
+  const targetProject = projectId.value;
   const currentQuestion = question.value.trim();
-  asking.value = true;
   errorMessage.value = "";
   try {
-    const answer = await askQuestion(
-      projectId.value,
+    const answer = await tasks.ask(
+      targetProject,
       currentQuestion,
       sessionId.value,
     );
+    if (!mounted || targetProject !== projectId.value) return;
     sessionId.value = answer.sessionId;
     turns.value.push({ question: currentQuestion, answer });
     question.value = "";
   } catch (error) {
-    errorMessage.value = toAppError(error).message;
-  } finally {
-    asking.value = false;
+    if (mounted && targetProject === projectId.value)
+      errorMessage.value = toAppError(error).message;
   }
 }
 
-onMounted(loadDocuments);
+onMounted(() => {
+  mounted = true;
+  void Promise.all([loadDocuments(), restoreHistory()]);
+});
+onUnmounted(() => {
+  mounted = false;
+});
 watch(projectId, () => {
   sessionId.value = undefined;
   turns.value = [];
   selectedFile.value = undefined;
   documentNotice.value = "";
-  loadDocuments();
+  void Promise.all([loadDocuments(), restoreHistory()]);
 });
 </script>
 <template>
@@ -127,9 +171,7 @@ watch(projectId, () => {
         <h1>知识问答</h1>
       </div>
       <div class="workspace-links">
-        <RouterLink :to="`/projects/${projectId}/exams`">
-          真题分析与模拟考
-        </RouterLink>
+        <RouterLink :to="`/projects/${projectId}/exams`"> 智能组卷 </RouterLink>
       </div>
     </div>
     <div class="qa-layout">
@@ -155,7 +197,11 @@ watch(projectId, () => {
             </div>
             <small>每次弄懂一点，都是进步。</small>
           </div>
-          <article v-for="turn in turns" :key="turn.question" class="qa-turn">
+          <article
+            v-for="(turn, index) in turns"
+            :key="`${index}-${turn.question}`"
+            class="qa-turn"
+          >
             <p class="question">你</p>
             <p class="answer">{{ turn.question }}</p>
             <p class="question assistant-label">StudyPilot</p>

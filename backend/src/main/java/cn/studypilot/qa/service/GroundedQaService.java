@@ -10,6 +10,7 @@ import cn.studypilot.model.gateway.ModelGateway;
 import cn.studypilot.qa.dto.AskQaRequest;
 import cn.studypilot.qa.dto.QaAnswerResponse;
 import cn.studypilot.qa.dto.QaCitationResponse;
+import cn.studypilot.qa.dto.QaHistoryResponse;
 import cn.studypilot.qa.model.QaCitationEvidence;
 import cn.studypilot.qa.repository.QaRepository;
 import cn.studypilot.retrieval.dto.RetrievalHit;
@@ -39,6 +40,15 @@ public class GroundedQaService {
 
   public GroundedQaService(DocumentQueryService documents, RetrievalGateway retrieval, ModelGateway model, QaRepository qa) {
     this.documents = documents; this.retrieval = retrieval; this.model = model; this.qa = qa;
+  }
+
+  @Transactional(readOnly = true)
+  public QaHistoryResponse history(long projectId) {
+    if (projectId <= 0) throw new IllegalArgumentException("课程项目编号必须为正数");
+    var history = qa.latestHistory(projectId);
+    return new QaHistoryResponse(history.sessionId(), history.turns().stream().map(turn ->
+        new QaHistoryResponse.QaHistoryTurnResponse(turn.question(), turn.answer(), turn.citations().stream().map(citation ->
+            new QaCitationResponse(citation.documentName(), citation.pageNumber(), citation.excerpt(), citation.score())).toList())).toList());
   }
 
   @Transactional

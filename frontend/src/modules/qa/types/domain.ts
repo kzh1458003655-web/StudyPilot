@@ -11,3 +11,8 @@ export interface QaAnswer {
   answer: string;
   citations: QaCitation[];
 }
+
+export interface QaHistory {
+  sessionId: number | null;
+  turns: Array<{ question: string; answer: QaAnswer }>;
+}

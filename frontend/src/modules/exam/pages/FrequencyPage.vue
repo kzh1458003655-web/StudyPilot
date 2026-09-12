@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import {
   listDocuments,
@@ -21,17 +21,23 @@ const analyzingId = ref<number>();
 const error = ref("");
 
 async function load() {
-  const documents = await listDocuments(projectId.value);
+  const targetProject = projectId.value;
+  const documents = await listDocuments(targetProject);
+  const points = await getKnowledgePoints(targetProject);
+  if (targetProject !== projectId.value) return;
   papers.value = documents.filter(
     (document) => document.documentType === "PAST_EXAM",
   );
-  frequencies.value = await getKnowledgePoints(projectId.value);
+  frequencies.value = points;
 }
 async function analyze(documentId: number) {
+  const targetProject = projectId.value;
   analyzingId.value = documentId;
   error.value = "";
   try {
-    analysis.value = await analyzePastPaper(projectId.value, documentId);
+    const result = await analyzePastPaper(targetProject, documentId);
+    if (targetProject !== projectId.value) return;
+    analysis.value = result;
     await load();
   } catch (reason) {
     error.value = toAppError(reason).message;
@@ -44,6 +50,15 @@ onMounted(() =>
     error.value = toAppError(reason).message;
   }),
 );
+watch(projectId, () => {
+  papers.value = [];
+  frequencies.value = [];
+  analysis.value = undefined;
+  error.value = "";
+  void load().catch((reason) => {
+    error.value = toAppError(reason).message;
+  });
+});
 </script>
 <template>
   <section class="workspace">
@@ -52,7 +67,7 @@ onMounted(() =>
         <p class="eyebrow">本课程 · 考频分析 Skill</p>
         <h1>历年试卷考频</h1>
       </div>
-      <RouterLink :to="`/projects/${projectId}/exams`">生成模拟卷</RouterLink>
+      <RouterLink :to="`/projects/${projectId}/exams`">智能组卷</RouterLink>
     </div>
     <p class="subtle">
       系统会自动识别上传的试卷。选择下方试卷开始分析，无需填写编号。

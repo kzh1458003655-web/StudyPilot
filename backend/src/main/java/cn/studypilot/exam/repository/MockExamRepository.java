@@ -10,4 +10,5 @@ public interface MockExamRepository {
   SavedMockExam save(long projectId, String title, List<GeneratedExamItem> items);
   Optional<MockExamDetail> findByProject(long projectId, long examId);
   List<MockExamSummary> listByProject(long projectId);
+  boolean deleteByProject(long projectId, long examId);
 }

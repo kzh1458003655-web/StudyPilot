@@ -43,4 +43,9 @@ public class ExamController {
   public ApiResponse<java.util.List<cn.studypilot.exam.model.MockExamSummary>> list(@RequestParam long projectId, HttpServletRequest request) {
     return new ApiResponse<>(query.list(projectId), request.getAttribute(RequestIdFilter.ATTRIBUTE).toString());
   }
+  @DeleteMapping("/{examId}")
+  @ResponseStatus(org.springframework.http.HttpStatus.NO_CONTENT)
+  public void delete(@PathVariable long examId, @RequestParam long projectId) {
+    query.delete(projectId, examId);
+  }
 }

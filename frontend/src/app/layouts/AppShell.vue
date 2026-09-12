@@ -8,9 +8,13 @@ import {
   restoreProject,
 } from "@/modules/project/api/requests";
 import type { StudyProject } from "@/modules/project/types/domain";
+import { useQaTaskStore } from "@/modules/qa/stores/qaTaskStore";
+import { useExamTaskStore } from "@/modules/exam/stores/examTaskStore";
 
 const route = useRoute();
 const router = useRouter();
+const qaTasks = useQaTaskStore();
+const examTasks = useExamTaskStore();
 const projects = ref<StudyProject[]>([]);
 const loading = ref(false);
 const loadFailed = ref(false);
@@ -43,7 +47,7 @@ const archivedProjects = computed(() =>
 );
 const currentSection = computed(() => {
   if (route.path.endsWith("/frequency")) return "frequency";
-  if (route.path.endsWith("/exams")) return "exams";
+  if (route.path.includes("/exams")) return "exams";
   return "qa";
 });
 
@@ -215,13 +219,15 @@ watch(
           :class="{ active: currentSection === 'qa' }"
           :to="`/projects/${projectId}/qa`"
         >
-          问答
+          <span>问答</span>
+          <small v-if="projectId && qaTasks.active[projectId]">回答中</small>
         </RouterLink>
         <RouterLink
           :class="{ active: currentSection === 'exams' }"
           :to="`/projects/${projectId}/exams`"
         >
-          模拟考
+          <span>智能组卷</span>
+          <small v-if="projectId && examTasks.active[projectId]">生成中</small>
         </RouterLink>
         <RouterLink
           :class="{ active: currentSection === 'frequency' }"
@@ -256,7 +262,7 @@ watch(
       >
         <p class="eyebrow">NEW COURSE</p>
         <h2 id="course-dialog-title">新建课程</h2>
-        <p class="subtle">每门课程都有独立的资料、问答、模拟考和测评记录。</p>
+        <p class="subtle">每门课程都有独立的资料、问答、智能组卷和测评记录。</p>
         <form class="course-dialog-form" @submit.prevent="createCourse">
           <label
             >课程名称<input

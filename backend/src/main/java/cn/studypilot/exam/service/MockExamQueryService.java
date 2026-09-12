@@ -19,4 +19,10 @@ public class MockExamQueryService {
   public java.util.List<cn.studypilot.exam.model.MockExamSummary> list(long projectId) {
     return exams.listByProject(projectId);
   }
+  public void delete(long projectId, long examId) {
+    if (projectId <= 0 || examId <= 0) throw new IllegalArgumentException("课程项目编号或模拟卷编号不合法");
+    if (!exams.deleteByProject(projectId, examId)) {
+      throw new ResourceNotFoundException("模拟卷不存在或不属于当前项目");
+    }
+  }
 }

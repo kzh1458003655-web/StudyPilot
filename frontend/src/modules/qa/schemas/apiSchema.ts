@@ -16,3 +16,18 @@ export const qaAnswerSchema = z.object({
   }),
   requestId: z.string().min(1),
 });
+
+const citationSchema = qaAnswerSchema.shape.data.shape.citations.element;
+export const qaHistorySchema = z.object({
+  data: z.object({
+    sessionId: z.number().int().positive().nullable(),
+    turns: z.array(
+      z.object({
+        question: z.string(),
+        answer: z.string(),
+        citations: z.array(citationSchema),
+      }),
+    ),
+  }),
+  requestId: z.string().min(1),
+});

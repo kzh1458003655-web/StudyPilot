@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import cn.studypilot.common.config.RequestIdFilter;
@@ -58,5 +59,11 @@ class ExamControllerTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.data.title").value("模拟卷"))
         .andExpect(jsonPath("$.data.items[0].options[0]").value("程序的一次执行"));
+  }
+
+  @Test void deletesTheGeneratedPaperWithinItsProject() throws Exception {
+    mvc.perform(delete("/api/v1/exams/31").param("projectId", "7"))
+        .andExpect(status().isNoContent());
+    org.mockito.Mockito.verify(query).delete(7L, 31L);
   }
 }
