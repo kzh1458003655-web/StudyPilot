@@ -30,6 +30,8 @@ public class CppModelGateway implements ModelGateway {
     body.put("max_tokens", request.maxTokens());
     if (request.taskType() == ModelTaskType.EXAM_GENERATION) {
       body.put("response_format", examResponseFormat());
+    } else if (request.taskType() == ModelTaskType.SHORT_ANSWER_ASSESSMENT) {
+      body.put("response_format", assessmentResponseFormat());
     }
     try {
       JsonNode result = client.post().uri("/completion").body(body).retrieve().body(JsonNode.class);
@@ -66,5 +68,18 @@ public class CppModelGateway implements ModelGateway {
         "type", "array", "minItems", 2, "maxItems", 20, "items", item);
     return Map.of("type", "json_schema", "json_schema", Map.of(
         "name", "mock_exam", "strict", true, "schema", schema));
+  }
+
+  /** Forces score and feedback to be emitted as parseable JSON instead of JSON-like prose. */
+  private Map<String, Object> assessmentResponseFormat() {
+    Map<String, Object> schema = Map.of(
+        "type", "object",
+        "additionalProperties", false,
+        "required", java.util.List.of("score", "feedback"),
+        "properties", Map.of(
+            "score", Map.of("type", "number", "minimum", 0),
+            "feedback", Map.of("type", "string", "minLength", 1)));
+    return Map.of("type", "json_schema", "json_schema", Map.of(
+        "name", "short_answer_assessment", "strict", true, "schema", schema));
   }
 }
