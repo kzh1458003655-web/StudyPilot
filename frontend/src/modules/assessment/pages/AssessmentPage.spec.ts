@@ -17,6 +17,7 @@ vi.mock("../api/requests", () => ({ startAttempt, submitAttempt }));
 
 describe("AssessmentPage", () => {
   beforeEach(() => {
+    vi.resetAllMocks();
     getMockExam.mockResolvedValue({
       id: 9,
       title: "操作系统模拟卷",
@@ -75,5 +76,29 @@ describe("AssessmentPage", () => {
     ]);
     expect(wrapper.text()).toContain("得分 12 / 15");
     expect(wrapper.text()).toContain("定义基本完整");
+  });
+
+  it("creates a fresh attempt before the learner answers the same exam again", async () => {
+    startAttempt.mockResolvedValueOnce(23).mockResolvedValueOnce(24);
+    const wrapper = mount(AssessmentPage, {
+      global: { stubs: { RouterLink: true } },
+    });
+    await flushPromises();
+    await wrapper.get('input[value="A"]').setValue();
+    await wrapper.get("textarea").setValue("线程是执行单位");
+    await wrapper.get("form").trigger("submit.prevent");
+    await flushPromises();
+
+    expect(wrapper.find('button[type="submit"]').exists()).toBe(false);
+    await wrapper.get("button:last-child").trigger("click");
+    await flushPromises();
+
+    expect(startAttempt).toHaveBeenCalledTimes(2);
+    expect(startAttempt).toHaveBeenLastCalledWith(7, 9);
+    expect(wrapper.find('button[type="submit"]').exists()).toBe(true);
+    expect((wrapper.get("textarea").element as HTMLTextAreaElement).value).toBe(
+      "",
+    );
+    expect(wrapper.text()).not.toContain("得分 12 / 15");
   });
 });

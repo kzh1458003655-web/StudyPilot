@@ -23,9 +23,9 @@ async function loadHistory() {
   if (mounted && targetProject === projectId.value) history.value = result;
 }
 async function restoreHistory() {
+  const running = tasks.current(projectId.value);
   try {
     await loadHistory();
-    const running = tasks.current(projectId.value);
     if (running) {
       try {
         await running;

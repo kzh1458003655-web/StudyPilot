@@ -44,9 +44,9 @@ async function loadHistory() {
 
 async function restoreHistory() {
   errorMessage.value = "";
+  const running = tasks.current(projectId.value);
   try {
     await loadHistory();
-    const running = tasks.current(projectId.value);
     if (running) {
       try {
         await running;

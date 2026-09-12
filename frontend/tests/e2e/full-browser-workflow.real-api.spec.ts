@@ -116,12 +116,23 @@ test("completes the browser workflow from course creation to assessment", async 
   await expect(page.getByText("得分", { exact: false })).toBeVisible({
     timeout: 120_000,
   });
-  await page.getByRole("link", { name: "返回智能组卷" }).click();
-  await page.getByRole("link", { name: "重新作答" }).click();
+  await page.getByRole("button", { name: "重新作答本卷" }).click();
   await expect(
     page.getByText("作答记录已准备好", { exact: false }),
   ).toBeVisible();
   await expect(page.getByText("得分", { exact: false })).toHaveCount(0);
+  for (const questionCard of await page.locator("form .exam-card").all()) {
+    const option = questionCard.locator('input[type="radio"]').first();
+    if (await option.count()) await option.check();
+    const answerBox = questionCard.locator(
+      "textarea[placeholder='输入简答题答案']",
+    );
+    if (await answerBox.count()) await answerBox.fill("这是第二次验收作答。");
+  }
+  await page.getByRole("button", { name: "提交并生成测评" }).click();
+  await expect(page.getByText("得分", { exact: false })).toBeVisible({
+    timeout: 120_000,
+  });
   await page.getByRole("link", { name: "返回智能组卷" }).click();
   page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: /删除/ }).click();

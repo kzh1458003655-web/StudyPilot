@@ -45,6 +45,7 @@ async function start() {
 async function submit() {
   if (!attemptId.value || !exam.value) return;
   submitting.value = true;
+  error.value = "";
   try {
     result.value = await submitAttempt(
       projectId.value,
@@ -59,6 +60,12 @@ async function submit() {
   } finally {
     submitting.value = false;
   }
+}
+async function repeatAttempt() {
+  result.value = undefined;
+  answers.value = {};
+  attemptId.value = undefined;
+  await start();
 }
 async function askAboutResult() {
   if (!result.value) return;
@@ -104,6 +111,7 @@ onMounted(load);
             >
               <input
                 v-model="answers[item.id]"
+                :disabled="Boolean(result)"
                 type="radio"
                 :name="`item-${item.id}`"
                 :value="String.fromCharCode(65 + index)"
@@ -117,11 +125,16 @@ onMounted(load);
           <textarea
             v-else
             v-model="answers[item.id]"
+            :disabled="Boolean(result)"
             placeholder="输入简答题答案"
           />
           <p class="subtle">知识点：{{ item.knowledgePoint }}</p>
         </article>
-        <button type="submit" :disabled="!attemptId || submitting">
+        <button
+          v-if="!result"
+          type="submit"
+          :disabled="!attemptId || submitting"
+        >
           {{ submitting ? "正在测评…" : "提交并生成测评" }}
         </button>
       </form>
@@ -134,6 +147,7 @@ onMounted(load);
       <button type="button" @click="askAboutResult">
         根据本次结果继续提问
       </button>
+      <button type="button" @click="repeatAttempt">重新作答本卷</button>
     </article>
   </section>
 </template>
