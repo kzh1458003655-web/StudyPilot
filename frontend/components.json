@@ -1,5 +1,5 @@
 {
-  "schema": "https://shadcn-vue.com/schema.json",
+  "$schema": "https://shadcn-vue.com/schema.json",
   "typescript": true,
   "style": "default",
   "tailwind": {
@@ -9,7 +9,7 @@
     "cssVariables": true
   },
   "aliases": {
-    "components": "@/shared/ui",
+    "components": "@/shared",
     "utils": "@/shared/utils",
     "ui": "@/shared/ui"
   }

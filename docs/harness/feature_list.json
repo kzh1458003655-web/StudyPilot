@@ -1,7 +1,7 @@
 {
   "$schema": "./feature_list.schema.json",
   "schemaVersion": 1,
-  "lastUpdated": "2026-09-09T10:36:00+08:00",
+  "lastUpdated": "2026-09-17T20:50:00+08:00",
   "features": [
     {
       "id": "HARNESS-001",
@@ -314,6 +314,62 @@
         "docs/harness/progress.md",
         "docs/harness/session-handoff.md",
         "docs/关键记录/README.md"
+      ]
+    },
+    {
+      "id": "UX-001",
+      "phase": "product",
+      "name": "建立前端集中式模拟服务",
+      "description": "在不安装数据库、模型或启动 Java 后端的情况下，按项目隔离提供与真实接口契约一致的前端样式调试数据。",
+      "dependencies": ["RELEASE-001"],
+      "status": "verified",
+      "acceptanceCriteria": [
+        "普通开发模式仍连接真实后端，模拟模式可独立启动",
+        "模拟请求保持现有 API 路径、请求参数和响应结构",
+        "资料、问答、考频、试卷和测评数据以项目为隔离边界",
+        "覆盖空白、处理中、已完成、归档、长文本和接口失败等视觉边界",
+        "模拟变更保存在浏览器本地且可恢复初始数据",
+        "契约测试、前端测试、类型检查、构建和浏览器冒烟验证通过"
+      ],
+      "branch": "feat/frontend-mock-backend",
+      "evidence": [
+        "2026-09-17：新增基于 MSW 的 /api/v1 集中式模拟服务，覆盖项目、资料、问答、真题分析、组卷、作答评分及健康接口。",
+        "2026-09-17：8 个项目种子覆盖不同业务阶段和边界状态；操作写入浏览器 localStorage，不连接真实数据库。",
+        "2026-09-17：Vitest 全量 11 项、vue-tsc、ESLint 和 Vite 生产构建通过；5 项新增测试验证契约、项目隔离、持久变更、评分和错误场景。",
+        "2026-09-17：使用真实 Chromium 在 dev:mock 模式验证 7 个活动项目、1 个归档项目、课程资料和模拟卷均可在无后端情况下显示。"
+      ],
+      "docsToUpdate": [
+        "frontend/src/mocks/README.md",
+        "docs/harness/progress.md",
+        "docs/harness/verification.md",
+        "docs/harness/session-handoff.md"
+      ]
+    },
+    {
+      "id": "UX-002",
+      "phase": "product",
+      "name": "重构前端视觉与课程工作台交互",
+      "description": "以温暖编辑型设计系统重构课程导航、问答资料、智能组卷、考频图表和在线测评，并使用 Vue 组件库替代重复手写基础组件。",
+      "dependencies": ["UX-001"],
+      "status": "verified",
+      "acceptanceCriteria": [
+        "左侧栏只保留活动课程，模块切换位于内容区，归档课程通过抽屉恢复后才能查看",
+        "问答、资料上传、组卷、考频和测评使用统一暖色设计与精简文案",
+        "问答采用 AI Elements Vue 组合组件且保持现有 API 契约",
+        "考频分析提供分析中状态、横向 ECharts 图表和文本数据回退",
+        "桌面、平板和移动端无横向溢出且关键工作流通过自动化验证"
+      ],
+      "branch": "feat/frontend-visual-redesign",
+      "evidence": [
+        "2026-09-17：完成暖米白、暖黑、珊瑚设计系统；接入 Tailwind CSS 4、shadcn-vue 源码组件、精选 AI Elements Vue 与 ECharts。",
+        "2026-09-17：左侧栏仅保留活动课程，三模块改为顶部 Tabs；归档课程进入右侧抽屉，直链访问会被拦截，恢复后不自动进入课程。",
+        "2026-09-17：问答与资料、智能组卷、考频分析、在线作答和课程主页完成统一视觉与响应式重构，保留原 Axios、Pinia、Mock 和 API Schema。",
+        "2026-09-17：ESLint、vue-tsc、13 项 Vitest、生产构建及 Playwright Chrome 通道测试通过；真实浏览器验证 1440×900、1024×768、390×844 均无横向溢出。"
+      ],
+      "docsToUpdate": [
+        "docs/harness/progress.md",
+        "docs/harness/verification.md",
+        "docs/harness/session-handoff.md"
       ]
     }
   ]

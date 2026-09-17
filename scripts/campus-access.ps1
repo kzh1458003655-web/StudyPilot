@@ -118,4 +118,3 @@ $campusUrl = "http://${campusIp}:$frontendPort"
 Wait-Http $campusUrl 10 '校园网入口'
 Write-Host "校园网访问已开启：$campusUrl" -ForegroundColor Green
 Write-Host '关闭时双击“关闭校园网访问.cmd”。'
-

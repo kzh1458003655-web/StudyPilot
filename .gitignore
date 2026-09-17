@@ -22,6 +22,7 @@ __pycache__/
 **/node_modules/
 **/dist/
 **/coverage/
+frontend/.playwright-cli/
 
 # 本地模型与大文件
 *.gguf
