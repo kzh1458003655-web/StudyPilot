@@ -101,7 +101,6 @@ export interface MockProjectRecord {
 }
 
 export interface MockBackendState {
-  version: number;
   nextProjectId: number;
   nextDocumentId: number;
   nextSessionId: number;

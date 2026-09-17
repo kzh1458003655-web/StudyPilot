@@ -1,7 +1,7 @@
 {
   "$schema": "./feature_list.schema.json",
   "schemaVersion": 1,
-  "lastUpdated": "2026-09-17T20:50:00+08:00",
+  "lastUpdated": "2026-09-17T23:40:45+08:00",
   "features": [
     {
       "id": "HARNESS-001",
@@ -371,7 +371,30 @@
         "docs/harness/verification.md",
         "docs/harness/session-handoff.md"
       ]
+    },
+    {
+      "id": "UX-003",
+      "phase": "product",
+      "name": "完善考频分析演示",
+      "description": "以三套数据库系统原理试卷的固定分析结果，提供八秒节点式分析过程和四项核心可视化。",
+      "dependencies": ["UX-002"],
+      "status": "done",
+      "acceptanceCriteria": [
+        "分析过程仅使用一个节点图并在约八秒内完成五个阶段",
+        "结果仅展示考频统计、复习优先级雷达图、高频高分四象限图和考频关系图",
+        "页面复用现有 shadcn-vue、AI Elements Vue 与 ECharts，不增加新的前端依赖",
+        "生产构建通过，最终视觉效果由用户在 Mock 模式下确认"
+      ],
+      "branch": "feat/frequency-analysis-visuals",
+      "evidence": [
+        "2026-09-17：考频页已接入三套试卷、300 分和八类考点的固定演示数据，分析过程收敛为单一节点图。",
+        "2026-09-17：定向 ESLint 与生产构建通过；按用户要求未运行浏览器、E2E 或新增单元测试，视觉确认待用户完成。"
+      ],
+      "docsToUpdate": [
+        "docs/harness/progress.md",
+        "docs/harness/verification.md",
+        "docs/harness/session-handoff.md"
+      ]
     }
   ]
 }
-

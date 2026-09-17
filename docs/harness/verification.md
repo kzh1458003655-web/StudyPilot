@@ -191,3 +191,12 @@ CI 在 Pull Request 中使用基线 commit 运行：
 | 响应式视觉 | Playwright CLI + `dev:mock` | 1440×900、1024×768、390×844 验证课程列表、问答、资料抽屉、考频图表与测评页；页面宽度等于视口宽度，无横向溢出。 |
 | Mock 业务状态 | 8 个种子项目 | 验证问答历史与引用、资料状态、考频图表、长课程名、已完成测评和归档课程恢复。 |
 | 格式基线 | `frontend\corepack pnpm run format:check` | 仍有 44 个历史文件未符合当前 Prettier 配置；本轮新增和修改文件已定向格式化，未批量重写无关文件。 |
+
+## UX-003 验证记录
+
+| 检查         | 命令或证据                                                                                                                                                         | 结果                                                  |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------- |
+| 定向格式     | `frontend\corepack pnpm exec prettier --write`                                                                                                                     | 通过；仅格式化本轮四个前端与 Mock 文件。              |
+| 定向静态检查 | `frontend\corepack pnpm exec eslint src/modules/exam/pages/FrequencyPage.vue src/modules/exam/pages/frequencyChart.ts src/mocks/fixtures.ts src/mocks/database.ts` | 通过，无警告。                                        |
+| 生产构建     | `frontend\corepack pnpm run build`                                                                                                                                 | 通过；`vue-tsc --noEmit` 与 Vite 生产构建成功。       |
+| 浏览器与测试 | 用户指定由其自行查看效果，不运行浏览器、E2E 或单元测试                                                                                                             | 未执行；因此 `UX-003` 保持 `done`，等待用户视觉确认。 |
