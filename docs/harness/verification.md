@@ -170,3 +170,15 @@ CI 在 Pull Request 中使用基线 commit 运行：
 | 生产构建 | `frontend\corepack pnpm run build` | 通过；普通生产模式不会启用模拟服务。 |
 | 浏览器冒烟 | Chromium 打开 `pnpm run dev:mock` 服务 | 无 Java 后端时显示 7 个活动项目、1 个归档项目；项目 105 显示 2 份资料和 2 套模拟卷，网络日志确认请求由 MSW 返回。 |
 | 格式基线 | `frontend\corepack pnpm run check` | `format:check` 因仓库原有 63 个文件与当前 Prettier 配置不一致而失败；本次源文件已定向执行 Prettier，未批量改写无关文件。 |
+
+## UX-002 验证记录
+
+| 检查 | 命令或证据 | 结果 |
+| --- | --- | --- |
+| 前端回归 | `frontend\corepack pnpm run test` | 13 项全部通过，新增考频排序、最高频配色与 Tooltip 百分比测试。 |
+| 静态检查 | `frontend\corepack pnpm run lint`、`frontend\corepack pnpm run typecheck` | 通过；组件注册表源码使用限定规则，业务代码保持严格检查。 |
+| 生产构建 | `frontend\corepack pnpm run build` | 通过；考频页面按路由拆分，ECharts 仅在该页面加载。 |
+| 浏览器自动化 | `frontend\corepack pnpm run test:e2e` | 本地 UI 测试通过；真实后端两项测试按环境变量明确跳过。新增归档直链拦截、恢复后不自动打开课程验证。 |
+| 响应式视觉 | Playwright CLI + `dev:mock` | 1440×900、1024×768、390×844 验证课程列表、问答、资料抽屉、考频图表与测评页；页面宽度等于视口宽度，无横向溢出。 |
+| Mock 业务状态 | 8 个种子项目 | 验证问答历史与引用、资料状态、考频图表、长课程名、已完成测评和归档课程恢复。 |
+| 格式基线 | `frontend\corepack pnpm run format:check` | 仍有 44 个历史文件未符合当前 Prettier 配置；本轮新增和修改文件已定向格式化，未批量重写无关文件。 |

@@ -2,8 +2,8 @@
 
 ## 当前目标
 
-- 当前分支：`feat/frontend-mock-backend`。
-- `UX-001` 前端集中式模拟服务已验证完成，当前没有待执行的 Harness 任务。
+- 当前分支：`feat/frontend-visual-redesign`。
+- `UX-002` 已完成并验证前端视觉与课程工作台交互重构，依赖的 `UX-001` 保持验证状态。
 - 后续变更应以新的任务项开始，并更新相应验证证据。
 
 ## 已验证事实
@@ -15,7 +15,9 @@
 - 2026-09-09 已用 Qwen3-4B Q4 复跑 `GroundedQaEndToEndTest`；真实 C++／本地模型资料问答链路通过。本机当前未保持模型进程运行。
 - `frontend` 运行 `corepack pnpm run dev:mock` 可只启动前端；MSW 接管现有 `/api/v1` 请求，8 个模拟项目及调试操作保存在浏览器 `localStorage`，不需要数据库或模型。
 - 普通 `corepack pnpm run dev` 未启用模拟服务，仍通过 Vite 代理连接真实 Java 后端。
-- 2026-09-17 前端全量 11 项 Vitest、类型检查、ESLint、生产构建和真实 Chromium 冒烟检查通过；全量 `format:check` 仍受仓库原有 63 个格式化基线文件影响。
+- 2026-09-17 前端全量 13 项 Vitest、类型检查、ESLint、生产构建和 Playwright Chrome 通道测试通过；真实浏览器以 Mock 模式验证 1440×900、1024×768、390×844 无横向溢出。
+- 课程模块已移至顶部 Tabs；归档课程仅在右侧抽屉中恢复，归档直链会重定向到 `/projects?archive=1`，恢复后不自动进入课程。
+- 全量 `format:check` 仍受仓库原有 44 个格式化基线文件影响，本轮文件均已定向格式化。
 
 ## 下一会话启动顺序
 

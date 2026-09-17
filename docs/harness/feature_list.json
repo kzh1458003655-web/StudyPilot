@@ -1,7 +1,7 @@
 {
   "$schema": "./feature_list.schema.json",
   "schemaVersion": 1,
-  "lastUpdated": "2026-09-17T18:43:00+08:00",
+  "lastUpdated": "2026-09-17T20:50:00+08:00",
   "features": [
     {
       "id": "HARNESS-001",
@@ -340,6 +340,33 @@
       ],
       "docsToUpdate": [
         "frontend/src/mocks/README.md",
+        "docs/harness/progress.md",
+        "docs/harness/verification.md",
+        "docs/harness/session-handoff.md"
+      ]
+    },
+    {
+      "id": "UX-002",
+      "phase": "product",
+      "name": "重构前端视觉与课程工作台交互",
+      "description": "以温暖编辑型设计系统重构课程导航、问答资料、智能组卷、考频图表和在线测评，并使用 Vue 组件库替代重复手写基础组件。",
+      "dependencies": ["UX-001"],
+      "status": "verified",
+      "acceptanceCriteria": [
+        "左侧栏只保留活动课程，模块切换位于内容区，归档课程通过抽屉恢复后才能查看",
+        "问答、资料上传、组卷、考频和测评使用统一暖色设计与精简文案",
+        "问答采用 AI Elements Vue 组合组件且保持现有 API 契约",
+        "考频分析提供分析中状态、横向 ECharts 图表和文本数据回退",
+        "桌面、平板和移动端无横向溢出且关键工作流通过自动化验证"
+      ],
+      "branch": "feat/frontend-visual-redesign",
+      "evidence": [
+        "2026-09-17：完成暖米白、暖黑、珊瑚设计系统；接入 Tailwind CSS 4、shadcn-vue 源码组件、精选 AI Elements Vue 与 ECharts。",
+        "2026-09-17：左侧栏仅保留活动课程，三模块改为顶部 Tabs；归档课程进入右侧抽屉，直链访问会被拦截，恢复后不自动进入课程。",
+        "2026-09-17：问答与资料、智能组卷、考频分析、在线作答和课程主页完成统一视觉与响应式重构，保留原 Axios、Pinia、Mock 和 API Schema。",
+        "2026-09-17：ESLint、vue-tsc、13 项 Vitest、生产构建及 Playwright Chrome 通道测试通过；真实浏览器验证 1440×900、1024×768、390×844 均无横向溢出。"
+      ],
+      "docsToUpdate": [
         "docs/harness/progress.md",
         "docs/harness/verification.md",
         "docs/harness/session-handoff.md"

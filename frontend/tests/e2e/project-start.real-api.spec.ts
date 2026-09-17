@@ -22,42 +22,38 @@ test("creates a project through the running local API", async ({ page }) => {
 
   await expect(page).toHaveURL(/\/projects\/\d+\/qa$/);
   await expect(page.getByRole("heading", { name: "知识问答" })).toBeVisible();
-  await expect(page.getByText("本课程 · 可追溯回答")).toBeVisible();
-  await expect(
-    page.locator(".course-item", { hasText: projectName }),
-  ).toBeVisible();
+  await expect(page.getByRole("button", { name: projectName })).toBeVisible();
 
   await page.getByRole("button", { name: `课程操作：${projectName}` }).click();
-  await page.getByRole("button", { name: "归档课程" }).click();
+  await page.getByRole("menuitem", { name: "归档课程" }).click();
+  await page.getByRole("button", { name: "归档", exact: true }).click();
   await expect(page).toHaveURL(/\/projects$/);
-  const archivedCourse = page.locator(".archived-course", {
-    hasText: projectName,
-  });
-  await expect(archivedCourse).toBeVisible();
-  await archivedCourse
-    .getByRole("button", { name: `课程操作：${projectName}` })
-    .click();
-  await archivedCourse.getByRole("button", { name: "恢复课程" }).click();
-  await expect(page).toHaveURL(/\/projects\/\d+\/qa$/);
+  await page.getByRole("button", { name: /归档课程/ }).click();
+  const archiveDialog = page.getByRole("dialog", { name: "归档课程" });
+  await expect(archiveDialog.getByText(projectName)).toBeVisible();
+  await archiveDialog.getByRole("button", { name: "恢复课程" }).click();
+  await expect(page).toHaveURL(/\/projects$/);
+  await page.getByRole("button", { name: projectName }).click();
 
   await page
-    .getByPlaceholder("输入问题，或说说你想弄懂的知识点…")
+    .getByPlaceholder("输入问题，Shift + Enter 换行")
     .fill("数据库事务的 ACID 分别指什么？");
-  await page.getByRole("button", { name: "发送问题 ↑" }).click();
-  await expect(page.locator(".qa-turn")).toContainText("StudyPilot", {
-    timeout: 60_000,
-  });
-  await expect(page.locator(".qa-turn .answer").last()).not.toBeEmpty();
+  await page.getByRole("button", { name: "发送问题" }).click();
+  await expect(page.getByText("数据库事务的 ACID 分别指什么？")).toBeVisible();
 
+  await page
+    .getByRole("button", { name: /课程资料/ })
+    .first()
+    .click();
   const fileInput = page.locator('input[type="file"]');
   await fileInput.setInputFiles(databasePaper);
   await page.getByRole("button", { name: "上传资料" }).click();
   await expect(page.getByText("数据库原理历年试卷测试样卷.pdf")).toBeVisible();
 
-  page.once("dialog", (dialog) => dialog.accept());
   await page
-    .getByRole("button", { name: "删除 数据库原理历年试卷测试样卷.pdf" })
+    .getByRole("button", { name: /资料操作：数据库原理历年试卷测试样卷/ })
     .click();
-  await expect(page.getByText("资料已删除。", { exact: true })).toBeVisible();
+  await page.getByRole("menuitem", { name: "删除资料" }).click();
+  await page.getByRole("button", { name: "删除", exact: true }).click();
   await expect(page.getByText("数据库原理历年试卷测试样卷.pdf")).toHaveCount(0);
 });

@@ -2,35 +2,81 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
+  ArchiveIcon,
+  BookOpenIcon,
+  MenuIcon,
+  MoreHorizontalIcon,
+  PlusIcon,
+  RotateCcwIcon,
+} from "@lucide/vue";
+import { toast } from "vue-sonner";
+import {
   archiveProject,
   createProject,
   listProjects,
   restoreProject,
 } from "@/modules/project/api/requests";
 import type { StudyProject } from "@/modules/project/types/domain";
-import { useQaTaskStore } from "@/modules/qa/stores/qaTaskStore";
-import { useExamTaskStore } from "@/modules/exam/stores/examTaskStore";
+import { Button } from "@/shared/ui/button";
+import { Badge } from "@/shared/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/shared/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shared/ui/alert-dialog";
+import { Input } from "@/shared/ui/input";
+import { Textarea } from "@/shared/ui/textarea";
+import { ScrollArea } from "@/shared/ui/scroll-area";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/shared/ui/sheet";
+import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/shared/ui/tooltip";
+
+type CourseModule = "qa" | "exams" | "frequency";
 
 const route = useRoute();
 const router = useRouter();
-const qaTasks = useQaTaskStore();
-const examTasks = useExamTaskStore();
 const projects = ref<StudyProject[]>([]);
 const loading = ref(false);
 const loadFailed = ref(false);
 const courseDialogOpen = ref(false);
+const archiveSheetOpen = ref(false);
+const mobileSheetOpen = ref(false);
+const pendingArchive = ref<StudyProject>();
 const courseName = ref("");
 const courseDescription = ref("");
 const creatingCourse = ref(false);
 const courseError = ref("");
-const courseMenuProjectId = ref<number>();
-const quotes = [
-  "慢慢来，把今天的一个问题弄懂就很好。",
-  "暂时不会，是理解开始的地方。",
-  "认真走过的每一步，都会成为你的底气。",
-  "把复杂的问题拆小，答案就会慢慢清晰。",
-];
-const quote = quotes[Math.floor(Math.random() * quotes.length)];
+const archiveRedirecting = ref(false);
 
 const projectId = computed(() => {
   const value = Number(route.params.projectId);
@@ -45,53 +91,75 @@ const visibleProjects = computed(() =>
 const archivedProjects = computed(() =>
   projects.value.filter((project) => project.archivedAt),
 );
-const currentSection = computed(() => {
+const currentSection = computed<CourseModule>(() => {
   if (route.path.endsWith("/frequency")) return "frequency";
-  if (route.path.includes("/exams")) return "exams";
+  if (route.path.includes("/exams") || route.path.includes("/assessment")) {
+    return "exams";
+  }
   return "qa";
 });
+
+function projectRoute(id: number, section: CourseModule = "qa") {
+  return `/projects/${id}/${section}`;
+}
+
+function formatArchivedAt(value: string | null) {
+  if (!value) return "";
+  return new Intl.DateTimeFormat("zh-CN", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
 
 async function refreshProjects() {
   loading.value = true;
   loadFailed.value = false;
   try {
     projects.value = await listProjects(true);
+    if (route.query.archive === "1") {
+      archiveSheetOpen.value = true;
+    }
   } catch {
     loadFailed.value = true;
   } finally {
     loading.value = false;
   }
 }
-function openProject(project: StudyProject) {
-  router.push(`/projects/${project.id}/qa`);
+
+async function openProject(project: StudyProject) {
+  mobileSheetOpen.value = false;
+  await router.push(projectRoute(project.id));
 }
+
 function openCourseDialog() {
   courseError.value = "";
   courseDialogOpen.value = true;
 }
-function toggleCourseMenu(id: number) {
-  courseMenuProjectId.value = courseMenuProjectId.value === id ? undefined : id;
-}
+
 async function archiveCourse(project: StudyProject) {
   try {
     await archiveProject(project.id);
+    pendingArchive.value = undefined;
     await refreshProjects();
-    courseMenuProjectId.value = undefined;
     if (project.id === projectId.value) await router.push("/projects");
+    toast.success("课程已归档");
   } catch {
-    courseError.value = "课程归档失败，请稍后重试。";
+    toast.error("课程归档失败，请稍后重试");
   }
 }
+
 async function restoreCourse(project: StudyProject) {
   try {
     await restoreProject(project.id);
     await refreshProjects();
-    courseMenuProjectId.value = undefined;
-    await router.push(`/projects/${project.id}/qa`);
+    toast.success("课程已恢复，可从课程列表打开");
   } catch {
-    courseError.value = "课程恢复失败，请稍后重试。";
+    toast.error("课程恢复失败，请稍后重试");
   }
 }
+
 async function createCourse() {
   if (!courseName.value.trim()) {
     courseError.value = "请填写课程名称。";
@@ -108,7 +176,8 @@ async function createCourse() {
     courseDialogOpen.value = false;
     courseName.value = "";
     courseDescription.value = "";
-    await router.push(`/projects/${project.id}/qa`);
+    await router.push(projectRoute(project.id));
+    toast.success("课程已创建");
   } catch {
     courseError.value = "课程创建失败，请确认本地服务已启动。";
   } finally {
@@ -116,183 +185,351 @@ async function createCourse() {
   }
 }
 
+function changeSection(value: string | number) {
+  if (!projectId.value) return;
+  router.push(projectRoute(projectId.value, String(value) as CourseModule));
+}
+
 onMounted(refreshProjects);
-// Creating a project changes the route, so the course list refreshes automatically.
 watch(
-  () => route.fullPath,
-  () => {
-    refreshProjects();
-    if (route.query.create === "1") openCourseDialog();
+  () => route.query.create,
+  (value) => {
+    if (value === "1") openCourseDialog();
   },
+  { immediate: true },
+);
+watch(
+  activeProject,
+  async (project) => {
+    if (!project?.archivedAt || archiveRedirecting.value) return;
+    archiveRedirecting.value = true;
+    archiveSheetOpen.value = true;
+    toast.info("请先恢复课程，再查看课程内容");
+    await router.replace({ path: "/projects", query: { archive: "1" } });
+    archiveRedirecting.value = false;
+  },
+  { immediate: true },
 );
 </script>
 
 <template>
-  <div class="study-shell">
-    <aside class="course-sidebar" @click="courseMenuProjectId = undefined">
-      <RouterLink class="brand" to="/projects" aria-label="StudyPilot 课程主页">
-        <span class="brand-mark">S</span>
-        <span><strong>StudyPilot</strong><small>LOCAL STUDY SPACE</small></span>
-      </RouterLink>
-      <button class="new-course" type="button" @click="openCourseDialog">
-        <span>＋</span> 新建课程
-      </button>
-
-      <section class="course-section" aria-label="课程列表">
-        <div class="side-heading">
-          <span>我的课程</span><small>{{ visibleProjects.length }}</small>
-        </div>
-        <div class="course-list">
-          <p v-if="loading" class="side-muted">正在读取课程…</p>
-          <p v-else-if="loadFailed" class="side-muted">本地服务未连接</p>
-          <p v-else-if="!visibleProjects.length" class="side-muted">
-            还没有课程，先新建一个。
-          </p>
-          <div
-            v-for="project in visibleProjects"
-            :key="project.id"
-            class="course-row"
+  <TooltipProvider>
+    <div
+      class="min-h-screen bg-background text-foreground md:grid md:grid-cols-[276px_minmax(0,1fr)]"
+    >
+      <aside class="hidden h-screen border-r bg-[#f5f1ea] md:flex md:flex-col">
+        <RouterLink
+          class="flex h-20 items-center gap-3 px-6"
+          to="/projects"
+          aria-label="StudyPilot 课程主页"
+        >
+          <span
+            class="grid size-10 place-items-center rounded-xl bg-foreground font-serif text-xl font-semibold text-background"
+            >S</span
           >
+          <span class="min-w-0">
+            <strong class="block text-lg tracking-tight">StudyPilot</strong>
+            <small
+              class="block text-[10px] tracking-[0.24em] text-muted-foreground"
+              >LOCAL STUDY SPACE</small
+            >
+          </span>
+        </RouterLink>
+
+        <div class="px-4 pb-4">
+          <Button
+            class="h-11 w-full justify-start bg-card text-foreground shadow-none ring-1 ring-border hover:bg-accent"
+            @click="openCourseDialog"
+          >
+            <PlusIcon />新建课程
+          </Button>
+        </div>
+
+        <div class="flex min-h-0 flex-1 flex-col px-3 pb-3">
+          <div
+            class="flex items-center justify-between px-3 py-2 text-xs text-muted-foreground"
+          >
+            <span>课程</span><span>{{ visibleProjects.length }}</span>
+          </div>
+          <ScrollArea class="min-h-0 flex-1 pr-2">
+            <div class="space-y-1 pb-6" aria-label="活动课程列表">
+              <p
+                v-if="loading"
+                class="px-3 py-8 text-center text-sm text-muted-foreground"
+              >
+                正在读取课程…
+              </p>
+              <div v-else-if="loadFailed" class="px-3 py-8 text-center">
+                <p class="text-sm text-muted-foreground">本地服务未连接</p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  class="mt-2"
+                  @click="refreshProjects"
+                  >重试</Button
+                >
+              </div>
+              <p
+                v-else-if="!visibleProjects.length"
+                class="px-3 py-8 text-center text-sm text-muted-foreground"
+              >
+                还没有课程
+              </p>
+              <div
+                v-for="project in visibleProjects"
+                :key="project.id"
+                class="group relative flex items-center"
+              >
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <button
+                      class="relative flex min-h-12 min-w-0 flex-1 items-center gap-2 rounded-lg px-3 py-2 pr-9 text-left text-sm transition-colors hover:bg-accent/70"
+                      :class="
+                        project.id === projectId
+                          ? 'bg-accent font-medium before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-primary'
+                          : 'text-muted-foreground'
+                      "
+                      type="button"
+                      @click="openProject(project)"
+                    >
+                      <BookOpenIcon class="size-4 shrink-0" />
+                      <span class="line-clamp-2 leading-5">{{
+                        project.name
+                      }}</span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" class="max-w-72">{{
+                    project.name
+                  }}</TooltipContent>
+                </Tooltip>
+                <DropdownMenu>
+                  <DropdownMenuTrigger as-child>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      class="absolute right-1 opacity-0 group-hover:opacity-100 focus:opacity-100"
+                      :aria-label="`课程操作：${project.name}`"
+                    >
+                      <MoreHorizontalIcon />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuItem
+                      class="text-destructive"
+                      @select="pendingArchive = project"
+                    >
+                      <ArchiveIcon />归档课程
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+          </ScrollArea>
+        </div>
+      </aside>
+
+      <main class="min-w-0">
+        <header
+          class="sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-background/92 px-4 backdrop-blur md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:px-7"
+        >
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            class="md:hidden"
+            aria-label="打开课程列表"
+            @click="mobileSheetOpen = true"
+          >
+            <MenuIcon />
+          </Button>
+          <p
+            class="hidden min-w-0 items-center gap-2 text-sm text-muted-foreground md:flex"
+          >
+            <RouterLink
+              to="/projects"
+              class="shrink-0 whitespace-nowrap hover:text-foreground"
+              >我的课程</RouterLink
+            >
+            <span class="shrink-0">/</span>
+            <span class="truncate text-foreground">{{
+              activeProject?.name ?? "课程工作台"
+            }}</span>
+          </p>
+          <Tabs
+            v-if="projectId"
+            :model-value="currentSection"
+            @update:model-value="changeSection"
+          >
+            <TabsList class="h-10 bg-secondary/80 p-1">
+              <TabsTrigger value="qa" class="px-4">问答</TabsTrigger>
+              <TabsTrigger value="exams" class="px-4">智能组卷</TabsTrigger>
+              <TabsTrigger value="frequency" class="px-4">考频分析</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <span v-else class="font-serif text-base font-semibold md:hidden"
+            >StudyPilot</span
+          >
+          <div class="ml-auto flex justify-end">
+            <Button
+              variant="ghost"
+              size="sm"
+              class="gap-2"
+              @click="archiveSheetOpen = true"
+            >
+              <ArchiveIcon /><span class="hidden sm:inline">归档课程</span>
+              <Badge
+                v-if="archivedProjects.length"
+                variant="secondary"
+                class="min-w-5 justify-center px-1.5"
+                >{{ archivedProjects.length }}</Badge
+              >
+            </Button>
+          </div>
+        </header>
+        <div class="min-h-[calc(100vh-4rem)]"><slot /></div>
+      </main>
+
+      <Sheet v-model:open="archiveSheetOpen">
+        <SheetContent class="w-[92vw] border-l bg-card p-0 sm:max-w-md">
+          <SheetHeader class="border-b px-6 py-5 text-left">
+            <SheetTitle>归档课程</SheetTitle>
+            <SheetDescription class="sr-only"
+              >恢复后可从活动课程列表重新进入课程。</SheetDescription
+            >
+          </SheetHeader>
+          <ScrollArea class="h-[calc(100vh-76px)]">
+            <div class="space-y-3 p-5">
+              <p
+                v-if="!archivedProjects.length"
+                class="py-16 text-center text-sm text-muted-foreground"
+              >
+                暂无归档课程
+              </p>
+              <article
+                v-for="project in archivedProjects"
+                :key="project.id"
+                class="rounded-xl border bg-background p-4"
+              >
+                <h3
+                  class="break-words font-sans text-sm font-medium tracking-normal"
+                >
+                  {{ project.name }}
+                </h3>
+                <p class="mt-1 text-xs text-muted-foreground">
+                  归档于 {{ formatArchivedAt(project.archivedAt) }}
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  class="mt-4 w-full"
+                  @click="restoreCourse(project)"
+                >
+                  <RotateCcwIcon />恢复课程
+                </Button>
+              </article>
+            </div>
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet v-model:open="mobileSheetOpen">
+        <SheetContent side="left" class="w-[88vw] bg-[#f5f1ea] p-0 sm:max-w-sm">
+          <SheetHeader class="border-b px-5 py-5 text-left"
+            ><SheetTitle>选择课程</SheetTitle
+            ><SheetDescription class="sr-only"
+              >从活动课程中选择要打开的课程。</SheetDescription
+            ></SheetHeader
+          >
+          <div class="p-4">
+            <Button class="w-full" @click="openCourseDialog"
+              ><PlusIcon />新建课程</Button
+            >
+          </div>
+          <ScrollArea class="h-[calc(100vh-145px)] px-3">
             <button
-              class="course-item"
-              :class="{ selected: project.id === projectId }"
-              type="button"
+              v-for="project in visibleProjects"
+              :key="project.id"
+              class="mb-1 flex w-full items-start gap-2 rounded-lg px-3 py-3 text-left text-sm hover:bg-accent"
               @click="openProject(project)"
             >
-              <span class="course-folder">□</span
-              ><span>{{ project.name }}</span>
+              <BookOpenIcon class="mt-0.5 size-4 shrink-0" /><span
+                class="break-words"
+                >{{ project.name }}</span
+              >
             </button>
-            <button
-              class="course-more"
-              :aria-expanded="courseMenuProjectId === project.id"
-              :aria-label="`课程操作：${project.name}`"
-              type="button"
-              @click.stop="toggleCourseMenu(project.id)"
-            >
-              ⋯
-            </button>
-            <div v-if="courseMenuProjectId === project.id" class="course-menu">
-              <button type="button" @click="archiveCourse(project)">
-                归档课程
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
 
-      <section
-        v-if="archivedProjects.length"
-        class="course-section archived-section"
-        aria-label="已归档课程"
-      >
-        <div class="side-heading">
-          <span>已归档</span><small>{{ archivedProjects.length }}</small>
-        </div>
-        <div class="course-list">
-          <div
-            v-for="project in archivedProjects"
-            :key="project.id"
-            class="archived-course"
+      <Dialog v-model:open="courseDialogOpen">
+        <DialogContent class="sm:max-w-md">
+          <DialogHeader
+            ><DialogTitle>新建课程</DialogTitle
+            ><DialogDescription class="sr-only"
+              >填写课程名称和可选说明。</DialogDescription
+            ></DialogHeader
           >
-            <span>□ {{ project.name }}</span>
-            <button
-              class="course-more"
-              :aria-expanded="courseMenuProjectId === project.id"
-              :aria-label="`课程操作：${project.name}`"
-              type="button"
-              @click.stop="toggleCourseMenu(project.id)"
-            >
-              ⋯
-            </button>
-            <div v-if="courseMenuProjectId === project.id" class="course-menu">
-              <button type="button" @click="restoreCourse(project)">
-                恢复课程
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
+          <form class="space-y-4" @submit.prevent="createCourse">
+            <label class="grid gap-2 text-sm font-medium"
+              >课程名称
+              <Input
+                v-model="courseName"
+                autofocus
+                maxlength="100"
+                placeholder="例如：操作系统期末复习"
+              />
+            </label>
+            <label class="grid gap-2 text-sm font-medium"
+              >说明 <span class="sr-only">可选</span>
+              <Textarea
+                v-model="courseDescription"
+                maxlength="1000"
+                placeholder="可选"
+                class="min-h-24 resize-none"
+              />
+            </label>
+            <p v-if="courseError" class="text-sm text-destructive" role="alert">
+              {{ courseError }}
+            </p>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="ghost"
+                @click="courseDialogOpen = false"
+                >取消</Button
+              >
+              <Button :disabled="creatingCourse" type="submit">{{
+                creatingCourse ? "正在创建…" : "创建课程"
+              }}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-      <nav v-if="projectId" class="module-nav" aria-label="当前课程功能">
-        <p class="side-heading">当前课程</p>
-        <RouterLink
-          :class="{ active: currentSection === 'qa' }"
-          :to="`/projects/${projectId}/qa`"
-        >
-          <span>问答</span>
-          <small v-if="projectId && qaTasks.active[projectId]">回答中</small>
-        </RouterLink>
-        <RouterLink
-          :class="{ active: currentSection === 'exams' }"
-          :to="`/projects/${projectId}/exams`"
-        >
-          <span>智能组卷</span>
-          <small v-if="projectId && examTasks.active[projectId]">生成中</small>
-        </RouterLink>
-        <RouterLink
-          :class="{ active: currentSection === 'frequency' }"
-          :to="`/projects/${projectId}/frequency`"
-        >
-          考频分析
-        </RouterLink>
-      </nav>
-
-      <div class="study-quote"><span>学习提醒</span>{{ quote }}</div>
-      <div class="local-state"><i /> 本地学习空间</div>
-    </aside>
-    <main class="main-pane">
-      <header class="workspace-header">
-        <p>
-          <span>我的课程</span><b>/</b>{{ activeProject?.name ?? "课程工作台" }}
-        </p>
-        <span class="local-pill">本地模式</span>
-      </header>
-      <div class="workspace-content"><slot /></div>
-    </main>
-    <div
-      v-if="courseDialogOpen"
-      class="modal-backdrop"
-      @click.self="courseDialogOpen = false"
-    >
-      <section
-        class="course-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="course-dialog-title"
+      <AlertDialog
+        :open="Boolean(pendingArchive)"
+        @update:open="(open) => !open && (pendingArchive = undefined)"
       >
-        <p class="eyebrow">NEW COURSE</p>
-        <h2 id="course-dialog-title">新建课程</h2>
-        <p class="subtle">每门课程都有独立的资料、问答、智能组卷和测评记录。</p>
-        <form class="course-dialog-form" @submit.prevent="createCourse">
-          <label
-            >课程名称<input
-              v-model="courseName"
-              autofocus
-              maxlength="100"
-              placeholder="例如：操作系统期末复习"
-          /></label>
-          <label
-            >说明（可选）<textarea
-              v-model="courseDescription"
-              maxlength="1000"
-              placeholder="写下这门课程的学习目标"
-            />
-          </label>
-          <p v-if="courseError" class="error" role="alert">{{ courseError }}</p>
-          <div class="dialog-actions">
-            <button
-              class="secondary-button"
-              type="button"
-              @click="courseDialogOpen = false"
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle
+              >归档“{{ pendingArchive?.name }}”？</AlertDialogTitle
             >
-              取消
-            </button>
-            <button :disabled="creatingCourse" type="submit">
-              {{ creatingCourse ? "正在创建…" : "创建课程" }}
-            </button>
-          </div>
-        </form>
-      </section>
+            <AlertDialogDescription
+              >归档后需先恢复课程，才能继续查看其中内容。</AlertDialogDescription
+            >
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel @click="pendingArchive = undefined"
+              >取消</AlertDialogCancel
+            >
+            <AlertDialogAction
+              class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              @click="pendingArchive && archiveCourse(pendingArchive)"
+              >归档</AlertDialogAction
+            >
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
-  </div>
+  </TooltipProvider>
 </template>

@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
+import {
+  FileTextIcon,
+  MoreHorizontalIcon,
+  PaperclipIcon,
+  Trash2Icon,
+  UploadCloudIcon,
+} from "@lucide/vue";
+import { toast } from "vue-sonner";
 import { toAppError } from "@/shared/api/http";
 import {
   deleteDocument,
@@ -8,16 +16,72 @@ import {
   uploadDocument,
 } from "@/modules/document/api/requests";
 import type { CourseDocument } from "@/modules/document/api/requests";
+import {
+  Conversation,
+  ConversationContent,
+  ConversationScrollButton,
+} from "@/shared/conversation";
+import { Message, MessageContent } from "@/shared/message";
+import {
+  PromptInput,
+  PromptInputBody,
+  PromptInputFooter,
+  PromptInputSubmit,
+  PromptInputTextarea,
+  PromptInputTools,
+} from "@/shared/prompt-input";
+import type { PromptInputMessage } from "@/shared/prompt-input";
+import {
+  InlineCitation,
+  InlineCitationCard,
+  InlineCitationCardBody,
+  InlineCitationCardTrigger,
+  InlineCitationQuote,
+  InlineCitationSource,
+} from "@/shared/inline-citation";
+import { Attachments, Attachment } from "@/shared/attachments";
+import { Suggestion, Suggestions } from "@/shared/suggestion";
+import { Shimmer } from "@/shared/shimmer";
+import { Loader } from "@/shared/loader";
+import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/shared/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shared/ui/alert-dialog";
+import { ScrollArea } from "@/shared/ui/scroll-area";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/shared/ui/sheet";
 import { getQaHistory } from "../api/requests";
 import type { QaAnswer } from "../types/domain";
 import { useQaTaskStore } from "../stores/qaTaskStore";
+
 interface Turn {
   question: string;
   answer: QaAnswer;
 }
+
 const route = useRoute();
 const projectId = computed(() => Number(route.params.projectId));
 const question = ref("");
+const composerKey = ref(0);
 const sessionId = ref<number>();
 const turns = ref<Turn[]>([]);
 const tasks = useQaTaskStore();
@@ -26,12 +90,34 @@ const errorMessage = ref("");
 const documents = ref<CourseDocument[]>([]);
 const documentsLoading = ref(false);
 const documentError = ref("");
-const documentNotice = ref("");
 const selectedFile = ref<File>();
 const uploading = ref(false);
 const fileInput = ref<HTMLInputElement>();
+const materialsOpen = ref(false);
+const pendingDelete = ref<CourseDocument>();
 const MAX_PDF_BYTES = 25 * 1024 * 1024;
 let mounted = true;
+
+function statusLabel(status: string) {
+  return (
+    (
+      {
+        READY: "已就绪",
+        PROCESSING: "处理中",
+        PENDING: "等待中",
+        FAILED: "失败",
+      } as Record<string, string>
+    )[status] ?? status
+  );
+}
+
+function statusVariant(status: string) {
+  return status === "FAILED"
+    ? "destructive"
+    : status === "READY"
+      ? "secondary"
+      : "outline";
+}
 
 async function loadHistory() {
   if (!Number.isInteger(projectId.value) || projectId.value <= 0) return;
@@ -76,9 +162,11 @@ async function loadDocuments() {
       documentsLoading.value = false;
   }
 }
+
 function selectFile(event: Event) {
   selectedFile.value = (event.target as HTMLInputElement).files?.[0];
 }
+
 async function uploadMaterial() {
   if (!selectedFile.value) {
     documentError.value = "请选择一份文字型 PDF。";
@@ -91,46 +179,42 @@ async function uploadMaterial() {
   uploading.value = true;
   const targetProject = projectId.value;
   documentError.value = "";
-  documentNotice.value = "";
   try {
-    const result = await uploadDocument(targetProject, selectedFile.value);
+    await uploadDocument(targetProject, selectedFile.value);
     if (!mounted || targetProject !== projectId.value) return;
-    documentNotice.value = `已提取 ${result.pageCount} 页，建立 ${result.chunkCount} 个检索片段。`;
     selectedFile.value = undefined;
     if (fileInput.value) fileInput.value.value = "";
     await loadDocuments();
+    toast.success("资料已上传并建立索引");
   } catch (error) {
     documentError.value = toAppError(error).message;
   } finally {
     uploading.value = false;
   }
 }
+
 async function removeDocument(document: CourseDocument) {
-  if (
-    !window.confirm(
-      `删除“${document.displayName}”吗？这会移除本课程中的文件和索引。`,
-    )
-  )
-    return;
   const targetProject = projectId.value;
   try {
     await deleteDocument(targetProject, document.id);
+    pendingDelete.value = undefined;
     if (!mounted || targetProject !== projectId.value) return;
-    documentNotice.value = "资料已删除。";
     await loadDocuments();
+    toast.success("资料已删除");
   } catch (error) {
     documentError.value = toAppError(error).message;
   }
 }
-async function ask() {
+
+async function ask(text: string) {
   if (
-    !question.value.trim() ||
+    !text.trim() ||
     !Number.isInteger(projectId.value) ||
     projectId.value <= 0
   )
     return;
   const targetProject = projectId.value;
-  const currentQuestion = question.value.trim();
+  const currentQuestion = text.trim();
   errorMessage.value = "";
   try {
     const answer = await tasks.ask(
@@ -148,6 +232,15 @@ async function ask() {
   }
 }
 
+function submitPrompt(message: PromptInputMessage) {
+  return ask(message.text);
+}
+
+function useSuggestion(value: string) {
+  question.value = value;
+  composerKey.value += 1;
+}
+
 onMounted(() => {
   mounted = true;
   void Promise.all([loadDocuments(), restoreHistory()]);
@@ -159,151 +252,292 @@ watch(projectId, () => {
   sessionId.value = undefined;
   turns.value = [];
   selectedFile.value = undefined;
-  documentNotice.value = "";
   void Promise.all([loadDocuments(), restoreHistory()]);
 });
 </script>
+
 <template>
-  <section class="workspace">
-    <div class="workspace-head">
-      <div>
-        <p class="eyebrow">本课程 · 可追溯回答</p>
-        <h1>知识问答</h1>
-      </div>
-      <div class="workspace-links">
-        <RouterLink :to="`/projects/${projectId}/exams`"> 智能组卷 </RouterLink>
-      </div>
+  <section
+    class="mx-auto flex h-[calc(100vh-4rem)] max-w-[920px] flex-col px-4 sm:px-7"
+  >
+    <div class="flex items-center justify-between py-5">
+      <h1 class="editorial-title text-2xl font-semibold">知识问答</h1>
+      <Button variant="ghost" size="sm" @click="materialsOpen = true">
+        <PaperclipIcon />课程资料
+        <Badge variant="secondary">{{ documents.length }}</Badge>
+      </Button>
     </div>
-    <div class="qa-layout">
-      <section class="chat-panel">
-        <div class="messages">
-          <div v-if="!turns.length" class="welcome">
-            <div class="welcome-mark">✳</div>
-            <h2>今天想弄懂什么？</h2>
-            <p>直接提问，或先添加本课程 PDF，让回答更贴近课堂。</p>
-            <div class="suggestions">
-              <button
-                type="button"
-                @click="question = '请用一个简单例子解释这门课的核心概念。'"
-              >
-                解释一个知识点 ↗
-              </button>
-              <button
-                type="button"
-                @click="question = '请帮我梳理这门课的复习思路。'"
-              >
-                梳理重点与区别 ↗
-              </button>
-            </div>
-            <small>每次弄懂一点，都是进步。</small>
-          </div>
-          <article
-            v-for="(turn, index) in turns"
-            :key="`${index}-${turn.question}`"
-            class="qa-turn"
-          >
-            <p class="question">你</p>
-            <p class="answer">{{ turn.question }}</p>
-            <p class="question assistant-label">StudyPilot</p>
-            <p class="answer">{{ turn.answer.answer }}</p>
-            <p
-              v-if="turn.answer.status === 'INSUFFICIENT_EVIDENCE'"
-              class="notice"
-            >
-              这次回答没有使用模型推断，因为资料证据不足。
+
+    <Conversation class="min-h-0" aria-label="课程问答">
+      <ConversationContent
+        class="mx-auto w-full max-w-[820px] gap-7 px-0 pb-36 pt-6"
+      >
+        <div
+          v-if="!turns.length && !asking"
+          class="grid min-h-[48vh] place-items-center text-center"
+        >
+          <div>
+            <h2 class="editorial-title text-balance text-3xl font-semibold">
+              今天想弄懂什么？
+            </h2>
+            <p class="mt-3 text-sm text-muted-foreground">
+              直接提问，或从下面选一个开始。
             </p>
-            <details
-              v-for="citation in turn.answer.citations"
-              :key="`${citation.documentName}-${citation.pageNumber}-${citation.excerpt}`"
-              class="citation"
-            >
-              <summary>
-                {{ citation.documentName }} · 第 {{ citation.pageNumber }} 页
-              </summary>
-              <p>{{ citation.excerpt }}</p>
-            </details>
-          </article>
-        </div>
-        <form class="composer" @submit.prevent="ask">
-          <textarea
-            v-model="question"
-            maxlength="1000"
-            placeholder="输入问题，或说说你想弄懂的知识点…"
-            :disabled="asking"
-          />
-          <div class="composer-foot">
-            <span>{{
-              documents.length
-                ? "优先使用当前课程资料"
-                : "当前无资料，将使用本地模型回答"
-            }}</span>
-            <span v-if="errorMessage" class="error" role="alert">{{
-              errorMessage
-            }}</span>
-            <button type="submit" :disabled="asking || !question.trim()">
-              {{ asking ? "正在检索与回答…" : "发送问题 ↑" }}
-            </button>
+            <Suggestions class="mt-6 justify-center">
+              <Suggestion
+                suggestion="请用一个简单例子解释这门课的核心概念。"
+                @click="useSuggestion"
+                >解释一个知识点</Suggestion
+              >
+              <Suggestion
+                suggestion="请帮我梳理这门课的重点与区别。"
+                @click="useSuggestion"
+                >梳理重点与区别</Suggestion
+              >
+            </Suggestions>
           </div>
-        </form>
-      </section>
-      <aside class="qa-sidecard">
-        <div class="panel-heading">
-          <h3>本课程资料</h3>
-          <span>{{ documents.length }} 份</span>
         </div>
-        <p>
-          资料只用于当前课程，回答会引用命中的原文页码。仅支持不超过 25 MB
-          的文字型 PDF。
-        </p>
-        <form class="side-upload" @submit.prevent="uploadMaterial">
-          <label class="upload-picker">
-            <input
-              ref="fileInput"
-              accept="application/pdf,.pdf"
-              type="file"
-              @change="selectFile"
-            />
-            <span>{{ selectedFile?.name ?? "选择 PDF 文件" }}</span>
-          </label>
-          <button type="submit" :disabled="uploading">
-            {{ uploading ? "正在建立索引…" : "上传资料" }}
-          </button>
-        </form>
-        <p v-if="documentNotice" class="success side-message" role="status">
-          {{ documentNotice }}
-        </p>
-        <p v-if="documentError" class="error side-message" role="alert">
-          {{ documentError }}
-        </p>
-        <div class="document-list" aria-label="当前课程资料列表">
-          <p v-if="documentsLoading" class="side-muted">正在读取资料…</p>
-          <p v-else-if="!documents.length" class="side-muted">尚未添加资料。</p>
-          <article
-            v-for="document in documents"
-            :key="document.id"
-            class="document-item"
+
+        <template
+          v-for="(turn, index) in turns"
+          :key="`${index}-${turn.question}`"
+        >
+          <Message from="user">
+            <MessageContent class="max-w-[36rem] bg-[#efe9e1]">{{
+              turn.question
+            }}</MessageContent>
+          </Message>
+          <Message from="assistant" class="max-w-none">
+            <MessageContent class="w-full max-w-none text-[15px] leading-7">
+              <p class="whitespace-pre-wrap">{{ turn.answer.answer }}</p>
+              <p
+                v-if="turn.answer.status === 'INSUFFICIENT_EVIDENCE'"
+                class="mt-4 border-l-2 border-amber-500/70 pl-3 text-sm text-amber-800"
+              >
+                当前资料证据不足，回答未使用模型推断。
+              </p>
+              <div
+                v-if="turn.answer.citations.length"
+                class="mt-4 flex flex-wrap gap-2"
+              >
+                <InlineCitation
+                  v-for="citation in turn.answer.citations"
+                  :key="`${citation.documentName}-${citation.pageNumber}-${citation.excerpt}`"
+                >
+                  <InlineCitationCard>
+                    <InlineCitationCardTrigger
+                      :sources="['https://materials.local']"
+                      :label="`${citation.documentName} · P${citation.pageNumber}`"
+                      class="ml-0 cursor-help font-normal"
+                    />
+                    <InlineCitationCardBody>
+                      <div class="space-y-3 p-4">
+                        <InlineCitationSource
+                          :title="citation.documentName"
+                          :description="`第 ${citation.pageNumber} 页 · 相关度 ${Math.round(citation.score * 100)}%`"
+                        />
+                        <InlineCitationQuote>{{
+                          citation.excerpt
+                        }}</InlineCitationQuote>
+                      </div>
+                    </InlineCitationCardBody>
+                  </InlineCitationCard>
+                </InlineCitation>
+              </div>
+            </MessageContent>
+          </Message>
+        </template>
+
+        <Message v-if="asking" from="assistant">
+          <MessageContent
+            class="flex-row items-center gap-2 text-muted-foreground"
           >
-            <div>
-              <strong>{{ document.displayName }}</strong>
-              <small>
-                {{ document.pageCount }} 页 ·
-                {{ document.status === "READY" ? "已就绪" : "处理中" }}
-              </small>
-            </div>
-            <button
-              type="button"
-              :aria-label="`删除 ${document.displayName}`"
-              @click="removeDocument(document)"
+            <Loader :size="14" /><Shimmer class="text-sm"
+              >正在检索课程资料并组织回答…</Shimmer
             >
-              ×
-            </button>
-          </article>
-        </div>
-        <div class="side-note">
-          <strong>让回答更有依据</strong><br />添加文字型 PDF
-          后，回答会附上页码和原文片段。
-        </div>
-      </aside>
+          </MessageContent>
+        </Message>
+        <p v-if="errorMessage" class="text-sm text-destructive" role="alert">
+          {{ errorMessage }}
+        </p>
+      </ConversationContent>
+      <ConversationScrollButton />
+    </Conversation>
+
+    <div
+      class="pointer-events-none absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-background via-background to-transparent px-4 pb-5 pt-12 md:left-[276px]"
+    >
+      <PromptInput
+        :key="composerKey"
+        class="pointer-events-auto mx-auto max-w-[820px]"
+        :initial-input="question"
+        @submit="submitPrompt"
+      >
+        <PromptInputBody>
+          <PromptInputTextarea
+            :disabled="asking"
+            maxlength="1000"
+            placeholder="输入问题，Shift + Enter 换行"
+            class="min-h-[72px] resize-none px-4 pt-4 text-[15px]"
+          />
+        </PromptInputBody>
+        <PromptInputFooter class="px-3 pb-2">
+          <PromptInputTools>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              class="h-8 text-xs text-muted-foreground"
+              @click="materialsOpen = true"
+            >
+              <PaperclipIcon />课程资料 {{ documents.length }}
+            </Button>
+            <span class="hidden text-xs text-muted-foreground sm:inline">{{
+              documents.length ? "使用课程资料检索" : "暂无课程资料"
+            }}</span>
+          </PromptInputTools>
+          <PromptInputSubmit
+            :disabled="asking"
+            :status="asking ? 'submitted' : 'ready'"
+            class="rounded-full"
+            aria-label="发送问题"
+          />
+        </PromptInputFooter>
+      </PromptInput>
     </div>
+
+    <Sheet v-model:open="materialsOpen">
+      <SheetContent class="w-[94vw] bg-card p-0 sm:max-w-lg">
+        <SheetHeader class="border-b px-6 py-5 text-left"
+          ><SheetTitle>课程资料</SheetTitle
+          ><SheetDescription class="sr-only"
+            >上传、查看和管理当前课程的 PDF 资料。</SheetDescription
+          ></SheetHeader
+        >
+        <ScrollArea class="h-[calc(100vh-76px)]">
+          <div class="space-y-5 p-5">
+            <form class="space-y-3" @submit.prevent="uploadMaterial">
+              <label
+                class="flex min-h-32 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed bg-background px-4 text-center transition-colors hover:bg-accent/40"
+              >
+                <input
+                  ref="fileInput"
+                  accept="application/pdf,.pdf"
+                  type="file"
+                  class="sr-only"
+                  @change="selectFile"
+                />
+                <UploadCloudIcon class="mb-3 size-6 text-muted-foreground" />
+                <span class="max-w-full truncate text-sm font-medium">{{
+                  selectedFile?.name ?? "拖入或选择 PDF"
+                }}</span>
+                <small class="mt-1 text-xs text-muted-foreground"
+                  >PDF · 最大 25 MB</small
+                >
+              </label>
+              <Button
+                type="submit"
+                class="w-full"
+                :disabled="uploading || !selectedFile"
+              >
+                <Loader v-if="uploading" :size="14" />{{
+                  uploading ? "正在建立索引" : "上传资料"
+                }}
+              </Button>
+            </form>
+            <p
+              v-if="documentError"
+              class="text-sm text-destructive"
+              role="alert"
+            >
+              {{ documentError }}
+            </p>
+            <div
+              v-if="documentsLoading"
+              class="flex items-center gap-2 py-8 text-sm text-muted-foreground"
+            >
+              <Loader />正在读取资料…
+            </div>
+            <p
+              v-else-if="!documents.length"
+              class="py-8 text-center text-sm text-muted-foreground"
+            >
+              尚未添加资料
+            </p>
+            <Attachments v-else variant="list" aria-label="当前课程资料列表">
+              <Attachment
+                v-for="document in documents"
+                :key="document.id"
+                :data="{
+                  id: String(document.id),
+                  type: 'file',
+                  mediaType: 'application/pdf',
+                  filename: document.displayName,
+                  url: '',
+                }"
+                class="bg-background"
+              >
+                <FileTextIcon class="size-5 shrink-0 text-primary" />
+                <div class="min-w-0 flex-1">
+                  <p class="truncate text-sm font-medium">
+                    {{ document.displayName }}
+                  </p>
+                  <p class="mt-1 text-xs text-muted-foreground">
+                    {{ document.pageCount }} 页
+                  </p>
+                </div>
+                <Badge
+                  :variant="statusVariant(document.status)"
+                  class="shrink-0"
+                  >{{ statusLabel(document.status) }}</Badge
+                >
+                <DropdownMenu>
+                  <DropdownMenuTrigger as-child
+                    ><Button
+                      variant="ghost"
+                      size="icon-sm"
+                      :aria-label="`资料操作：${document.displayName}`"
+                      ><MoreHorizontalIcon /></Button
+                  ></DropdownMenuTrigger>
+                  <DropdownMenuContent align="end"
+                    ><DropdownMenuItem
+                      class="text-destructive"
+                      @select="pendingDelete = document"
+                      ><Trash2Icon />删除资料</DropdownMenuItem
+                    ></DropdownMenuContent
+                  >
+                </DropdownMenu>
+              </Attachment>
+            </Attachments>
+          </div>
+        </ScrollArea>
+      </SheetContent>
+    </Sheet>
+
+    <AlertDialog
+      :open="Boolean(pendingDelete)"
+      @update:open="(open) => !open && (pendingDelete = undefined)"
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle
+            >删除“{{ pendingDelete?.displayName }}”？</AlertDialogTitle
+          >
+          <AlertDialogDescription
+            >这会移除本课程中的文件和检索索引。</AlertDialogDescription
+          >
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel @click="pendingDelete = undefined"
+            >取消</AlertDialogCancel
+          >
+          <AlertDialogAction
+            class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            @click="pendingDelete && removeDocument(pendingDelete)"
+            >删除</AlertDialogAction
+          >
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   </section>
 </template>
