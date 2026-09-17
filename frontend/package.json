@@ -6,6 +6,7 @@
   "packageManager": "pnpm@11.19.0",
   "scripts": {
     "dev": "vite",
+    "dev:mock": "vite --mode mock",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -41,5 +42,10 @@
     "vite": "^6.2.2",
     "vitest": "^3.0.8",
     "vue-tsc": "^2.2.8"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
   }
 }

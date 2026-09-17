@@ -159,3 +159,14 @@ CI 在 Pull Request 中使用基线 commit 运行：
 | PostgreSQL 写入 | `PostgreSqlSchemaIntegrationTest` | 通过；独立 attempt、答案、评分依据、错题、掌握度与建议记录均写入真实 Embedded PostgreSQL。 |
 | HTTP 工作流 | `-Dstudypilot.e2e=true -Dtest=MockExamWorkflowEndToEndTest` | 通过；创建项目、上传、组卷、开始作答、提交答案和返回评分结果。 |
 | 前端入口 | `frontend\pnpm run check` | 通过；模拟卷跳转、逐题作答、提交和评分结果页面可构建。 |
+
+## UX-001 验证记录
+
+| 检查 | 命令或证据 | 结果 |
+| --- | --- | --- |
+| 模拟 API 契约 | `frontend\corepack pnpm exec vitest run src/mocks/handlers.spec.ts` | 5 项通过；覆盖项目列表、归档数据、真实 Zod 契约、跨项目隔离、创建项目、作答评分和 503 错误场景。 |
+| 前端回归 | `frontend\corepack pnpm run test` | 11 项全部通过，现有页面与请求测试没有回归。 |
+| 静态检查 | 进入 `frontend` 后运行 `corepack pnpm run lint`、`corepack pnpm run typecheck` | 通过；生成的 MSW worker 已从项目代码风格检查中排除。 |
+| 生产构建 | `frontend\corepack pnpm run build` | 通过；普通生产模式不会启用模拟服务。 |
+| 浏览器冒烟 | Chromium 打开 `pnpm run dev:mock` 服务 | 无 Java 后端时显示 7 个活动项目、1 个归档项目；项目 105 显示 2 份资料和 2 套模拟卷，网络日志确认请求由 MSW 返回。 |
+| 格式基线 | `frontend\corepack pnpm run check` | `format:check` 因仓库原有 63 个文件与当前 Prettier 配置不一致而失败；本次源文件已定向执行 Prettier，未批量改写无关文件。 |

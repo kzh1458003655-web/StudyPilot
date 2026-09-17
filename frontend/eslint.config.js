@@ -3,7 +3,15 @@ import vue from "eslint-plugin-vue";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 export default [
-  { ignores: ["dist/", "node_modules/", "coverage/", "playwright-report/"] },
+  {
+    ignores: [
+      "dist/",
+      "node_modules/",
+      "coverage/",
+      "playwright-report/",
+      "public/mockServiceWorker.js",
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   ...vue.configs["flat/recommended"],
