@@ -1,0 +1,140 @@
+import { expect, test } from "@playwright/test";
+
+const algorithmLecture =
+  "D:/大四课程设计/StudyPilot-output/external-course-fixtures/algorithms-lecture-2020.pdf";
+const algorithmPaper =
+  "D:/大四课程设计/StudyPilot-output/external-course-fixtures/algorithms-final.pdf";
+
+test("completes the browser workflow from course creation to assessment", async ({
+  page,
+}) => {
+  test.setTimeout(300_000);
+  const courseName = `浏览器全流程验收-${Date.now()}`;
+
+  await page.goto("/projects");
+  await page.getByRole("button", { name: "新建课程" }).click();
+  await page.getByLabel("课程名称").fill(courseName);
+  await page.getByRole("button", { name: "创建课程", exact: true }).click();
+  await expect(page).toHaveURL(/\/projects\/\d+\/qa$/);
+
+  const fileInput = page.locator('input[type="file"]');
+  await fileInput.setInputFiles(algorithmLecture);
+  await page.getByRole("button", { name: "上传资料" }).click();
+  await expect(page.getByText("已提取", { exact: false })).toBeVisible({
+    timeout: 30_000,
+  });
+  await fileInput.setInputFiles(algorithmPaper);
+  await page.getByRole("button", { name: "上传资料" }).click();
+  await expect(page.getByText("algorithms-final.pdf")).toBeVisible();
+
+  await page
+    .getByPlaceholder("输入问题，或说说你想弄懂的知识点…")
+    .fill("What is the running time of binary search?");
+  await page.getByRole("button", { name: "发送问题 ↑" }).click();
+  await page
+    .locator(".module-nav")
+    .getByRole("link", { name: /智能组卷/ })
+    .click();
+  await expect(page).toHaveURL(/\/projects\/\d+\/exams$/);
+  await expect(
+    page.locator(".module-nav").getByRole("link", { name: /问答/ }),
+  ).not.toContainText("回答中", { timeout: 60_000 });
+  await expect(page).toHaveURL(/\/projects\/\d+\/exams$/);
+  await page.locator(".module-nav").getByRole("link", { name: /问答/ }).click();
+  await expect(
+    page.getByText("What is the running time of binary search?"),
+  ).toBeVisible();
+  await expect(page.locator(".citation").first()).toBeVisible({
+    timeout: 60_000,
+  });
+
+  // A broad question can miss lexical retrieval against the English PDFs.
+  // The learner should still receive a useful local-model answer without a fake citation.
+  await page
+    .getByPlaceholder("输入问题，或说说你想弄懂的知识点…")
+    .fill("这个课件讲了什么？");
+  await page.getByRole("button", { name: "发送问题 ↑" }).click();
+  await expect(page.locator(".qa-turn")).toHaveCount(2, { timeout: 60_000 });
+  await expect(page.locator(".qa-turn").last()).not.toContainText(
+    "暂不能给出确定性结论",
+  );
+  await expect(page.locator(".qa-turn").last()).not.toContainText("未引用");
+
+  await page
+    .locator(".module-nav")
+    .getByRole("link", { name: "考频分析" })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "历年试卷考频" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "开始分析" }).click();
+  // The fixture has ten explicit “Problem N.” headers; option numbers must not
+  // inflate this count.
+  await expect(page.locator(".success")).toContainText("识别 10 题", {
+    timeout: 60_000,
+  });
+
+  await page
+    .locator(".module-nav")
+    .getByRole("link", { name: /智能组卷/ })
+    .click();
+  await page
+    .getByPlaceholder("输入题量、难度、题型或知识范围；不填写也可以直接生成")
+    .fill("生成 3 道默认单选题");
+  await page.getByRole("button", { name: "生成并开始作答" }).click();
+  await page.locator(".module-nav").getByRole("link", { name: /问答/ }).click();
+  await expect(page).toHaveURL(/\/projects\/\d+\/qa$/);
+  await expect(
+    page.locator(".module-nav").getByRole("link", { name: /智能组卷/ }),
+  ).not.toContainText("生成中", { timeout: 120_000 });
+  await expect(page).toHaveURL(/\/projects\/\d+\/qa$/);
+  await page
+    .locator(".module-nav")
+    .getByRole("link", { name: /智能组卷/ })
+    .click();
+  await expect(page.getByRole("link", { name: "重新作答" })).toBeVisible();
+  await page.getByRole("link", { name: "重新作答" }).click();
+  await expect(page).toHaveURL(/\/projects\/\d+\/exams\/\d+\/take$/, {
+    timeout: 120_000,
+  });
+  await expect(
+    page.getByText("作答记录已准备好", { exact: false }),
+  ).toBeVisible();
+  for (const questionCard of await page.locator("form .exam-card").all()) {
+    const option = questionCard.locator('input[type="radio"]').first();
+    if (await option.count()) {
+      await option.check();
+    }
+    const answerBox = questionCard.locator(
+      "textarea[placeholder='输入简答题答案']",
+    );
+    if (await answerBox.count()) {
+      await answerBox.fill("这是浏览器验收作答。");
+    }
+  }
+  await page.getByRole("button", { name: "提交并生成测评" }).click();
+  await expect(page.getByText("得分", { exact: false })).toBeVisible({
+    timeout: 120_000,
+  });
+  await page.getByRole("button", { name: "重新作答本卷" }).click();
+  await expect(
+    page.getByText("作答记录已准备好", { exact: false }),
+  ).toBeVisible();
+  await expect(page.getByText("得分", { exact: false })).toHaveCount(0);
+  for (const questionCard of await page.locator("form .exam-card").all()) {
+    const option = questionCard.locator('input[type="radio"]').first();
+    if (await option.count()) await option.check();
+    const answerBox = questionCard.locator(
+      "textarea[placeholder='输入简答题答案']",
+    );
+    if (await answerBox.count()) await answerBox.fill("这是第二次验收作答。");
+  }
+  await page.getByRole("button", { name: "提交并生成测评" }).click();
+  await expect(page.getByText("得分", { exact: false })).toBeVisible({
+    timeout: 120_000,
+  });
+  await page.getByRole("link", { name: "返回智能组卷" }).click();
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: /删除/ }).click();
+  await expect(page.getByText("本课程还没有生成记录。")).toBeVisible();
+});

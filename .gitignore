@@ -6,7 +6,7 @@ config.local.json
 # 运行数据与日志
 data/
 logs/
-app/
+/app/
 .build-cache/
 .local/
 
@@ -19,6 +19,9 @@ ai/bin/
 hs_err_pid*.log
 __pycache__/
 *.py[cod]
+**/node_modules/
+**/dist/
+**/coverage/
 
 # 本地模型与大文件
 *.gguf

@@ -1,0 +1,16 @@
+{
+  "schema": "https://shadcn-vue.com/schema.json",
+  "typescript": true,
+  "style": "default",
+  "tailwind": {
+    "config": "",
+    "css": "src/shared/styles/index.css",
+    "baseColor": "slate",
+    "cssVariables": true
+  },
+  "aliases": {
+    "components": "@/shared/ui",
+    "utils": "@/shared/utils",
+    "ui": "@/shared/ui"
+  }
+}

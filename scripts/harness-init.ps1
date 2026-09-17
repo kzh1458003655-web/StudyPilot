@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param()
 
 $ErrorActionPreference = 'Stop'
@@ -39,15 +39,20 @@ foreach ($toolName in @('git', 'java', 'node', 'pnpm', 'python')) {
 }
 
 $featurePath = Join-Path $projectRoot 'docs/harness/feature_list.json'
-$featureList = Get-Content -LiteralPath $featurePath -Raw -Encoding UTF8 | ConvertFrom-Json -Depth 100
+# Windows PowerShell 5.1 does not implement ConvertFrom-Json -Depth; the task list is shallow enough for its default parser.
+$featureList = Get-Content -LiteralPath $featurePath -Raw -Encoding UTF8 | ConvertFrom-Json
 $actionable = @($featureList.features | Where-Object status -in @('ready', 'in_progress', 'done'))
 $current = $actionable[0]
 
 Write-Host ''
-Write-Host '当前唯一推荐任务：' -ForegroundColor Cyan
-Write-Host "  $($current.id) [$($current.status)] $($current.name)"
-Write-Host "  分支：$($current.branch)"
-Write-Host "  说明：$($current.description)"
+if ($null -eq $current) {
+    Write-Host '当前任务状态：全部任务已 verified，无待执行任务。' -ForegroundColor Green
+} else {
+    Write-Host '当前唯一推荐任务：' -ForegroundColor Cyan
+    Write-Host "  $($current.id) [$($current.status)] $($current.name)"
+    Write-Host "  分支：$($current.branch)"
+    Write-Host "  说明：$($current.description)"
+}
 
 Write-Host ''
 Write-Host '开始修改前请依次阅读：'

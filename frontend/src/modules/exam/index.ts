@@ -1,0 +1,1 @@
+export { examRoutes } from "./routes";
