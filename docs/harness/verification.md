@@ -159,3 +159,12 @@ CI 在 Pull Request 中使用基线 commit 运行：
 | PostgreSQL 写入 | `PostgreSqlSchemaIntegrationTest` | 通过；独立 attempt、答案、评分依据、错题、掌握度与建议记录均写入真实 Embedded PostgreSQL。 |
 | HTTP 工作流 | `-Dstudypilot.e2e=true -Dtest=MockExamWorkflowEndToEndTest` | 通过；创建项目、上传、组卷、开始作答、提交答案和返回评分结果。 |
 | 前端入口 | `frontend\pnpm run check` | 通过；模拟卷跳转、逐题作答、提交和评分结果页面可构建。 |
+
+## 2026-09-17 设计文档一致性检查
+
+| 检查 | 命令或证据 | 结果 |
+| --- | --- | --- |
+| Harness 结构 | `scripts\harness-init.ps1`、`scripts\harness-check.ps1` | 通过；全部既有任务保持 `verified`。 |
+| Markdown 差异 | `git diff --check` | 通过；没有尾随空格或补丁格式错误。 |
+| 本地文档链接 | 扫描本轮修改文档中的相对 Markdown 链接并检查目标 | 通过；没有失效的本地链接。 |
+| 代码事实核对 | 前端路由、页面、Java Controller、Service、SQL Schema 与模型 Benchmark 原始 CSV | 已核对；文档按知识问答、智能组卷与测评、考频分析三个实际模块更新。 |
