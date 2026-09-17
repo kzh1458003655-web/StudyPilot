@@ -1,7 +1,8 @@
 import { createMockBackendSeed } from "./fixtures";
 import type { MockBackendState, MockProjectRecord } from "./types";
 
-const STORAGE_KEY = "studypilot.mock.database.v1";
+const STORAGE_KEY = "studypilot.mock.database";
+
 let memoryState: MockBackendState | undefined;
 
 function storageAvailable(): boolean {
@@ -16,9 +17,7 @@ function readStoredState(): MockBackendState | undefined {
   if (!serialized) return undefined;
   try {
     const parsed = JSON.parse(serialized) as MockBackendState;
-    return parsed.version === 1 && Array.isArray(parsed.projects)
-      ? parsed
-      : undefined;
+    return Array.isArray(parsed.projects) ? parsed : undefined;
   } catch {
     return undefined;
   }
