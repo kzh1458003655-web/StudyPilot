@@ -215,9 +215,9 @@ watch(
 <template>
   <TooltipProvider>
     <div
-      class="min-h-screen bg-background text-foreground md:grid md:grid-cols-[276px_minmax(0,1fr)]"
+      class="h-dvh overflow-hidden bg-background text-foreground md:grid md:grid-cols-[276px_minmax(0,1fr)]"
     >
-      <aside class="hidden h-screen border-r bg-[#f5f1ea] md:flex md:flex-col">
+      <aside class="hidden h-dvh min-h-0 border-r bg-[#f5f1ea] md:flex md:flex-col">
         <RouterLink
           class="flex h-20 items-center gap-3 px-6"
           to="/projects"
@@ -328,9 +328,9 @@ watch(
         </div>
       </aside>
 
-      <main class="min-w-0">
+      <main class="flex h-dvh min-h-0 min-w-0 flex-col overflow-hidden">
         <header
-          class="sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-background/92 px-4 backdrop-blur md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:px-7"
+          class="z-30 flex h-16 shrink-0 items-center gap-3 border-b bg-background/92 px-4 backdrop-blur md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:px-7"
         >
           <Button
             variant="ghost"
@@ -385,7 +385,11 @@ watch(
             </Button>
           </div>
         </header>
-        <div class="min-h-[calc(100vh-4rem)]"><slot /></div>
+        <div
+          class="scrollbar-subtle min-h-0 flex-1 overflow-y-auto overscroll-contain"
+        >
+          <slot />
+        </div>
       </main>
 
       <Sheet v-model:open="archiveSheetOpen">
