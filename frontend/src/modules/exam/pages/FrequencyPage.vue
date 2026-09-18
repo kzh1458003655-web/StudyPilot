@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, onUnmounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { BarChart, GraphChart, RadarChart, ScatterChart } from "echarts/charts";
 import {
@@ -17,17 +17,11 @@ import {
   RefreshCwIcon,
   ScanLineIcon,
 } from "@lucide/vue";
-import {
-  listDocuments,
-  type CourseDocument,
-} from "@/modules/document/api/requests";
-import { toAppError } from "@/shared/api/http";
+import type { CourseDocument } from "@/modules/document/api/requests";
 import { Shimmer } from "@/shared/shimmer";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Progress } from "@/shared/ui/progress";
-import { analyzePastPaper, getKnowledgePoints } from "../api/requests";
-import type { KnowledgePointFrequency } from "../types/domain";
 import {
   EXAM_TOPIC_INSIGHTS,
   createFrequencyQuadrantOption,
@@ -48,15 +42,38 @@ use([
 ]);
 
 const ANALYSIS_DURATION = 8_000;
+const FIXED_ANALYSIS_PAPERS: CourseDocument[] = [
+  {
+    id: 401,
+    displayName: "2012—2013 学年中文卷（含答案）.pdf",
+    documentType: "PAST_EXAM",
+    status: "READY",
+    pageCount: 6,
+    chunkCount: 21,
+  },
+  {
+    id: 402,
+    displayName: "2012—2013 学年双语期中 A 卷（含答案）.pdf",
+    documentType: "PAST_EXAM",
+    status: "READY",
+    pageCount: 10,
+    chunkCount: 31,
+  },
+  {
+    id: 403,
+    displayName: "2014—2015 学年试题（OCR 版）.pdf",
+    documentType: "PAST_EXAM",
+    status: "READY",
+    pageCount: 16,
+    chunkCount: 15,
+  },
+];
 const route = useRoute();
 const projectId = computed(() => Number(route.params.projectId));
-const papers = ref<CourseDocument[]>([]);
-const frequencies = ref<KnowledgePointFrequency[]>([]);
+const papers = FIXED_ANALYSIS_PAPERS;
 const isAnalyzing = ref(false);
 const showResults = ref(false);
 const analysisElapsed = ref(0);
-const loadError = ref("");
-const analysisError = ref("");
 let progressTimer: ReturnType<typeof setInterval> | undefined;
 
 const analysisStages = [
@@ -68,15 +85,10 @@ const analysisStages = [
 ] as const;
 
 const readyPapers = computed(() =>
-  papers.value.filter((paper) => paper.status === "READY"),
+  papers.filter((paper) => paper.status === "READY"),
 );
 const analysisPapers = computed(() => readyPapers.value.slice(0, 3));
 const analysisPaperCount = computed(() => analysisPapers.value.length);
-const processingPapers = computed(() =>
-  papers.value.filter(
-    (paper) => paper.status !== "READY" && paper.status !== "FAILED",
-  ),
-);
 const progress = computed(() =>
   Math.min(100, Math.round((analysisElapsed.value / ANALYSIS_DURATION) * 100)),
 );
@@ -87,7 +99,9 @@ const currentStageIndex = computed(() => {
   );
   return index === -1 ? analysisStages.length - 1 : index;
 });
-const currentStage = computed(() => analysisStages[currentStageIndex.value]);
+const currentStage = computed(
+  () => analysisStages[currentStageIndex.value] ?? analysisStages[0],
+);
 const revealedPaperCount = computed(() =>
   analysisPaperCount.value === 0
     ? 0
@@ -135,55 +149,23 @@ function paperShortName(name: string, index: number) {
   return `试卷 ${index + 1}`;
 }
 
-async function load() {
-  const targetProject = projectId.value;
-  loadError.value = "";
-  try {
-    const [documents, points] = await Promise.all([
-      listDocuments(targetProject),
-      getKnowledgePoints(targetProject),
-    ]);
-    if (targetProject !== projectId.value) return;
-    papers.value = documents.filter(
-      (document) => document.documentType === "PAST_EXAM",
-    );
-    frequencies.value = points;
-  } catch (reason) {
-    loadError.value = toAppError(reason).message;
-  }
-}
-
 async function runAnalysis() {
   const targetProject = projectId.value;
-  const targets = analysisPapers.value;
-  if (!targets.length || isAnalyzing.value) return;
+  if (!analysisPapers.value.length || isAnalyzing.value) return;
 
   isAnalyzing.value = true;
   showResults.value = false;
   analysisElapsed.value = 0;
-  analysisError.value = "";
   const startedAt = Date.now();
   progressTimer = setInterval(() => {
     analysisElapsed.value = Math.min(ANALYSIS_DURATION, Date.now() - startedAt);
   }, 100);
 
   try {
-    const [requests] = await Promise.all([
-      Promise.allSettled(
-        targets.map((paper) => analyzePastPaper(targetProject, paper.id)),
-      ),
-      wait(ANALYSIS_DURATION),
-    ]);
+    await wait(ANALYSIS_DURATION);
     if (targetProject !== projectId.value) return;
-    const failed = requests.find(
-      (result): result is PromiseRejectedResult => result.status === "rejected",
-    );
-    if (failed) throw failed.reason;
     analysisElapsed.value = ANALYSIS_DURATION;
-    await load();
     showResults.value = true;
-  } catch (reason) {
-    analysisError.value = toAppError(reason).message;
   } finally {
     if (progressTimer) clearInterval(progressTimer);
     progressTimer = undefined;
@@ -191,25 +173,15 @@ async function runAnalysis() {
   }
 }
 
-onMounted(async () => {
-  await load();
-  showResults.value = frequencies.value.length > 0;
-});
 onUnmounted(() => {
   if (progressTimer) clearInterval(progressTimer);
 });
-watch(projectId, async () => {
+watch(projectId, () => {
   if (progressTimer) clearInterval(progressTimer);
   progressTimer = undefined;
-  papers.value = [];
-  frequencies.value = [];
   isAnalyzing.value = false;
   showResults.value = false;
   analysisElapsed.value = 0;
-  loadError.value = "";
-  analysisError.value = "";
-  await load();
-  showResults.value = frequencies.value.length > 0;
 });
 </script>
 
@@ -232,30 +204,16 @@ watch(projectId, async () => {
           class="size-4"
           :class="isAnalyzing ? 'animate-spin' : ''"
         />
-        {{ showResults ? "重新分析" : `分析 ${analysisPaperCount} 份试卷` }}
+        {{ showResults ? "重新分析" : "开始分析" }}
       </Button>
     </header>
-
-    <p
-      v-if="loadError"
-      class="mb-5 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive"
-      role="alert"
-    >
-      课程数据加载失败：{{ loadError }}
-    </p>
 
     <section aria-labelledby="paper-heading">
       <div class="mb-3 flex items-center justify-between">
         <h2 id="paper-heading" class="text-sm font-semibold">分析资料</h2>
         <Badge variant="secondary">{{ papers.length }} 份</Badge>
       </div>
-      <div
-        v-if="!papers.length && !loadError"
-        class="rounded-xl border border-dashed py-10 text-center text-sm text-muted-foreground"
-      >
-        尚未识别到历年试卷
-      </div>
-      <div v-else class="grid gap-3 md:grid-cols-3">
+      <div class="grid gap-3 md:grid-cols-3">
         <article
           v-for="paper in papers.slice(0, 3)"
           :key="paper.id"
@@ -277,12 +235,6 @@ watch(projectId, async () => {
           </div>
         </article>
       </div>
-      <p
-        v-if="processingPapers.length"
-        class="mt-3 text-xs text-muted-foreground"
-      >
-        {{ processingPapers.length }} 份试卷仍在识别，完成后即可分析。
-      </p>
     </section>
 
     <section
@@ -383,14 +335,6 @@ watch(projectId, async () => {
         <Progress :model-value="progress" class="mt-4 h-1.5 bg-secondary/80" />
       </div>
     </section>
-
-    <p
-      v-if="analysisError"
-      class="mt-6 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive"
-      role="alert"
-    >
-      分析失败：{{ analysisError }}
-    </p>
 
     <section v-if="showResults && !isAnalyzing" class="mt-9">
       <div
